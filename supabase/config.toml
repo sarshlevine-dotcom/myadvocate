@@ -1,0 +1,11 @@
+# For local development with Supabase CLI
+# Run: supabase start (requires Docker)
+# Run: supabase db push (to apply migrations)
+[api]
+port = 54321
+
+[db]
+port = 5432
+
+[studio]
+port = 54323
