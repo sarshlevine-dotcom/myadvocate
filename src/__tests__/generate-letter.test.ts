@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+vi.mock('@/lib/rate-limit', () => ({
+  generateRateLimit: {
+    limit: vi.fn().mockResolvedValue({ success: true, remaining: 9 }),
+  },
+}))
+
 // vi.hoisted ensures mockCreate is available when vi.mock factory runs (hoisted scope)
 const mockCreate = vi.hoisted(() =>
   vi.fn().mockResolvedValue({

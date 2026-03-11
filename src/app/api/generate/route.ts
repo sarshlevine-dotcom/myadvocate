@@ -3,9 +3,7 @@ import { getCurrentUser } from '@/lib/auth'
 import { generateLetter } from '@/lib/generate-letter'
 import { getCaseById } from '@/lib/db/cases'
 import { createClient } from '@/lib/supabase/server'
-
-// Placeholder rate limit: max 5 requests per user per session (MA-SEC-002 P15 — full impl in Task 24)
-const requestCounts = new Map<string, number>()
+import { generateRateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser()
@@ -26,10 +24,16 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // Placeholder rate limit
-  const count = requestCounts.get(user.id) ?? 0
-  if (count >= 5) return NextResponse.json({ error: 'Rate limit reached' }, { status: 429 })
-  requestCounts.set(user.id, count + 1)
+  const { success, remaining } = await generateRateLimit.limit(user.id)
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Daily limit reached. Try again tomorrow.' },
+      {
+        status: 429,
+        headers: { 'X-RateLimit-Remaining': String(remaining) },
+      }
+    )
+  }
 
   const { caseId, caseData } = await request.json()
   const caseRecord = await getCaseById(caseId)
