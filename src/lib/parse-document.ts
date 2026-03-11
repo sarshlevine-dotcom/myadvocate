@@ -1,7 +1,7 @@
 // MA-SEC-002: Document parsing — confidence threshold 0.7
 // Only PDFs and images accepted
 
-import pdfParse from 'pdf-parse'
+const pdfParse = require("pdf-parse")
 import { createWorker } from 'tesseract.js'
 
 export const CONFIDENCE_THRESHOLD = 0.7
