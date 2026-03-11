@@ -4,10 +4,6 @@ import { getDenialCodeByCode, getAllDenialCodes } from '@/lib/db/denial-codes'
 import { notFound } from 'next/navigation'
 import type { WithContext, FAQPage } from 'schema-dts'
 
-export async function generateStaticParams() {
-  const codes = await getAllDenialCodes()
-  return codes.map(c => ({ code: c.code }))
-}
 
 export async function generateMetadata({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params
