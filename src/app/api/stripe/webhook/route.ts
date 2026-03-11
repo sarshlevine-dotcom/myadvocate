@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
           stripeCustomerId: subscription.customer as string,
           stripeSubscriptionId: subscription.id,
           status: subscription.status === 'active' ? 'active' : 'canceled',
-          currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+          currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
         })
 
         await updateSubscriptionStatus(
