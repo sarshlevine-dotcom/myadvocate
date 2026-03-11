@@ -1,5 +1,6 @@
 import { getDenialCodeByCode, getAllDenialCodes } from '@/lib/db/denial-codes'
 import { notFound } from 'next/navigation'
+import type { WithContext, FAQPage } from 'schema-dts'
 
 export async function generateStaticParams() {
   const codes = await getAllDenialCodes()
@@ -21,8 +22,35 @@ export default async function DenialCodePage({ params }: { params: Promise<{ cod
   const record = await getDenialCodeByCode(code)
   if (!record) notFound()
 
+  const jsonLd: WithContext<FAQPage> = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: `What does denial code ${record.code} mean?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: record.plain_language_explanation,
+        },
+      },
+      {
+        '@type': 'Question',
+        name: `What should I do about denial code ${record.code}?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: record.recommended_action,
+        },
+      },
+    ],
+  }
+
   return (
     <main className="max-w-2xl mx-auto px-4 py-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <h1 className="text-3xl font-bold mb-2">Denial Code {record.code}</h1>
       <p className="text-lg text-gray-700 mb-6">{record.plain_language_explanation}</p>
       <h2 className="text-xl font-semibold mb-2">What To Do</h2>
