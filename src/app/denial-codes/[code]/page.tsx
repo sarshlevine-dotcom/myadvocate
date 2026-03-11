@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import { getDenialCodeByCode, getAllDenialCodes } from '@/lib/db/denial-codes'
 import { notFound } from 'next/navigation'
 import type { WithContext, FAQPage } from 'schema-dts'
