@@ -7,6 +7,10 @@ import type Stripe from 'stripe'
 
 // MA-SEC-002 P17: ALWAYS verify Stripe signature before processing any event
 export async function POST(request: NextRequest) {
+  if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 })
+  }
+
   const body = await request.text()
   const signature = request.headers.get('stripe-signature')
 
@@ -17,43 +21,52 @@ export async function POST(request: NextRequest) {
     event = stripe.webhooks.constructEvent(
       body,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      process.env.STRIPE_WEBHOOK_SECRET
     )
   } catch {
     // Invalid signature — reject immediately
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
-  // Handle subscription lifecycle events
-  if (
-    event.type === 'customer.subscription.updated' ||
-    event.type === 'customer.subscription.created'
-  ) {
-    const subscription = event.data.object as Stripe.Subscription
-    const userId = subscription.metadata.userId
+  try {
+    // Handle subscription lifecycle events
+    if (
+      event.type === 'customer.subscription.updated' ||
+      event.type === 'customer.subscription.created'
+    ) {
+      const subscription = event.data.object as Stripe.Subscription
+      const userId = subscription.metadata.userId
 
-    if (userId) {
-      await upsertSubscription({
-        userId,
-        stripeCustomerId: subscription.customer as string,
-        stripeSubscriptionId: subscription.id,
-        status: subscription.status === 'active' ? 'active' : 'canceled',
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      })
+      if (userId) {
+        await upsertSubscription({
+          userId,
+          stripeCustomerId: subscription.customer as string,
+          stripeSubscriptionId: subscription.id,
+          status: subscription.status === 'active' ? 'active' : 'canceled',
+          currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        })
 
-      await updateSubscriptionStatus(
-        userId,
-        subscription.status === 'active' ? 'active' : 'canceled'
-      )
+        await updateSubscriptionStatus(
+          userId,
+          subscription.status === 'active' ? 'active' : 'canceled'
+        )
+      } else {
+        console.error('Stripe webhook: missing userId in subscription metadata', { type: event.type, subscriptionId: (event.data.object as Stripe.Subscription).id })
+      }
     }
-  }
 
-  if (event.type === 'customer.subscription.deleted') {
-    const subscription = event.data.object as Stripe.Subscription
-    const userId = subscription.metadata.userId
-    if (userId) {
-      await updateSubscriptionStatus(userId, 'canceled')
+    if (event.type === 'customer.subscription.deleted') {
+      const subscription = event.data.object as Stripe.Subscription
+      const userId = subscription.metadata.userId
+      if (userId) {
+        await updateSubscriptionStatus(userId, 'canceled')
+      } else {
+        console.error('Stripe webhook: missing userId in subscription metadata', { type: event.type, subscriptionId: (event.data.object as Stripe.Subscription).id })
+      }
     }
+  } catch (err) {
+    console.error('Stripe webhook: error processing event', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 
   return NextResponse.json({ received: true })

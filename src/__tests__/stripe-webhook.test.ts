@@ -19,9 +19,13 @@ vi.mock('@/lib/db/users', () => ({
 
 import { stripe } from '@/lib/stripe'
 import { upsertSubscription } from '@/lib/db/subscriptions'
+import { updateSubscriptionStatus } from '@/lib/db/users'
 
 describe('Stripe webhook handler', () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => {
+    vi.clearAllMocks()
+    process.env.STRIPE_WEBHOOK_SECRET = 'test-secret'
+  })
 
   it('rejects requests with invalid signature', async () => {
     vi.mocked(stripe.webhooks.constructEvent).mockImplementation(() => {
@@ -69,5 +73,6 @@ describe('Stripe webhook handler', () => {
         status: 'active',
       })
     )
+    expect(updateSubscriptionStatus).toHaveBeenCalledWith('user-1', 'active')
   })
 })
