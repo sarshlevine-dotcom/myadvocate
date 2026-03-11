@@ -20,8 +20,11 @@ export default async function ResourcesPage({
   searchParams: Promise<{ state?: string; issue?: string }>
 }) {
   const params = await searchParams
-  const state = params.state as UsState | undefined
-  const issue = params.issue as IssueType | undefined
+  const VALID_STATES = STATES.map(s => s.value)
+  const VALID_ISSUES = ISSUE_TYPES.map(t => t.value)
+
+  const state = VALID_STATES.includes(params.state as UsState) ? params.state as UsState : undefined
+  const issue = VALID_ISSUES.includes(params.issue as IssueType) ? params.issue as IssueType : undefined
 
   const resources =
     state && issue
@@ -59,7 +62,7 @@ export default async function ResourcesPage({
             <div key={r.id} className="border rounded-lg p-5">
               <h2 className="font-semibold text-lg mb-1">{r.resource_name}</h2>
               <a
-                href={r.url}
+                href={r.url?.startsWith('https://') ? r.url : '#'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 underline text-sm"
