@@ -9,8 +9,11 @@ set -euo pipefail
 
 echo "🔍 Pre-commit: running ESLint on staged files..."
 
-# Get all staged .ts, .tsx, .js, .jsx files
-staged_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx|js|jsx)$' || true)
+# Get all staged .ts, .tsx, .js, .jsx files — exclude dirs ESLint ignores
+staged_files=$(git diff --cached --name-only --diff-filter=ACM \
+  | grep -E '\.(ts|tsx|js|jsx)$' \
+  | grep -Ev '^(automation|scripts)/' \
+  || true)
 
 if [[ -z "$staged_files" ]]; then
   echo "  No JS/TS files staged — skipping lint."
