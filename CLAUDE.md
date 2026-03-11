@@ -11,7 +11,7 @@
 - Core product live on Vercel
 - Insurance denial decoder, appeal generator, medical bill dispute, HIPAA records request — all functional
 - Supabase DB + Stripe billing + Anthropic API integrated
-- 35 commits, all Phase 1 acceptance criteria met
+- 37 commits, all Phase 1 acceptance criteria met
 
 **Now in Phase 2:** Content engine, SEO growth, automation pipeline
 
@@ -43,12 +43,21 @@ boundary for scrubber enforcement, model selection, caching, and output normaliz
 
 ## Repo Map
 - `src/app/` — Next.js App Router pages and API routes
-- `src/lib/` — core utilities: Supabase clients, db helpers, pii-scrubber, generateLetter, disclaimer
-- `src/types/` — TypeScript types for all 10 domain objects
-- `src/components/` — shared UI components (Button, Input, FormField, Card, Alert, Nav)
-- `supabase/migrations/` — all DB migrations (never edit past migrations)
+  - `src/app/api/` — API routes: `admin/`, `cases/`, `denial-lookup/`, `documents/`, `generate/`, `stripe/`
+  - `src/app/tools/denial-decoder/` — denial decoder tool page
+  - `src/app/intake/`, `auth/`, `denial-codes/`, `resources/`, `admin/review/`
+- `src/lib/` — core utilities
+  - `db/` — 10 domain helpers: artifacts, cases, denial-codes, documents, extraction-outputs, metric-events, resource-routes, review-queue, subscriptions, users
+  - `supabase/` — `client.ts` (anon/browser), `server.ts` (service role)
+  - `auth.ts`, `stripe.ts`, `rate-limit.ts`, `parse-document.ts`
+  - `generate-letter.ts` — single Anthropic call boundary (never bypass)
+  - `pii-scrubber.ts` — must run before every API call
+  - `disclaimer.ts` — appended to all user-facing outputs
+- `src/types/` — `domain.ts` (shared enums/interfaces), `supabase.ts` (generated DB types)
+- `src/components/` — shared UI: Button, Input, FormField, Card, Alert, Nav
+- `supabase/migrations/` — 11 migrations, append-only (see `supabase/migrations/CLAUDE.md`)
 - `supabase/seed/` — seed data for denial codes and resource routes
-- `docs/superpowers/` — specs and plans
+- `docs/` — `security-audit-session-9.md` and ad-hoc session notes
 - `automation/daily.js` — Notion sync automation (see Automation section below)
 - `.claude/skills/` — 32 Claude skill definitions (see Skills System below)
 - `.claude/hooks/` — Claude Code guardrail hooks
@@ -105,7 +114,8 @@ Before building any new feature or making an architectural change, run through t
 - MA-LCH-004 — Launch Truth (what ships in Phase 1)
 - MA-SEC-002 — Security Checklist (20 controls, all must PASS)
 - MA-DAT-002 — Data Model (10 objects, minimum fields)
-- `docs/superpowers/specs/2026-03-10-myadvocate-mvp-build-design.md` — approved Phase 1 spec
+- `docs/security-audit-session-9.md` — security audit session notes
+- `supabase/migrations/CLAUDE.md` — migration rules (append-only, never edit past migrations)
 
 ---
 
@@ -146,7 +156,7 @@ Configured in `.claude/settings.json`:
 | `guard-migrations.sh` | PreToolUse: Edit/Write on `supabase/migrations/` | Blocks edit, explains new migration workflow |
 | `run-lib-tests.sh` | PostToolUse: Edit/Write on `src/lib/` | Runs `npm test` automatically |
 
-Git pre-commit hook (`scripts/pre-commit`): runs ESLint on staged `.ts/.tsx` files before each commit. Install with `bash scripts/install-hooks.sh`.
+Git pre-commit hook (`scripts/pre-commit`): runs ESLint on staged `.ts/.tsx/.js/.jsx` files before each commit. Automatically excludes `automation/` and `scripts/` (which are in ESLint's ignore list) to prevent false-positive warnings. Install with `bash scripts/install-hooks.sh`.
 
 ---
 
@@ -180,3 +190,7 @@ This file should be reviewed whenever:
 - A new skill category is added to `.claude/skills/`
 
 Last reviewed: **2026-03-11**
+
+### Recent Changes
+- 2026-03-11: Fixed pre-commit hook — `automation/` and `scripts/` now excluded from ESLint staged-file check to match `eslint.config.mjs` ignore patterns.
+- 2026-03-11: Updated Repo Map to reflect actual `src/lib/` structure, API routes, and `src/types/`. Removed phantom `docs/superpowers/` reference. Updated commit count to 37.
