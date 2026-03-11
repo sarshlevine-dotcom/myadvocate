@@ -1,0 +1,11 @@
+-- MA-SEC-002 P16: Private storage buckets — no public access
+-- Buckets are created via Supabase Storage API or dashboard, not SQL.
+-- Run manually after supabase start:
+--   supabase storage create documents --private
+--   supabase storage create artifacts --private
+--
+-- Or via Supabase dashboard: Storage > New bucket > documents (private)
+--                             Storage > New bucket > artifacts (private)
+--
+-- RLS policy for documents bucket (apply after bucket creation):
+-- Users can only upload to their own path: {userId}/{caseId}/...
