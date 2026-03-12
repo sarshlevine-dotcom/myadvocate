@@ -148,7 +148,7 @@ Before building any new feature or making an architectural change, run through t
 
 ## Canonical Docs
 - `SYSTEM.md` — constitutional layer (mission, ethics, legal, privacy) — read first
-- `MA-PMP-001` (PMP v21) — single source of truth for strategy, operations, financials — `docs/pmp/MyAdvocate_PMP_v21.docx`
+- `MA-PMP-001` (PMP v22) — single source of truth for strategy, operations, financials — `docs/pmp/MyAdvocate_PMP_v22.docx`
 - `MA-LCH-004` — Launch Truth (what ships in Phase 1)
 - `MA-SEC-002` — Security Checklist (24 controls — 20 original + 4 AI content security controls)
 - `MA-COST-001` — API Cost Architecture & Spend Control (model routing, output caps, budget tripwires)
@@ -156,6 +156,8 @@ Before building any new feature or making an architectural change, run through t
 - `MA-CTX-001` — Context Registry Specification — governs `context_registry/` folder and all JSON registries
 - `MA-SOC-002` — Patient Story Engine — dual-track sourcing, scrub protocol, rollout gates
 - `MA-AGT-001` — External Agent Integration Plan — 11 agents (GEO-01/02/03, DEV-01/02/03, CNT-01, MKT-01/02/03, PRD-01)
+- `MA-YT-001` — YouTube & Spanish Channel Strategy — EN + ES channel model, phase cadence, QA pipeline — `docs/social/MA-YT-001_YouTube_Spanish_Strategy_Report.docx`
+- `MA-IG-001` — Instagram Strategy v2.0 — gate structure, direct/indirect revenue model, EN + ES dual channel — `docs/social/MA-IG-001_Instagram_Strategy_v2.docx`
 - `MA-AHP-001` — Anti-Hallucination Protocol — governs all agent outputs (in Notion Agent Registry)
 - `docs/security/security-audit-session-9.md` — security audit session notes
 - `docs/security/MA-SEC-002-additions-priorities-21-24.md` — Priorities 21–24 to integrate into Google Drive doc
@@ -168,12 +170,14 @@ Before building any new feature or making an architectural change, run through t
 docs/
   cost/       MA-COST-001-api-cost-architecture.md
   security/   security-audit-session-9.md, MA-SEC-002-additions-priorities-21-24.md
-  pmp/        MyAdvocate_PMP_v18.docx, MyAdvocate_PMP_v19.docx, MyAdvocate_PMP_v21.docx  ← CURRENT
+  pmp/        MyAdvocate_PMP_v18.docx, MyAdvocate_PMP_v19.docx, MyAdvocate_PMP_v21.docx, MyAdvocate_PMP_v22.docx  ← CURRENT
   system/     claude-project-instructions.md
   superpowers/plans/
   agents/     MA-AGT-001 (External Agent Integration Plan)           ← NEW in v21
   context/    MA-CTX-001 (Context Registry Specification)            ← NEW in v21
   social/     MA-SOC-002 (Patient Story Engine)                      ← NEW in v21
+              MA-YT-001_YouTube_Spanish_Strategy_Report.docx         ← NEW in v22
+              MA-IG-001_Instagram_Strategy_v2.docx                   ← NEW in v22
 ```
 
 ---
@@ -326,6 +330,7 @@ This file should be reviewed whenever:
 Last reviewed: **2026-03-12**
 
 ### Recent Changes
+- 2026-03-12: PMP v22 created — MA-YT-001 (YouTube & Spanish Strategy) and MA-IG-001 (Instagram Strategy v2.0) canonized into docs/social/. §6D (YouTube Revenue) and §6E (Instagram Revenue) added to PMP. Projections v16 replaces v15. CLAUDE.md canonical docs and docs/ structure updated.
 - 2026-03-12: PMP v21 created — MA-CTX-001, MA-SOC-002, MA-AGT-001 canonized. Projections v15. External Agent System, Context Registry, and Patient Story Engine sections added to CLAUDE.md. docs/agents/, docs/context/, docs/social/ subdirectories added. Supabase migration 016 pending (scrub_records).
 - 2026-03-12: Cost architecture shipped — `budget-monitor.ts`, model routing in `generate-letter.ts`, output caps, migration 015, MA-COST-001 canonical doc. 4 Parking Lot entries added (caching, retry optimization, n8n alerts, batch content rules).
 - 2026-03-12: MA-SEC-002 extended to 24 controls (Priorities 21–24: AI Content Security). Additions in `docs/security/MA-SEC-002-additions-priorities-21-24.md` — pending manual update to Google Drive doc.
