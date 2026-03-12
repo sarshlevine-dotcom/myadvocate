@@ -1,0 +1,174 @@
+{
+  "_meta": {
+    "registry": "regulations",
+    "id_prefix": "reg_",
+    "description": "Regulatory and policy sources affecting advocacy guidance, appeal strategies, and content freshness.",
+    "last_updated": "2026-03-12T00:00:00Z",
+    "schema_version": "1.0",
+    "authority": "MA-CTX-001"
+  },
+  "records": [
+    {
+      "id": "reg_0001",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009"
+      ],
+      "confidence": 1.0,
+      "name": "ACA \u2014 Affordable Care Act (Patient Protection and Affordable Care Act)",
+      "regulation_type": "federal_statute",
+      "agency": "HHS / CMS",
+      "jurisdiction": "US",
+      "effective_date": "2010-03-23",
+      "last_verified_at": "2026-03-12T00:00:00Z",
+      "summary": "Establishes essential health benefits, preventive care mandates, appeals rights (internal and external), coverage for pre-existing conditions, and marketplace insurance standards.",
+      "affected_service_types": [
+        "preventive",
+        "essential_health_benefits",
+        "all"
+      ],
+      "affected_denial_ids": [
+        "den_0001",
+        "den_0003",
+        "den_0005",
+        "den_0013",
+        "den_0020"
+      ],
+      "affected_strategy_ids": [
+        "str_0001",
+        "str_0002",
+        "str_0003",
+        "str_0005"
+      ],
+      "affected_page_ids": [],
+      "change_risk": "high",
+      "supersedes_regulation_id": null,
+      "notes": "Core regulatory anchor for most appeal strategies. ACA \u00a72719 requires internal and external appeals. ACA \u00a72713 covers preventive services without cost-sharing."
+    },
+    {
+      "id": "reg_0002",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009"
+      ],
+      "confidence": 1.0,
+      "name": "ERISA \u2014 Employee Retirement Income Security Act (Plan Appeals)",
+      "regulation_type": "federal_statute",
+      "agency": "DOL (Department of Labor)",
+      "jurisdiction": "US",
+      "effective_date": "1974-09-02",
+      "last_verified_at": "2026-03-12T00:00:00Z",
+      "summary": "Governs appeals rights for employer-sponsored health plans. Requires written denial notices with reason, 60-180 day internal appeal windows, and external review rights.",
+      "affected_service_types": [
+        "all"
+      ],
+      "affected_denial_ids": [
+        "den_0001",
+        "den_0002"
+      ],
+      "affected_strategy_ids": [
+        "str_0001"
+      ],
+      "affected_page_ids": [],
+      "change_risk": "low",
+      "supersedes_regulation_id": null,
+      "notes": "Employer-sponsored plan appeals. 60-day window for urgent care appeals; 180 days for standard. Preempts state law for self-funded plans."
+    },
+    {
+      "id": "reg_0003",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009"
+      ],
+      "confidence": 1.0,
+      "name": "MHPAEA \u2014 Mental Health Parity and Addiction Equity Act",
+      "regulation_type": "federal_statute",
+      "agency": "HHS / DOL / Treasury",
+      "jurisdiction": "US",
+      "effective_date": "2008-10-03",
+      "last_verified_at": "2026-03-12T00:00:00Z",
+      "summary": "Requires that financial requirements and treatment limitations for mental health and substance use disorder benefits be no more restrictive than those for medical/surgical benefits.",
+      "affected_service_types": [
+        "behavioral_health",
+        "substance_use_disorder",
+        "mental_health"
+      ],
+      "affected_denial_ids": [
+        "den_0002",
+        "den_0012"
+      ],
+      "affected_strategy_ids": [
+        "str_0002"
+      ],
+      "affected_page_ids": [],
+      "change_risk": "medium",
+      "supersedes_regulation_id": null,
+      "notes": "Primary angle for behavioral health non-coverage denials. Comparative analysis of medical vs. mental health treatment limitations required. 2023 Final Rule strengthened enforcement."
+    },
+    {
+      "id": "reg_0004",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009"
+      ],
+      "confidence": 1.0,
+      "name": "Medicare Secondary Payer (MSP) Rules",
+      "regulation_type": "cms_rule",
+      "agency": "CMS",
+      "jurisdiction": "US",
+      "effective_date": "1980-12-05",
+      "last_verified_at": "2026-03-12T00:00:00Z",
+      "summary": "Establishes when Medicare pays primary versus secondary to other insurance. Determines payer order for patients with employer coverage, workers comp, auto insurance, or other coverage.",
+      "affected_service_types": [
+        "all"
+      ],
+      "affected_denial_ids": [
+        "den_0014"
+      ],
+      "affected_strategy_ids": [],
+      "affected_page_ids": [],
+      "change_risk": "low",
+      "supersedes_regulation_id": null,
+      "notes": "MSP questionnaire is the key document. Correct COB order must be established before appeal on PR-204 denials."
+    },
+    {
+      "id": "reg_0005",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009"
+      ],
+      "confidence": 1.0,
+      "name": "HIPAA \u2014 Health Insurance Portability and Accountability Act",
+      "regulation_type": "federal_statute",
+      "agency": "HHS / OCR",
+      "jurisdiction": "US",
+      "effective_date": "1996-08-21",
+      "last_verified_at": "2026-03-12T00:00:00Z",
+      "summary": "Establishes patient rights to access medical records, portability of coverage, and privacy protections. Specifically: right to request records within 30 days; right to restrict disclosure.",
+      "affected_service_types": [
+        "all"
+      ],
+      "affected_denial_ids": [],
+      "affected_strategy_ids": [],
+      "affected_page_ids": [],
+      "change_risk": "low",
+      "supersedes_regulation_id": null,
+      "notes": "Powers the HIPAA Records Request tool. 30-day response requirement; 60-day extension with notice. Providers may charge reasonable cost-based fee."
+    }
+  ]
+}

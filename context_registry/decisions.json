@@ -1,0 +1,259 @@
+{
+  "_meta": {
+    "registry": "decisions",
+    "id_prefix": "dec_",
+    "description": "Structured log of strategic and operational decisions with rationale. One of the highest-value registries \u2014 captures why, not just what.",
+    "last_updated": "2026-03-12T00:00:00Z",
+    "schema_version": "1.0",
+    "authority": "MA-CTX-001"
+  },
+  "records": [
+    {
+      "id": "dec_0001",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0002",
+        "src_0007"
+      ],
+      "confidence": 1.0,
+      "title": "Haiku as default model; Sonnet reserved for document upload and complex cases only",
+      "decision_type": "architecture",
+      "summary": "All AI calls default to claude-haiku-4-5-20251001. Sonnet (claude-sonnet-4-6) is used only when document upload is present or the routing table explicitly calls for it.",
+      "rationale": [
+        "Haiku delivers sufficient quality for structured letter generation at 10-20x lower cost than Sonnet",
+        "$150/month budget cap requires cost discipline from the start",
+        "MA-COST-001 3-bucket rule: default to cheapest model that satisfies quality bar",
+        "Sonnet quality advantage is measurable only in complex reasoning and document comprehension tasks"
+      ],
+      "affects_systems": [
+        "MA-COST",
+        "MA-DEV",
+        "generate-letter.ts"
+      ],
+      "supersedes_decision_ids": [],
+      "related_decision_ids": [
+        "dec_0002"
+      ],
+      "review_on": null,
+      "notes": "Enforced via MODEL_ROUTER in src/lib/generate-letter.ts. Hard-coded model strings elsewhere are a violation."
+    },
+    {
+      "id": "dec_0002",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0002",
+        "src_0007"
+      ],
+      "confidence": 1.0,
+      "title": "All Anthropic API calls routed through generateLetter() abstraction \u2014 never bypass",
+      "decision_type": "architecture",
+      "summary": "generateLetter() in src/lib/generate-letter.ts is the single routing boundary for all AI calls. No direct SDK calls from page or component code.",
+      "rationale": [
+        "Single enforcement point for PII scrubber, model selection, output caps, cost logging, budget tripwires",
+        "Allows model swap, provider swap, or routing logic change without touching call sites",
+        "Prevents gradual accumulation of direct API calls that bypass governance controls",
+        "MA-SEC-002 Control 1: PII scrubber never optional \u2014 abstraction makes enforcement structural"
+      ],
+      "affects_systems": [
+        "MA-DEV",
+        "MA-SEC",
+        "MA-COST",
+        "src/lib/"
+      ],
+      "supersedes_decision_ids": [],
+      "related_decision_ids": [
+        "dec_0001",
+        "dec_0003"
+      ],
+      "review_on": null,
+      "notes": "Violation of this rule is a critical security event per MA-SEC-002."
+    },
+    {
+      "id": "dec_0003",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0001",
+        "src_0008"
+      ],
+      "confidence": 1.0,
+      "title": "PII scrubbing mandatory before every external model call \u2014 never optional",
+      "decision_type": "compliance",
+      "summary": "All free text containing user-submitted content passes through src/lib/pii-scrubber.ts before any Anthropic API call. This step cannot be bypassed.",
+      "rationale": [
+        "Healthcare data is HIPAA-adjacent \u2014 PII exposure is a critical liability",
+        "User trust is the product's core asset; privacy violations destroy it irreversibly",
+        "Regulatory risk: even without explicit HIPAA coverage, YMYL health data carries FTC and state-level privacy obligations",
+        "Structural enforcement (via generateLetter abstraction) is more reliable than developer discipline"
+      ],
+      "affects_systems": [
+        "MA-SEC",
+        "MA-DEV",
+        "src/lib/pii-scrubber.ts"
+      ],
+      "supersedes_decision_ids": [],
+      "related_decision_ids": [
+        "dec_0002"
+      ],
+      "review_on": null,
+      "notes": "Four-layer privacy model in SYSTEM.md Section 4. Layer 2 = PII scrubber."
+    },
+    {
+      "id": "dec_0004",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0003"
+      ],
+      "confidence": 1.0,
+      "title": "Phase-gated growth \u2014 unlock conditions, not calendar dates",
+      "decision_type": "strategy",
+      "summary": "No feature, market, or channel expansion without meeting defined unlock conditions. Growth is earned by hitting measurable signals, not by elapsed time.",
+      "rationale": [
+        "Prevents premature scaling of unvalidated features",
+        "Solo-founder operability constraint: complexity that requires a team is premature",
+        "Protects budget cap by preventing speculative infrastructure build",
+        "Signal-based gating creates measurable, accountable milestones"
+      ],
+      "affects_systems": [
+        "MA-PMP",
+        "MA-LCH",
+        "all-phases"
+      ],
+      "supersedes_decision_ids": [],
+      "related_decision_ids": [],
+      "review_on": null,
+      "notes": "Parking Lot in Notion holds all phase-gated items. Check before building anything in the lot."
+    },
+    {
+      "id": "dec_0005",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0003",
+        "src_0006"
+      ],
+      "confidence": 1.0,
+      "title": "GEO-first content strategy \u2014 134-167 word self-contained answer blocks",
+      "decision_type": "seo",
+      "summary": "All SEO content uses GEO (Generative Engine Optimization) structure: 134-167 word answer blocks, direct-answer first, FAQPage schema, citability score \u226570/100.",
+      "rationale": [
+        "AI search citation growing 527% faster than traditional organic per GEO-01 analysis",
+        "ChatGPT, Perplexity, Google AI Overviews are primary discovery channels for target audience",
+        "Self-contained answer blocks serve both AI extraction and traditional featured snippets",
+        "Citability scoring provides measurable quality gate before publish"
+      ],
+      "affects_systems": [
+        "MA-SEO",
+        "MA-CNT",
+        "seo_clusters.json",
+        "content_pages.json"
+      ],
+      "supersedes_decision_ids": [],
+      "related_decision_ids": [
+        "dec_0006"
+      ],
+      "review_on": null,
+      "notes": "GEO-01 agent enforces citability \u226570/100. GEO-03 writes denial-code SEO pages. CNT-01 is the YMYL compliance layer."
+    },
+    {
+      "id": "dec_0006",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0004"
+      ],
+      "confidence": 1.0,
+      "title": "Context registry as JSON files in Phase 1 \u2014 no database migration until 500+ records or performance degrades",
+      "decision_type": "architecture",
+      "summary": "The context registry is lightweight JSON files in /context_registry/. Migration to SQLite occurs at 500+ records. Migration to Supabase occurs at Signal 1 traffic or concurrent writes needed.",
+      "rationale": [
+        "JSON preserves launch momentum \u2014 no database infrastructure to provision",
+        "MA-CTX-001 migration path is signal-triggered, not calendar-triggered",
+        "Schema is intentionally SQL-compatible, making migration structural not transformational",
+        "Solo-founder operability: JSON is editable by anyone without database access"
+      ],
+      "affects_systems": [
+        "MA-CTX",
+        "MA-DEV",
+        "context_registry/"
+      ],
+      "supersedes_decision_ids": [],
+      "related_decision_ids": [],
+      "review_on": "2026-09-01",
+      "notes": "Review trigger: any single registry file exceeds 500 records OR query performance degrades."
+    },
+    {
+      "id": "dec_0007",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0005"
+      ],
+      "confidence": 1.0,
+      "title": "AI actor character for patient story videos \u2014 founders remain anonymous",
+      "decision_type": "strategy",
+      "summary": "Patient story videos use HeyGen AI avatars (English + Spanish). Founders do not appear on camera. AI actor character maintains brand voice without personal exposure.",
+      "rationale": [
+        "Founder privacy and safety: healthcare advocacy can attract hostile actors",
+        "AI avatars scale to ES content without separate production pipeline",
+        "Character consistency across dozens of videos without scheduling constraints",
+        "Gate 0 eligible immediately (tools live + first SEO article = unlock condition)"
+      ],
+      "affects_systems": [
+        "MA-SOC",
+        "MA-CNT",
+        "heygen",
+        "story-bank"
+      ],
+      "supersedes_decision_ids": [],
+      "related_decision_ids": [],
+      "review_on": null,
+      "notes": "HeyGen avatar selection: test 3 EN + 3 ES candidates with same script before committing. Story bank needs 3 approved stories before Month 3 YouTube launch."
+    },
+    {
+      "id": "dec_0008",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0002"
+      ],
+      "confidence": 1.0,
+      "title": "Append-only Supabase migrations \u2014 never edit past migrations",
+      "decision_type": "architecture",
+      "summary": "All Supabase schema changes require a new migration file. Past migrations are immutable. supabase migration new <name> is the only allowed workflow.",
+      "rationale": [
+        "Editing past migrations creates drift between local and production environments",
+        "Append-only enables reliable rollback and team onboarding",
+        "Pre-commit hook in guard-migrations.sh enforces this at the tooling layer",
+        "Supabase managed infrastructure requires migration history integrity"
+      ],
+      "affects_systems": [
+        "MA-DEV",
+        "supabase/migrations/"
+      ],
+      "supersedes_decision_ids": [],
+      "related_decision_ids": [],
+      "review_on": null,
+      "notes": "15 migrations as of v21. Next: migration 016 (scrub_records for MA-SOC-002)."
+    }
+  ]
+}

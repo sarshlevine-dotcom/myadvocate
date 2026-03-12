@@ -1,0 +1,238 @@
+{
+  "_meta": {
+    "registry": "appeal_strategies",
+    "id_prefix": "str_",
+    "description": "Reusable appeal frameworks linked to denial codes. Each strategy is a clinical-reviewed, actionable blueprint.",
+    "last_updated": "2026-03-12T00:00:00Z",
+    "schema_version": "1.0",
+    "authority": "MA-CTX-001"
+  },
+  "records": [
+    {
+      "id": "str_0001",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0002",
+        "src_0009"
+      ],
+      "confidence": 0.9,
+      "name": "Medical Necessity Internal Appeal",
+      "strategy_type": "appeal",
+      "summary": "Structured internal appeal citing treating physician support, clinical guidelines, and peer-reviewed literature to establish medical necessity for denied services.",
+      "applicable_denial_ids": [
+        "den_0001",
+        "den_0012"
+      ],
+      "required_documents": [
+        "physician_support_letter",
+        "clinical_notes",
+        "peer_reviewed_literature",
+        "treatment_history",
+        "eob"
+      ],
+      "recommended_evidence_types": [
+        "treating_physician_letter",
+        "specialist_consultation",
+        "nih_or_specialty_guidelines",
+        "prior_authorization_history"
+      ],
+      "related_regulation_ids": [
+        "reg_0001",
+        "reg_0002"
+      ],
+      "complexity": "high",
+      "review_level": "clinical_review_needed",
+      "use_cases": [
+        "Inpatient admission denied as not medically necessary",
+        "Specialist visit denied without clinical justification",
+        "DME denied as not medically necessary",
+        "Behavioral health treatment denied as not medically necessary"
+      ],
+      "contraindications": [
+        "Do not use if denial is due to billing error \u2014 use corrected claim workflow instead",
+        "Do not assert specific outcome predictions in appeal letter"
+      ],
+      "notes": "Primary strategy for CO-50. insurance-appeal-generator tool implements this. Clinical review required before activation of new variations."
+    },
+    {
+      "id": "str_0002",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0002",
+        "src_0009"
+      ],
+      "confidence": 0.9,
+      "name": "Coverage Dispute \u2014 Plan Document Review",
+      "strategy_type": "dispute",
+      "summary": "Disputes non-covered charges by citing specific plan document language, Summary of Benefits, and applicable federal coverage mandates.",
+      "applicable_denial_ids": [
+        "den_0002",
+        "den_0010"
+      ],
+      "required_documents": [
+        "summary_of_benefits",
+        "plan_documents",
+        "eob",
+        "itemized_bill"
+      ],
+      "recommended_evidence_types": [
+        "plan_document_excerpt",
+        "aca_essential_benefits_list",
+        "employer_plan_documents"
+      ],
+      "related_regulation_ids": [
+        "reg_0003"
+      ],
+      "complexity": "medium",
+      "review_level": "founder_review",
+      "use_cases": [
+        "Service denied as not covered when plan language is ambiguous",
+        "ACA essential health benefit denied as non-covered",
+        "Mental health service denied under less favorable terms than medical services"
+      ],
+      "contraindications": [
+        "Do not claim legal violations \u2014 describe what plan documents say and let the regulator determine compliance"
+      ],
+      "notes": "MHPAEA (Mental Health Parity) is the strongest angle for behavioral health denials coded as non-covered."
+    },
+    {
+      "id": "str_0003",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0002",
+        "src_0009"
+      ],
+      "confidence": 0.85,
+      "name": "Retroactive Prior Authorization Appeal",
+      "strategy_type": "appeal",
+      "summary": "Requests retroactive authorization approval by citing medical necessity, emergency circumstances, or provider good-faith reliance on authorization guidance.",
+      "applicable_denial_ids": [
+        "den_0003"
+      ],
+      "required_documents": [
+        "clinical_notes",
+        "auth_request_documentation",
+        "physician_letter",
+        "provider_communication_records"
+      ],
+      "recommended_evidence_types": [
+        "emergency_documentation",
+        "provider_auth_inquiry_records",
+        "timely_auth_request_proof"
+      ],
+      "related_regulation_ids": [
+        "reg_0001"
+      ],
+      "complexity": "high",
+      "review_level": "clinical_review_needed",
+      "use_cases": [
+        "Emergency admission where prior auth was not obtainable",
+        "Provider requested auth but received incorrect guidance",
+        "Authorization was obtained but not applied to claim correctly"
+      ],
+      "contraindications": [
+        "Not applicable if service was genuinely elective and auth was knowingly skipped",
+        "Do not fabricate emergency circumstances"
+      ],
+      "notes": "Emergency exception is strongest angle. ACA requires coverage of emergency services without prior auth."
+    },
+    {
+      "id": "str_0004",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0002",
+        "src_0009"
+      ],
+      "confidence": 0.95,
+      "name": "Corrected Claim Submission",
+      "strategy_type": "dispute",
+      "summary": "Identifies and corrects specific billing or coding errors that caused the denial, then resubmits as a corrected claim to preserve the original filing date.",
+      "applicable_denial_ids": [
+        "den_0004",
+        "den_0006",
+        "den_0015"
+      ],
+      "required_documents": [
+        "original_eob",
+        "remark_code_explanation",
+        "corrected_claim_form"
+      ],
+      "recommended_evidence_types": [
+        "eob_remark_codes",
+        "correct_icd10_documentation",
+        "correct_cpt_documentation"
+      ],
+      "related_regulation_ids": [],
+      "complexity": "low",
+      "review_level": "basic",
+      "use_cases": [
+        "Missing NPI, auth number, or modifier on original claim",
+        "Wrong ICD-10 code submitted \u2014 correct specificity needed",
+        "Outdated CPT code submitted for date of service",
+        "Missing required attachment on original submission"
+      ],
+      "contraindications": [
+        "Do not resubmit as new claim \u2014 resubmit as corrected claim to preserve original filing date",
+        "Do not use this strategy when denial is clinical (medical necessity) not administrative"
+      ],
+      "notes": "Lowest complexity strategy. High success rate for administrative denials. No AI generation needed in most cases."
+    },
+    {
+      "id": "str_0005",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0002",
+        "src_0009"
+      ],
+      "confidence": 0.8,
+      "name": "Age/Sex Restriction Override \u2014 Peer-to-Peer Review",
+      "strategy_type": "appeal",
+      "summary": "Requests peer-to-peer clinical review between the treating physician and payer medical director to challenge algorithmic age or sex-based coverage restrictions using patient-specific clinical evidence.",
+      "applicable_denial_ids": [
+        "den_0005",
+        "den_0013"
+      ],
+      "required_documents": [
+        "physician_letter",
+        "clinical_notes",
+        "peer_reviewed_literature",
+        "aca_preventive_guidelines"
+      ],
+      "recommended_evidence_types": [
+        "uspstf_guidelines",
+        "specialty_society_guidelines",
+        "patient_clinical_atypicality_documentation"
+      ],
+      "related_regulation_ids": [
+        "reg_0001",
+        "reg_0003"
+      ],
+      "complexity": "high",
+      "review_level": "clinical_review_needed",
+      "use_cases": [
+        "Screening denied based on age threshold (e.g., colonoscopy at age 40 vs standard 45)",
+        "Pediatric service denied as typically adult-only",
+        "ACA preventive service denied under age restriction"
+      ],
+      "contraindications": [
+        "Peer-to-peer must be requested by treating physician \u2014 patient cannot directly request this"
+      ],
+      "notes": "ACA preventive services mandate: USPSTF A/B rated preventive services must be covered without cost-sharing. Reference USPSTF guidelines directly."
+    }
+  ]
+}

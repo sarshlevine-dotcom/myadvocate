@@ -1,0 +1,96 @@
+{
+  "_meta": {
+    "registry": "review_queue",
+    "id_prefix": "rev_",
+    "description": "Human control surface. Any agent that detects a condition requiring human judgment writes here. No agent promotes draft\u2192active without a resolved review item (unless confidence >0.95 and risk=low).",
+    "last_updated": "2026-03-12T00:00:00Z",
+    "schema_version": "1.0",
+    "authority": "MA-CTX-001"
+  },
+  "records": [
+    {
+      "id": "rev_0001",
+      "status": "open",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0004"
+      ],
+      "confidence": 1.0,
+      "queue_type": "schema_review",
+      "target_object_type": "context_registry_system",
+      "target_object_id": "context_registry/",
+      "reason": "Context registry scaffolded from MA-CTX-001 spec. Founder review required to confirm schema accuracy, seed data quality, and build sequence completion before agents begin writing.",
+      "severity": "medium",
+      "recommended_action": "Review all 8 JSON registry files. Confirm shared envelope fields are correct. Spot-check 3-5 denial_codes entries against supabase/seed/denial_codes.sql. Confirm appeal_strategies are accurate to platform outputs. Mark resolved when satisfied.",
+      "assigned_to": "sarsh",
+      "resolution_notes": null,
+      "resolved_at": null,
+      "notes": "Scaffolded 2026-03-12. 20 denial codes seeded (52 in DB). 5 appeal strategies seeded. 5 regulations seeded. 5 SEO clusters planned. 5 content pages drafted."
+    },
+    {
+      "id": "rev_0002",
+      "status": "open",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0005"
+      ],
+      "confidence": 1.0,
+      "queue_type": "content_review",
+      "target_object_type": "story_engine_gate_0",
+      "target_object_id": "ma_soc_002",
+      "reason": "Story engine Gate 0 is eligible (Phase 1 shipped + first SEO article = unlock). HeyGen avatar selection and submission form consent language require founder decisions before Story Bank begins.",
+      "severity": "medium",
+      "recommended_action": "1) Select HeyGen avatars: test 3 EN + 3 ES candidates with same script. 2) Draft submission form consent language and schedule attorney review. 3) Source, scrub, and approve 3 seed stories for Story Bank before Month 3 YouTube launch.",
+      "assigned_to": "sarsh",
+      "resolution_notes": null,
+      "resolved_at": null,
+      "notes": "Gate 0 unlock: platform live + first SEO article published. Attorney review of consent language is a hard stop before submitting form goes live."
+    },
+    {
+      "id": "rev_0003",
+      "status": "open",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0006"
+      ],
+      "confidence": 1.0,
+      "queue_type": "schema_review",
+      "target_object_type": "external_agents",
+      "target_object_id": "ma_agt_001",
+      "reason": "Phase 1 external agents (GEO-01/02/03, CNT-01) require installation from geo-seo-claude and agency-agents repos before they can write to context registry.",
+      "severity": "high",
+      "recommended_action": "Install GEO-01/02/03 agents via geo-seo-claude repo (git clone + ./install.sh + /geo config). Build CNT-01 composite agent (technical-writer.md + legal-compliance-checker.md from agency-agents, prepend MA context). Configure agent write permissions per MA-CTX-001 Section 8.",
+      "assigned_to": "sarsh",
+      "resolution_notes": null,
+      "resolved_at": null,
+      "notes": "Signal-gated agents (MKT-01/02/03, PRD-01) remain deferred until Signal 1. Phase 1 agents are active threshold."
+    },
+    {
+      "id": "rev_0004",
+      "status": "open",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0008"
+      ],
+      "confidence": 1.0,
+      "queue_type": "security_review",
+      "target_object_type": "security_checklist",
+      "target_object_id": "ma_sec_002",
+      "reason": "MA-SEC-002 Priorities 21-24 (AI Content Security controls) were added during Phase 1 security audit session 9 but have not yet been synced to the Google Drive canonical doc.",
+      "severity": "medium",
+      "recommended_action": "Copy content from docs/security/MA-SEC-002-additions-priorities-21-24.md into the Google Drive MA-SEC-002 doc. Increment version. Mark all 24 controls as reviewed.",
+      "assigned_to": "sarsh",
+      "resolution_notes": null,
+      "resolved_at": null,
+      "notes": "Pending from Phase 1. Low urgency but creates governance drift if not resolved."
+    }
+  ]
+}

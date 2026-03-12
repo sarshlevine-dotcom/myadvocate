@@ -1,0 +1,170 @@
+{
+  "_meta": {
+    "registry": "seo_clusters",
+    "id_prefix": "cluster_",
+    "description": "SEO cluster definitions. Every cluster must be grounded in at least one denial code or regulation. Drives programmatic SEO and internal linking.",
+    "last_updated": "2026-03-12T00:00:00Z",
+    "schema_version": "1.0",
+    "authority": "MA-CTX-001"
+  },
+  "records": [
+    {
+      "id": "cluster_0001",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0003",
+        "src_0006"
+      ],
+      "confidence": 0.9,
+      "name": "Medical Necessity Denial Appeals",
+      "cluster_type": "denial_cluster",
+      "pillar_page_id": "",
+      "supporting_page_ids": [],
+      "target_problem": "Patient's health insurance denied a service as not medically necessary and they need to appeal.",
+      "search_intent": "high",
+      "priority": "high",
+      "related_denial_ids": [
+        "den_0001",
+        "den_0012"
+      ],
+      "related_strategy_ids": [
+        "str_0001"
+      ],
+      "related_regulation_ids": [
+        "reg_0001",
+        "reg_0002"
+      ],
+      "cluster_stage": "planned",
+      "gap_count": 8,
+      "notes": "Highest priority cluster. CO-50 is the most searched denial code. Pillar page + denial-specific support pages."
+    },
+    {
+      "id": "cluster_0002",
+      "status": "planned",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0003",
+        "src_0006"
+      ],
+      "confidence": 0.85,
+      "name": "Prior Authorization Denials and Overrides",
+      "cluster_type": "denial_cluster",
+      "pillar_page_id": "",
+      "supporting_page_ids": [],
+      "target_problem": "Patient's service was denied because prior authorization was not obtained, or was denied after requesting.",
+      "search_intent": "high",
+      "priority": "high",
+      "related_denial_ids": [
+        "den_0003"
+      ],
+      "related_strategy_ids": [
+        "str_0003"
+      ],
+      "related_regulation_ids": [
+        "reg_0001"
+      ],
+      "cluster_stage": "planned",
+      "gap_count": 6,
+      "notes": "High search volume. Emergency exception angle is the unique GEO-optimized answer block."
+    },
+    {
+      "id": "cluster_0003",
+      "status": "planned",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0003",
+        "src_0006"
+      ],
+      "confidence": 0.85,
+      "name": "Mental Health Insurance Parity Disputes",
+      "cluster_type": "rights_cluster",
+      "pillar_page_id": "",
+      "supporting_page_ids": [],
+      "target_problem": "Patient's mental health or substance use treatment was denied or covered at worse rates than physical health services.",
+      "search_intent": "high",
+      "priority": "high",
+      "related_denial_ids": [
+        "den_0002",
+        "den_0012"
+      ],
+      "related_strategy_ids": [
+        "str_0002"
+      ],
+      "related_regulation_ids": [
+        "reg_0003"
+      ],
+      "cluster_stage": "planned",
+      "gap_count": 5,
+      "notes": "MHPAEA is the anchor law. Growing search volume post-COVID. Comparative analysis angle is differentiating."
+    },
+    {
+      "id": "cluster_0004",
+      "status": "planned",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0003",
+        "src_0006"
+      ],
+      "confidence": 0.8,
+      "name": "Medical Bill Dispute and Negotiation",
+      "cluster_type": "billing_cluster",
+      "pillar_page_id": "",
+      "supporting_page_ids": [],
+      "target_problem": "Patient received an unexpected or incorrect medical bill and needs to dispute or negotiate it.",
+      "search_intent": "high",
+      "priority": "high",
+      "related_denial_ids": [
+        "den_0004",
+        "den_0006",
+        "den_0008",
+        "den_0009"
+      ],
+      "related_strategy_ids": [
+        "str_0004"
+      ],
+      "related_regulation_ids": [
+        "reg_0001"
+      ],
+      "cluster_stage": "planned",
+      "gap_count": 7,
+      "notes": "No Surprises Act and balance billing protections are key content angles. Medical Bill Dispute Tool is the CTA."
+    },
+    {
+      "id": "cluster_0005",
+      "status": "planned",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0003",
+        "src_0006"
+      ],
+      "confidence": 0.8,
+      "name": "Patient Rights and HIPAA Records Access",
+      "cluster_type": "rights_cluster",
+      "pillar_page_id": "",
+      "supporting_page_ids": [],
+      "target_problem": "Patient needs to understand their rights to access medical records or challenge healthcare decisions.",
+      "search_intent": "medium",
+      "priority": "medium",
+      "related_denial_ids": [],
+      "related_strategy_ids": [],
+      "related_regulation_ids": [
+        "reg_0005",
+        "reg_0001"
+      ],
+      "cluster_stage": "planned",
+      "gap_count": 4,
+      "notes": "HIPAA Records Request tool is the CTA. Good entry-point cluster for patients just starting to advocate."
+    }
+  ]
+}

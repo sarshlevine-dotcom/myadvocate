@@ -1,0 +1,174 @@
+{
+  "_meta": {
+    "registry": "content_pages",
+    "id_prefix": "page_",
+    "description": "Structured record of every content page. A page exists here before it is published.",
+    "last_updated": "2026-03-12T00:00:00Z",
+    "schema_version": "1.0",
+    "authority": "MA-CTX-001",
+    "total_planned": 210,
+    "published": 0,
+    "notes": "200 denial code pages + 10 foundational articles planned per Phase 2 content engine. First 5 seed entries below."
+  },
+  "records": [
+    {
+      "id": "page_0001",
+      "status": "draft",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0003",
+        "src_0006"
+      ],
+      "confidence": 0.85,
+      "title": "How to Appeal a Medical Necessity Denial (CO-50): Step-by-Step Guide",
+      "url_slug": "/appeal-medical-necessity-denial-co-50",
+      "page_type": "denial_code_page",
+      "cluster_id": "cluster_0001",
+      "target_keyword": "how to appeal medical necessity denial",
+      "search_intent": "high",
+      "related_denial_ids": [
+        "den_0001"
+      ],
+      "related_strategy_ids": [
+        "str_0001"
+      ],
+      "related_regulation_ids": [
+        "reg_0001",
+        "reg_0002"
+      ],
+      "freshness_state": "new",
+      "publish_state": "not_published",
+      "review_level": "clinical_review_needed",
+      "last_reviewed_at": null,
+      "notes": "Priority 1 for content engine. GEO-optimized answer block required. Citability score target \u226570."
+    },
+    {
+      "id": "page_0002",
+      "status": "draft",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0003",
+        "src_0006"
+      ],
+      "confidence": 0.85,
+      "title": "Prior Authorization Denial: How to Get Retroactive Approval (CO-197)",
+      "url_slug": "/prior-authorization-denial-appeal-co-197",
+      "page_type": "denial_code_page",
+      "cluster_id": "cluster_0002",
+      "target_keyword": "prior authorization denied how to appeal",
+      "search_intent": "high",
+      "related_denial_ids": [
+        "den_0003"
+      ],
+      "related_strategy_ids": [
+        "str_0003"
+      ],
+      "related_regulation_ids": [
+        "reg_0001"
+      ],
+      "freshness_state": "new",
+      "publish_state": "not_published",
+      "review_level": "clinical_review_needed",
+      "last_reviewed_at": null,
+      "notes": "Emergency exception angle is differentiating GEO content. ACA \u00a72719A citation required."
+    },
+    {
+      "id": "page_0003",
+      "status": "draft",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0003",
+        "src_0006"
+      ],
+      "confidence": 0.85,
+      "title": "Mental Health Insurance Denial: Your MHPAEA Rights Explained",
+      "url_slug": "/mental-health-insurance-denial-mhpaea-rights",
+      "page_type": "pillar_page",
+      "cluster_id": "cluster_0003",
+      "target_keyword": "mental health insurance denial rights",
+      "search_intent": "high",
+      "related_denial_ids": [
+        "den_0002",
+        "den_0012"
+      ],
+      "related_strategy_ids": [
+        "str_0002"
+      ],
+      "related_regulation_ids": [
+        "reg_0003"
+      ],
+      "freshness_state": "new",
+      "publish_state": "not_published",
+      "review_level": "clinical_review_needed",
+      "last_reviewed_at": null,
+      "notes": "Pillar page for mental health parity cluster. MHPAEA 2023 Final Rule is the freshness anchor."
+    },
+    {
+      "id": "page_0004",
+      "status": "draft",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0003",
+        "src_0006"
+      ],
+      "confidence": 0.8,
+      "title": "How to Dispute a Medical Bill: Template Letter and Negotiation Script",
+      "url_slug": "/how-to-dispute-medical-bill",
+      "page_type": "pillar_page",
+      "cluster_id": "cluster_0004",
+      "target_keyword": "how to dispute medical bill",
+      "search_intent": "high",
+      "related_denial_ids": [
+        "den_0004",
+        "den_0008"
+      ],
+      "related_strategy_ids": [
+        "str_0004"
+      ],
+      "related_regulation_ids": [
+        "reg_0001"
+      ],
+      "freshness_state": "new",
+      "publish_state": "not_published",
+      "review_level": "founder_review",
+      "last_reviewed_at": null,
+      "notes": "No Surprises Act is the key regulatory anchor. Medical Bill Dispute Tool is the CTA."
+    },
+    {
+      "id": "page_0005",
+      "status": "draft",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0003",
+        "src_0006"
+      ],
+      "confidence": 0.8,
+      "title": "How to Request Your Medical Records Under HIPAA",
+      "url_slug": "/how-to-request-medical-records-hipaa",
+      "page_type": "supporting_page",
+      "cluster_id": "cluster_0005",
+      "target_keyword": "how to request medical records hipaa",
+      "search_intent": "medium",
+      "related_denial_ids": [],
+      "related_strategy_ids": [],
+      "related_regulation_ids": [
+        "reg_0005"
+      ],
+      "freshness_state": "new",
+      "publish_state": "not_published",
+      "review_level": "founder_review",
+      "last_reviewed_at": null,
+      "notes": "30-day deadline enforcement angle. HIPAA Records Request tool CTA."
+    }
+  ]
+}

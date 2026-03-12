@@ -1,0 +1,740 @@
+{
+  "_meta": {
+    "registry": "denial_codes",
+    "id_prefix": "den_",
+    "description": "Core intelligence asset. Every denial code the platform addresses. Powers SEO cluster generation, appeal strategy linkage, and predictive denial modeling.",
+    "last_updated": "2026-03-12T00:00:00Z",
+    "schema_version": "1.0",
+    "authority": "MA-CTX-001",
+    "db_source_note": "DO NOT CONFUSE with src/lib/db/denial-codes.ts. This registry is the agent intelligence layer. The DB helper is the runtime product layer. They serve different purposes and must stay synchronized.",
+    "total_codes_in_db": 52,
+    "registry_seeded": 20,
+    "seed_source": "src_0010"
+  },
+  "records": [
+    {
+      "id": "den_0001",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009",
+        "src_0010"
+      ],
+      "confidence": 1.0,
+      "code": "CO-50",
+      "title": "Medical Necessity Denial",
+      "category": "medical_necessity",
+      "description": "The payer determined the service is not medically necessary under their coverage criteria.",
+      "payer_scope": [
+        "general",
+        "medicare",
+        "medicaid",
+        "commercial"
+      ],
+      "service_types": [
+        "inpatient",
+        "outpatient",
+        "specialist",
+        "DME",
+        "behavioral_health"
+      ],
+      "related_regulation_ids": [
+        "reg_0001",
+        "reg_0002"
+      ],
+      "related_strategy_ids": [
+        "str_0001"
+      ],
+      "related_page_ids": [],
+      "related_cluster_ids": [
+        "cluster_0001"
+      ],
+      "common_documents_needed": [
+        "physician_letter",
+        "clinical_notes",
+        "peer_reviewed_literature",
+        "treatment_history"
+      ],
+      "appeal_priority": "high",
+      "notes": "Highest-volume denial category. Primary target for insurance-appeal-generator tool."
+    },
+    {
+      "id": "den_0002",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009",
+        "src_0010"
+      ],
+      "confidence": 1.0,
+      "code": "CO-96",
+      "title": "Non-Covered Charge",
+      "category": "coverage",
+      "description": "The service is not covered under the patient's benefit plan.",
+      "payer_scope": [
+        "general",
+        "commercial"
+      ],
+      "service_types": [
+        "cosmetic",
+        "experimental",
+        "elective",
+        "out_of_network"
+      ],
+      "related_regulation_ids": [
+        "reg_0003"
+      ],
+      "related_strategy_ids": [
+        "str_0002"
+      ],
+      "related_page_ids": [],
+      "related_cluster_ids": [],
+      "common_documents_needed": [
+        "plan_documents",
+        "eob",
+        "clinical_notes"
+      ],
+      "appeal_priority": "high",
+      "notes": "Second most common denial. Often paired with plan document review strategy."
+    },
+    {
+      "id": "den_0003",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009",
+        "src_0010"
+      ],
+      "confidence": 1.0,
+      "code": "CO-197",
+      "title": "Prior Authorization Required",
+      "category": "authorization",
+      "description": "The service required prior authorization that was not obtained before the service was rendered.",
+      "payer_scope": [
+        "general",
+        "medicare_advantage",
+        "commercial"
+      ],
+      "service_types": [
+        "specialist",
+        "inpatient",
+        "outpatient",
+        "DME",
+        "imaging"
+      ],
+      "related_regulation_ids": [
+        "reg_0001"
+      ],
+      "related_strategy_ids": [
+        "str_0003"
+      ],
+      "related_page_ids": [],
+      "related_cluster_ids": [],
+      "common_documents_needed": [
+        "auth_request_records",
+        "referral_documentation",
+        "clinical_notes",
+        "provider_certification"
+      ],
+      "appeal_priority": "high",
+      "notes": "Third most common. Retroactive authorization appeal is primary strategy. Emergency exception is key angle."
+    },
+    {
+      "id": "den_0004",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009",
+        "src_0010"
+      ],
+      "confidence": 1.0,
+      "code": "CO-16",
+      "title": "Missing or Incomplete Information",
+      "category": "billing_error",
+      "description": "The claim is missing required information or has submission/billing errors that prevent processing.",
+      "payer_scope": [
+        "general"
+      ],
+      "service_types": [
+        "all"
+      ],
+      "related_regulation_ids": [],
+      "related_strategy_ids": [
+        "str_0004"
+      ],
+      "related_page_ids": [],
+      "related_cluster_ids": [],
+      "common_documents_needed": [
+        "corrected_claim",
+        "eob_with_remark_codes"
+      ],
+      "appeal_priority": "medium",
+      "notes": "Catch-all for incomplete claims. Remark codes on EOB identify exact missing field. Corrected claim workflow."
+    },
+    {
+      "id": "den_0005",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009",
+        "src_0010"
+      ],
+      "confidence": 1.0,
+      "code": "CO-4",
+      "title": "Service Not Consistent with Patient Age",
+      "category": "medical_necessity",
+      "description": "The service billed is not consistent with the patient's age as defined by the insurer's coverage policy.",
+      "payer_scope": [
+        "general",
+        "medicare",
+        "medicaid"
+      ],
+      "service_types": [
+        "pediatric",
+        "geriatric",
+        "specialist"
+      ],
+      "related_regulation_ids": [
+        "reg_0001"
+      ],
+      "related_strategy_ids": [
+        "str_0005"
+      ],
+      "related_page_ids": [],
+      "related_cluster_ids": [],
+      "common_documents_needed": [
+        "peer_reviewed_literature",
+        "clinical_notes",
+        "physician_letter"
+      ],
+      "appeal_priority": "medium",
+      "notes": "Algorithmic denial \u2014 peer-to-peer review is primary appeal route. Clinical atypicality argument."
+    },
+    {
+      "id": "den_0006",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009",
+        "src_0010"
+      ],
+      "confidence": 1.0,
+      "code": "CO-11",
+      "title": "Diagnosis Not Consistent with Procedure",
+      "category": "billing_error",
+      "description": "The diagnosis code submitted does not clinically support the procedure that was billed.",
+      "payer_scope": [
+        "general"
+      ],
+      "service_types": [
+        "all"
+      ],
+      "related_regulation_ids": [],
+      "related_strategy_ids": [
+        "str_0004"
+      ],
+      "related_page_ids": [],
+      "related_cluster_ids": [],
+      "common_documents_needed": [
+        "corrected_claim",
+        "clinical_notes",
+        "icd10_documentation"
+      ],
+      "appeal_priority": "medium",
+      "notes": "Common coding error. LCD/NCD review + re-coding to appropriate ICD-10 specificity."
+    },
+    {
+      "id": "den_0007",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009",
+        "src_0010"
+      ],
+      "confidence": 1.0,
+      "code": "CO-22",
+      "title": "Coordination of Benefits",
+      "category": "coordination",
+      "description": "This service may be covered by another insurance plan \u2014 coordination of benefits (COB) applies.",
+      "payer_scope": [
+        "general",
+        "commercial"
+      ],
+      "service_types": [
+        "all"
+      ],
+      "related_regulation_ids": [],
+      "related_strategy_ids": [],
+      "related_page_ids": [],
+      "related_cluster_ids": [],
+      "common_documents_needed": [
+        "primary_eob",
+        "payer_order_documentation"
+      ],
+      "appeal_priority": "medium",
+      "notes": "Submit to primary first, attach primary EOB to secondary claim."
+    },
+    {
+      "id": "den_0008",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009",
+        "src_0010"
+      ],
+      "confidence": 1.0,
+      "code": "CO-45",
+      "title": "Charge Exceeds Fee Schedule",
+      "category": "billing_error",
+      "description": "The charged amount exceeds the fee schedule or maximum allowable amount.",
+      "payer_scope": [
+        "general",
+        "medicare",
+        "medicaid",
+        "commercial"
+      ],
+      "service_types": [
+        "all"
+      ],
+      "related_regulation_ids": [],
+      "related_strategy_ids": [],
+      "related_page_ids": [],
+      "related_cluster_ids": [],
+      "common_documents_needed": [
+        "fee_schedule_documentation",
+        "eob"
+      ],
+      "appeal_priority": "low",
+      "notes": "Patient responsibility is limited to their cost-share on the allowed amount, not the billed charge."
+    },
+    {
+      "id": "den_0009",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009",
+        "src_0010"
+      ],
+      "confidence": 1.0,
+      "code": "CO-97",
+      "title": "Service Included in Another Procedure Billed",
+      "category": "billing_error",
+      "description": "The service or procedure is included in the allowance for another procedure or service already adjudicated.",
+      "payer_scope": [
+        "general"
+      ],
+      "service_types": [
+        "surgical",
+        "procedural"
+      ],
+      "related_regulation_ids": [],
+      "related_strategy_ids": [],
+      "related_page_ids": [],
+      "related_cluster_ids": [],
+      "common_documents_needed": [
+        "operative_report",
+        "itemized_billing"
+      ],
+      "appeal_priority": "medium",
+      "notes": "Bundling/unbundling issue. Review NCCI edits. Modifier may be required."
+    },
+    {
+      "id": "den_0010",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009",
+        "src_0010"
+      ],
+      "confidence": 1.0,
+      "code": "PR-96",
+      "title": "Non-Covered Charge \u2014 Patient Responsibility",
+      "category": "coverage",
+      "description": "The service is not covered by the plan and is the patient's financial responsibility.",
+      "payer_scope": [
+        "general"
+      ],
+      "service_types": [
+        "all"
+      ],
+      "related_regulation_ids": [],
+      "related_strategy_ids": [
+        "str_0002"
+      ],
+      "related_page_ids": [],
+      "related_cluster_ids": [],
+      "common_documents_needed": [
+        "plan_summary_of_benefits",
+        "eob"
+      ],
+      "appeal_priority": "medium",
+      "notes": "Contrast with CO-96 (payer adjustment) \u2014 PR codes are patient responsibility. Dispute strategy differs."
+    },
+    {
+      "id": "den_0011",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009",
+        "src_0010"
+      ],
+      "confidence": 1.0,
+      "code": "CO-151",
+      "title": "Service Denied \u2014 Information Required from Patient",
+      "category": "billing_error",
+      "description": "The payer requires information from the patient (not provider) to process this claim.",
+      "payer_scope": [
+        "general"
+      ],
+      "service_types": [
+        "all"
+      ],
+      "related_regulation_ids": [],
+      "related_strategy_ids": [],
+      "related_page_ids": [],
+      "related_cluster_ids": [],
+      "common_documents_needed": [
+        "patient_statement",
+        "accident_details",
+        "coordination_form"
+      ],
+      "appeal_priority": "low",
+      "notes": "Patient must respond directly to payer. Common for accident-related claims (auto, workers comp)."
+    },
+    {
+      "id": "den_0012",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009",
+        "src_0010"
+      ],
+      "confidence": 1.0,
+      "code": "CO-167",
+      "title": "Diagnosis Not Covered",
+      "category": "coverage",
+      "description": "The diagnosis is not covered by the plan or payer policy.",
+      "payer_scope": [
+        "general",
+        "commercial"
+      ],
+      "service_types": [
+        "all"
+      ],
+      "related_regulation_ids": [
+        "reg_0003"
+      ],
+      "related_strategy_ids": [
+        "str_0001"
+      ],
+      "related_page_ids": [],
+      "related_cluster_ids": [],
+      "common_documents_needed": [
+        "clinical_notes",
+        "physician_letter",
+        "peer_reviewed_literature"
+      ],
+      "appeal_priority": "high",
+      "notes": "Often behavioral health or chronic condition. Mental health parity law (MHPAEA) is key appeal angle."
+    },
+    {
+      "id": "den_0013",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009",
+        "src_0010"
+      ],
+      "confidence": 1.0,
+      "code": "CO-234",
+      "title": "Non-Covered Procedure \u2014 Age/Sex/Diagnosis Restriction",
+      "category": "coverage",
+      "description": "The procedure is not covered based on age, sex, or diagnosis criteria defined by the payer policy.",
+      "payer_scope": [
+        "general",
+        "medicare"
+      ],
+      "service_types": [
+        "preventive",
+        "screening",
+        "specialist"
+      ],
+      "related_regulation_ids": [
+        "reg_0001"
+      ],
+      "related_strategy_ids": [
+        "str_0005"
+      ],
+      "related_page_ids": [],
+      "related_cluster_ids": [],
+      "common_documents_needed": [
+        "clinical_notes",
+        "peer_reviewed_literature",
+        "aca_preventive_documentation"
+      ],
+      "appeal_priority": "high",
+      "notes": "ACA preventive services mandate is strong appeal angle for screening denials. Reference USPSTF guidelines."
+    },
+    {
+      "id": "den_0014",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009",
+        "src_0010"
+      ],
+      "confidence": 1.0,
+      "code": "PR-204",
+      "title": "Service Not Covered \u2014 Medicare Secondary Payer",
+      "category": "coordination",
+      "description": "This service is not covered when Medicare is the secondary payer.",
+      "payer_scope": [
+        "medicare"
+      ],
+      "service_types": [
+        "all"
+      ],
+      "related_regulation_ids": [
+        "reg_0004"
+      ],
+      "related_strategy_ids": [],
+      "related_page_ids": [],
+      "related_cluster_ids": [],
+      "common_documents_needed": [
+        "msp_questionnaire",
+        "primary_eob"
+      ],
+      "appeal_priority": "medium",
+      "notes": "Medicare Secondary Payer rules. Correct COB order must be established before appeal."
+    },
+    {
+      "id": "den_0015",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009",
+        "src_0010"
+      ],
+      "confidence": 1.0,
+      "code": "CO-55",
+      "title": "Procedure Code Not Valid on Date of Service",
+      "category": "billing_error",
+      "description": "The procedure code submitted was not valid or had been deleted as of the date of service.",
+      "payer_scope": [
+        "general"
+      ],
+      "service_types": [
+        "all"
+      ],
+      "related_regulation_ids": [],
+      "related_strategy_ids": [
+        "str_0004"
+      ],
+      "related_page_ids": [],
+      "related_cluster_ids": [],
+      "common_documents_needed": [
+        "corrected_claim",
+        "cpt_code_documentation"
+      ],
+      "appeal_priority": "low",
+      "notes": "CPT code annual updates. Resubmit with the valid code for the date of service."
+    },
+    {
+      "id": "den_0016",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009",
+        "src_0010"
+      ],
+      "confidence": 1.0,
+      "code": "N4",
+      "title": "Alert \u2014 Secondary Coverage May Apply",
+      "category": "coordination",
+      "description": "Payer alert indicating that secondary insurance coverage may exist and should be considered.",
+      "payer_scope": [
+        "general"
+      ],
+      "service_types": [
+        "all"
+      ],
+      "related_regulation_ids": [],
+      "related_strategy_ids": [],
+      "related_page_ids": [],
+      "related_cluster_ids": [],
+      "common_documents_needed": [
+        "secondary_insurance_info"
+      ],
+      "appeal_priority": "low",
+      "notes": "Informational remark, not a denial. Requires patient to identify and coordinate secondary coverage."
+    },
+    {
+      "id": "den_0017",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009",
+        "src_0010"
+      ],
+      "confidence": 1.0,
+      "code": "CO-109",
+      "title": "Claim Not Covered by This Payer",
+      "category": "coverage",
+      "description": "The claim is not covered by this payer. May have been sent to the wrong insurer.",
+      "payer_scope": [
+        "general"
+      ],
+      "service_types": [
+        "all"
+      ],
+      "related_regulation_ids": [],
+      "related_strategy_ids": [],
+      "related_page_ids": [],
+      "related_cluster_ids": [],
+      "common_documents_needed": [
+        "insurance_card",
+        "payer_id_documentation"
+      ],
+      "appeal_priority": "low",
+      "notes": "Wrong payer submission. Verify insurance information and resubmit to correct payer."
+    },
+    {
+      "id": "den_0018",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009",
+        "src_0010"
+      ],
+      "confidence": 1.0,
+      "code": "OA-23",
+      "title": "Claim Adjusted for Workers Compensation or Auto",
+      "category": "coordination",
+      "description": "The charge is covered by the Workers Compensation carrier or automobile insurance carrier.",
+      "payer_scope": [
+        "general"
+      ],
+      "service_types": [
+        "injury_related",
+        "accident_related"
+      ],
+      "related_regulation_ids": [],
+      "related_strategy_ids": [],
+      "related_page_ids": [],
+      "related_cluster_ids": [],
+      "common_documents_needed": [
+        "workers_comp_denial",
+        "auto_claim_documentation"
+      ],
+      "appeal_priority": "medium",
+      "notes": "Payer believes WC or auto should be primary. If disputed, provide documentation that WC/auto does not cover this claim."
+    },
+    {
+      "id": "den_0019",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009",
+        "src_0010"
+      ],
+      "confidence": 1.0,
+      "code": "CO-29",
+      "title": "Claim Expired \u2014 Timely Filing Deadline",
+      "category": "billing_error",
+      "description": "The claim was submitted after the payer's timely filing deadline.",
+      "payer_scope": [
+        "general",
+        "medicare",
+        "medicaid"
+      ],
+      "service_types": [
+        "all"
+      ],
+      "related_regulation_ids": [],
+      "related_strategy_ids": [],
+      "related_page_ids": [],
+      "related_cluster_ids": [],
+      "common_documents_needed": [
+        "original_submission_proof",
+        "payer_acknowledgment",
+        "clinical_circumstances"
+      ],
+      "appeal_priority": "medium",
+      "notes": "Good cause exception is primary appeal route. Provider-side delay, system failure, patient circumstances."
+    },
+    {
+      "id": "den_0020",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009",
+        "src_0010"
+      ],
+      "confidence": 1.0,
+      "code": "CO-200",
+      "title": "Expenses Incurred During Lapse in Coverage",
+      "category": "coverage",
+      "description": "The claim was submitted for expenses incurred during a period when the patient had no coverage.",
+      "payer_scope": [
+        "general",
+        "commercial"
+      ],
+      "service_types": [
+        "all"
+      ],
+      "related_regulation_ids": [
+        "reg_0003"
+      ],
+      "related_strategy_ids": [],
+      "related_page_ids": [],
+      "related_cluster_ids": [],
+      "common_documents_needed": [
+        "premium_payment_proof",
+        "grace_period_documentation",
+        "retroactive_enrollment_proof"
+      ],
+      "appeal_priority": "high",
+      "notes": "Retroactive enrollment, grace period, or continuous coverage argument. ACA special enrollment periods may apply."
+    }
+  ]
+}
