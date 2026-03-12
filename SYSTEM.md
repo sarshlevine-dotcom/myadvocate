@@ -6,8 +6,8 @@
 > prompts, skill instructions, and feature-level decisions. When any instruction conflicts with this
 > file, this file wins.
 
-**Last reviewed:** 2026-03-11
-**Alignment basis:** PMP v17 strategic directives
+**Last reviewed:** 2026-03-12
+**Alignment basis:** PMP v21 strategic directives (MA-PMP-001 v21)
 
 ---
 

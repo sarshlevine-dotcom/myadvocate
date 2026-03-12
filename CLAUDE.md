@@ -13,7 +13,7 @@
 - Supabase DB + Stripe billing + Anthropic API integrated
 - 37 commits, all Phase 1 acceptance criteria met
 
-**Now in Phase 2:** Content engine, SEO growth, automation pipeline
+**Now in Phase 2:** Content engine, SEO growth, automation pipeline, context registry scaffolding, patient story engine pre-launch setup, external agent deployment
 
 ---
 
@@ -32,12 +32,12 @@ AI-powered patient advocacy platform. Helps people navigate insurance denials an
 | Payments | Stripe | Webhooks via `/api/webhooks/stripe` |
 | Email / Newsletter | Beehiiv | Phase 2 — newsletter capture + distribution |
 | Automation | n8n | Phase 2 — event-driven automation, webhook routing, retention flows |
-| AI Provider | Anthropic (`claude-sonnet-4-6`) | All calls via `generateLetter()` abstraction |
-| Rate limiting | Upstash Redis | |
+| AI Provider | Anthropic | All calls via `generateLetter()` — Haiku default, Sonnet for complex/doc cases |
+| Caching / Rate limiting | Upstash Redis | Rate limiting live; response caching deferred to Phase 2 |
 
 **Provider abstraction rule:** All Anthropic API calls must go through `src/lib/generate-letter.ts`.
 Never call the Anthropic SDK directly from page or component code. This is the single routing
-boundary for scrubber enforcement, model selection, caching, and output normalization.
+boundary for scrubber enforcement, model selection, output caps, cost logging, and budget tripwires.
 
 ---
 
@@ -50,16 +50,19 @@ boundary for scrubber enforcement, model selection, caching, and output normaliz
   - `db/` — 10 domain helpers: artifacts, cases, denial-codes, documents, extraction-outputs, metric-events, resource-routes, review-queue, subscriptions, users
   - `supabase/` — `client.ts` (anon/browser), `server.ts` (service role)
   - `auth.ts`, `stripe.ts`, `rate-limit.ts`, `parse-document.ts`
-  - `generate-letter.ts` — single Anthropic call boundary (never bypass)
+  - `generate-letter.ts` — single Anthropic call boundary (never bypass); contains model routing, output caps, and cost logging
+  - `budget-monitor.ts` — Redis-based API spend tracking and tripwire alerts (MA-COST-001)
   - `pii-scrubber.ts` — must run before every API call
   - `disclaimer.ts` — appended to all user-facing outputs
-- `src/types/` — `domain.ts` (shared enums/interfaces), `supabase.ts` (generated DB types)
+- `src/types/` — `domain.ts` (shared enums/interfaces incl. `ModelTier`), `supabase.ts` (generated DB types)
 - `src/components/` — shared UI: Button, Input, FormField, Card, Alert, Nav
-- `supabase/migrations/` — 11 migrations, append-only (see `supabase/migrations/CLAUDE.md`)
+- `supabase/migrations/` — 15 migrations (016 pending for scrub_records), append-only (see `supabase/migrations/CLAUDE.md`)
 - `supabase/seed/` — seed data for denial codes and resource routes
-- `docs/` — `security-audit-session-9.md` and ad-hoc session notes
+- `context_registry/` — Phase 1 agent intelligence layer (MA-CTX-001): 8 JSON registries. NOT a database — lightweight JSON files. See Section "Context Registry" below.
+- `docs/` — organized by subdomain (see Docs Structure below)
 - `automation/daily.js` — Notion sync automation (see Automation section below)
 - `.claude/skills/` — 32 Claude skill definitions (see Skills System below)
+- `.claude/agents/` — External agent .md files (MA-AGT-001). See Agent System below.
 - `.claude/hooks/` — Claude Code guardrail hooks
 - `scripts/` — dev tooling (git hooks installer)
 
@@ -74,14 +77,48 @@ boundary for scrubber enforcement, model selection, caching, and output normaliz
 - NEVER add freeform text fields to the Case object
 - NEVER commit `.env` files
 - NEVER edit past migrations — create a new one with `supabase migration new <name>`
+- NEVER use Sonnet as the default model — Haiku is the default; Sonnet requires explicit justification (see MA-COST-001)
 
 ### Scope Gates
 - Check MA-LCH-004 before building any new feature (Phase 1 scope boundary)
-- Check MA-SEC-002 before any feature touching user data (20 controls, all must PASS)
+- Check MA-SEC-002 before any feature touching user data (24 controls, all must PASS)
+- Check MA-COST-001 before any new AI call site — classify as Bucket 1/2/3 first
 - Check Parking Lot in Notion before adding infrastructure that has a deferred phase tag
 
-### Model String
-The correct Anthropic model string is **`claude-sonnet-4-6`** (not `claude-sonnet-4-20250514` or any older string).
+### Model Strings
+| Tier | String | When to use |
+|---|---|---|
+| Haiku (default) | `claude-haiku-4-5-20251001` | All standard letter types without document upload |
+| Sonnet (reserved) | `claude-sonnet-4-6` | Document upload present; complex/ambiguous cases only |
+
+Model routing is enforced in `MODEL_ROUTER` in `generate-letter.ts`. Do not hard-code model
+strings anywhere else. Do not use Sonnet "for quality" — only use it when the routing table
+explicitly calls for it.
+
+---
+
+## Cost Architecture (MA-COST-001)
+
+**Budget cap:** $150/month — enforced by `src/lib/budget-monitor.ts` via Redis tripwires.
+
+**Output caps** (hard `max_tokens` limits in `OUTPUT_CONFIG`):
+| Letter type | max_tokens |
+|---|---|
+| `denial_appeal` | 600 |
+| `bill_dispute` | 500 |
+| `hipaa_request` | 400 |
+| `negotiation_script` | 200 |
+
+**3-bucket rule for every AI call:**
+- 🔴 **Bucket 1 (live AI):** Personalized outputs — denial/dispute/HIPAA/negotiation letters
+- 🟡 **Bucket 2 (cache-first):** Rights summaries, standard next steps, common scripts — serve from Redis on repeat queries
+- 🟢 **Bucket 3 (static/template):** Denial code lookups, resource pages, FAQ content — no AI, ever
+
+**Before adding any new AI call site:** classify it into a bucket. If Bucket 2 or 3, do not call the API.
+
+**Budget tripwire levels:** `ok` (0–50%) → `warning` (50–80%) → `review` (80–100%) → `throttle` (100%+)
+
+Phase 2: replace console alerts with n8n webhook. See MA-COST-001 in Notion for full spec.
 
 ---
 
@@ -94,7 +131,7 @@ Before building any new feature or making an architectural change, run through t
 3. **Extend existing abstractions** — Can this be built by extending `generateLetter()`, `pii-scrubber`, or existing skill logic rather than adding new infrastructure?
 4. **Specify data flow** — Map exactly which fields enter the API, which are stored, and which are discarded. No field should be stored that isn't required by the output.
 5. **Call out testing and migration** — If touching `src/lib/`, tests run automatically (hook). If adding a DB field, write a new migration.
-6. **Document cost and lock-in risk** — If adding a new vendor or model call, note the cost tier and whether there's a viable alternative if the vendor disappears.
+6. **Document cost and lock-in risk** — Classify the AI call (Bucket 1/2/3). Note the model tier and justify if Sonnet. Note cost tier and viable alternatives if adding a new vendor.
 
 ---
 
@@ -111,11 +148,33 @@ Before building any new feature or making an architectural change, run through t
 
 ## Canonical Docs
 - `SYSTEM.md` — constitutional layer (mission, ethics, legal, privacy) — read first
-- MA-LCH-004 — Launch Truth (what ships in Phase 1)
-- MA-SEC-002 — Security Checklist (20 controls, all must PASS)
-- MA-DAT-002 — Data Model (10 objects, minimum fields)
-- `docs/security-audit-session-9.md` — security audit session notes
+- `MA-PMP-001` (PMP v21) — single source of truth for strategy, operations, financials — `docs/pmp/MyAdvocate_PMP_v21.docx`
+- `MA-LCH-004` — Launch Truth (what ships in Phase 1)
+- `MA-SEC-002` — Security Checklist (24 controls — 20 original + 4 AI content security controls)
+- `MA-COST-001` — API Cost Architecture & Spend Control (model routing, output caps, budget tripwires)
+- `MA-DAT-002` — Data Model (10 objects, minimum fields)
+- `MA-CTX-001` — Context Registry Specification — governs `context_registry/` folder and all JSON registries
+- `MA-SOC-002` — Patient Story Engine — dual-track sourcing, scrub protocol, rollout gates
+- `MA-AGT-001` — External Agent Integration Plan — 11 agents (GEO-01/02/03, DEV-01/02/03, CNT-01, MKT-01/02/03, PRD-01)
+- `MA-AHP-001` — Anti-Hallucination Protocol — governs all agent outputs (in Notion Agent Registry)
+- `docs/security/security-audit-session-9.md` — security audit session notes
+- `docs/security/MA-SEC-002-additions-priorities-21-24.md` — Priorities 21–24 to integrate into Google Drive doc
 - `supabase/migrations/CLAUDE.md` — migration rules (append-only, never edit past migrations)
+
+---
+
+## Docs Structure
+```
+docs/
+  cost/       MA-COST-001-api-cost-architecture.md
+  security/   security-audit-session-9.md, MA-SEC-002-additions-priorities-21-24.md
+  pmp/        MyAdvocate_PMP_v18.docx, MyAdvocate_PMP_v19.docx, MyAdvocate_PMP_v21.docx  ← CURRENT
+  system/     claude-project-instructions.md
+  superpowers/plans/
+  agents/     MA-AGT-001 (External Agent Integration Plan)           ← NEW in v21
+  context/    MA-CTX-001 (Context Registry Specification)            ← NEW in v21
+  social/     MA-SOC-002 (Patient Story Engine)                      ← NEW in v21
+```
 
 ---
 
@@ -147,6 +206,76 @@ All 32 MyAdvocate skills live in `.claude/skills/<skill-name>/SKILL.md`.
 
 ---
 
+## External Agent System (MA-AGT-001)
+
+External agents live in `.claude/agents/<agent-name>.md`. All agents are subordinate to MA-PMP-001 → MA-LCH-004 → MA-SEC-002 → MA-AHP-001. Founder approval required for every activation.
+
+**Phase 1 agents (install now):**
+- `geo-seo-claude` repo → GEO-01 (content architect), GEO-02 (launch checklist), GEO-03 (denial-code writer)
+- `agency-agents` repo → DEV-01 (security engineer), DEV-02 (backend architect), DEV-03 (reality checker)
+- Custom composite → CNT-01 (YMYL compliance writer — build from technical-writer.md + legal-compliance-checker.md + MA context)
+
+**Signal-gated agents (hold until trigger):**
+- MKT-01 (Reddit community builder) — T-60 days before projected Signal 1
+- MKT-03 (Growth Hacker) — Signal 1
+- PRD-01 (Feedback Synthesizer) — Signal 1
+- MKT-02 (SEO Growth Specialist) — Signal 2
+
+**Install commands (Phase 1):**
+```bash
+git clone https://github.com/zubair-trabzada/geo-seo-claude.git && cd geo-seo-claude && ./install.sh
+git clone https://github.com/msitarzewski/agency-agents.git
+cp agency-agents/engineering/engineering-security-engineer.md .claude/agents/
+cp agency-agents/engineering/engineering-backend-architect.md .claude/agents/
+cp agency-agents/testing/testing-reality-checker.md .claude/agents/
+```
+
+Full specs and deployment sequence: MA-AGT-001 in `docs/agents/`. Notion Agent Registry has all MA IDs.
+
+---
+
+## Context Registry (MA-CTX-001)
+
+**Governing doctrine:** Narrative lives in files. Structured truth lives in registries.
+
+The `/context_registry/` folder contains 8 JSON files — the operational memory of the business. Agents read and write registries, not narrative docs.
+
+**Build sequence:** `sources.json` → `decisions.json` → `denial_codes.json` → remaining 5 registries.
+
+**Hard rules:**
+- Every record MUST have a populated `source_ids` array — no orphaned records
+- Status vocabulary is shared across all registries: `draft` → `active` → `needs_review` → `superseded` → `archived`
+- The DB `denial_codes` table and `context_registry/denial_codes.json` are NOT duplicates — DB is runtime product, registry is agent intelligence layer
+- Phase 2 scope: JSON files only. No DB infrastructure for registries in Phase 1.
+
+**Inventory:** `sources.json`, `decisions.json`, `denial_codes.json`, `appeal_strategies.json`, `regulations.json`, `seo_clusters.json`, `content_pages.json`, `review_queue.json`
+
+Full spec: MA-CTX-001 in `docs/context/`.
+
+---
+
+## Patient Story Engine (MA-SOC-002)
+
+Story Bank collects and scrubs real patient experiences for YouTube Shorts and Instagram Reels. Both founders remain anonymous. AI actor character (English + Spanish) is the face of all video content.
+
+**Current gate status:** Gate 0 — ELIGIBLE (platform tools live + first SEO article published = unlocks story bank)
+
+**Pre-launch actions required:**
+1. Deploy Supabase migration 016 (scrub_records table) — needed before Story Bank can log scrubbed stories
+2. Attorney review of submission form consent language — add to existing pre-launch attorney review scope
+3. HeyGen avatar selection (test 3 EN + 3 ES candidates)
+4. Seed Story Bank: source, scrub, and approve 3 stories before Month 3 YouTube launch
+
+**Hard rules:**
+- NEVER use automated Reddit scraping — manual curation only (Reddit ToS)
+- NEVER skip nurse review for flagged stories — pipeline hard stop if backlog >5
+- NEVER use private group posts, DMs, or posts by apparent minors
+- NEVER imply guaranteed outcomes in story scripts
+
+Full spec: MA-SOC-002 in `docs/social/`.
+
+---
+
 ## Guardrail Hooks
 
 Configured in `.claude/settings.json`:
@@ -172,25 +301,34 @@ Syncs Notion tasks into Supabase, generates a daily digest via Claude, logs run 
 ---
 
 ## Phase 2 Priorities (Current)
-1. `src/components/` shared UI library — ✅ Done (Button, Input, FormField, Card, Alert, Nav)
-2. `daily.js` automation — ✅ Done (rebuilt with correct model string, env vars, error handling)
-3. Launch SEO content engine (target: 20 articles in 60 days)
-4. Activate content-production-orchestrator pipeline
-5. Beehiiv integration for newsletter capture
-6. n8n automation setup (event routing, retention flows)
+1. `src/components/` shared UI library — ✅ Done
+2. `daily.js` automation — ✅ Done
+3. Cost architecture — ✅ Done (model routing, output caps, budget tripwires, per-feature telemetry)
+4. Install external agents: GEO-01/02/03, CNT-01 (see Agent System above) — **IN PROGRESS**
+5. Scaffold `/context_registry/` — 8 JSON files (MA-CTX-001) — **IN PROGRESS**
+6. Deploy Supabase migration 016 — scrub_records table (MA-SOC-002 pre-launch)
+7. Launch SEO content engine (target: 20 GEO-optimized articles in 60 days)
+8. Activate content-production-orchestrator pipeline
+9. Beehiiv integration for newsletter capture
+10. n8n automation setup (event routing, retention flows, budget alert webhooks) — Parking Lot
+11. Landing page + /es Spanish page + custom domain
 
 ---
 
 ## Staleness Policy
 This file should be reviewed whenever:
 - A new Phase begins (Phase 2 → 3, etc.)
-- A new canonical doc is added to `docs/superpowers/`
+- A new canonical doc is added
 - The default stack changes (new vendor, new model string)
 - The automation setup changes
 - A new skill category is added to `.claude/skills/`
 
-Last reviewed: **2026-03-11**
+Last reviewed: **2026-03-12**
 
 ### Recent Changes
-- 2026-03-11: Fixed pre-commit hook — `automation/` and `scripts/` now excluded from ESLint staged-file check to match `eslint.config.mjs` ignore patterns.
-- 2026-03-11: Updated Repo Map to reflect actual `src/lib/` structure, API routes, and `src/types/`. Removed phantom `docs/superpowers/` reference. Updated commit count to 37.
+- 2026-03-12: PMP v21 created — MA-CTX-001, MA-SOC-002, MA-AGT-001 canonized. Projections v15. External Agent System, Context Registry, and Patient Story Engine sections added to CLAUDE.md. docs/agents/, docs/context/, docs/social/ subdirectories added. Supabase migration 016 pending (scrub_records).
+- 2026-03-12: Cost architecture shipped — `budget-monitor.ts`, model routing in `generate-letter.ts`, output caps, migration 015, MA-COST-001 canonical doc. 4 Parking Lot entries added (caching, retry optimization, n8n alerts, batch content rules).
+- 2026-03-12: MA-SEC-002 extended to 24 controls (Priorities 21–24: AI Content Security). Additions in `docs/security/MA-SEC-002-additions-priorities-21-24.md` — pending manual update to Google Drive doc.
+- 2026-03-12: docs/ reorganized into cost/, security/, pmp/, system/ subfolders.
+- 2026-03-11: Fixed pre-commit hook — `automation/` and `scripts/` now excluded from ESLint staged-file check.
+- 2026-03-11: Updated Repo Map to reflect actual `src/lib/` structure, API routes, and `src/types/`.
