@@ -279,34 +279,49 @@ export interface Database {
         Row: {
           id: string
           code: string
-          category: 'labs' | 'imaging' | 'surgery' | 'other'
+          category: 'labs' | 'imaging' | 'surgery' | 'dme' | 'pharmacy' | 'mental_health' | 'prior_auth' | 'coordination' | 'timely_filing' | 'other'
           plain_language_explanation: string
           recommended_action: string
           source: string
           updated_at: string
+          common_causes: string | null
+          appeal_angle: string | null
+          related_codes: string[] | null
+          tool_cta_id: string | null  // intentionally loose; use ToolCtaId from domain.ts at call sites
         }
         Insert: {
           id?: string
           code: string
-          category: 'labs' | 'imaging' | 'surgery' | 'other'
+          category: 'labs' | 'imaging' | 'surgery' | 'dme' | 'pharmacy' | 'mental_health' | 'prior_auth' | 'coordination' | 'timely_filing' | 'other'
           plain_language_explanation: string
           recommended_action: string
           source: string
           updated_at?: string
+          common_causes?: string | null
+          appeal_angle?: string | null
+          related_codes?: string[] | null
+          tool_cta_id?: string | null  // intentionally loose; use ToolCtaId from domain.ts at call sites
         }
         Update: {
           id?: string
           code?: string
-          category?: 'labs' | 'imaging' | 'surgery' | 'other'
+          category?: 'labs' | 'imaging' | 'surgery' | 'dme' | 'pharmacy' | 'mental_health' | 'prior_auth' | 'coordination' | 'timely_filing' | 'other'
           plain_language_explanation?: string
           recommended_action?: string
           source?: string
           updated_at?: string
+          common_causes?: string | null
+          appeal_angle?: string | null
+          related_codes?: string[] | null
+          tool_cta_id?: string | null  // intentionally loose; use ToolCtaId from domain.ts at call sites
         }
       }
     }
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     Views: {}
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     Functions: {}
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     Enums: {}
   }
 }

@@ -20,3 +20,15 @@ export async function getAllDenialCodes() {
   if (error) throw error
   return data ?? []
 }
+
+export async function getRelatedDenialCodes(codes: string[]) {
+  if (codes.length === 0) return []
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('denial_codes')
+    .select()
+    .in('code', codes.map((c) => c.toUpperCase()))
+    .order('code')
+  if (error) throw error
+  return data ?? []
+}

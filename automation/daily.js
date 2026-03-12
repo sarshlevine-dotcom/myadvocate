@@ -181,8 +181,85 @@ async function recordSyncMetric(tasks) {
   }
 }
 
+// ─── Supabase: fetch PMP v19 §8 metrics summary ──────────────────────────────
+async function fetchMetricsSummary() {
+  const supabase = getSupabaseClient();
+
+  // Yesterday's date (UTC) for daily views
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  const yesterday = new Date(today);
+  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+  const yesterdayStr = yesterday.toISOString().slice(0, 10);
+
+  // First day of current month for monthly views
+  const monthStart = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1))
+    .toISOString()
+    .slice(0, 10);
+
+  async function queryView(viewName, dateColumn, dateValue) {
+    const { data, error } = await supabase
+      .from(viewName)
+      .select('*')
+      .eq(dateColumn, dateValue)
+      .maybeSingle();
+    if (error) {
+      console.warn(`[daily.js] Could not query ${viewName}:`, error.message);
+      return null;
+    }
+    return data;
+  }
+
+  const [
+    letterCompletion,
+    secondNeed,
+    takeRate,
+    perCaseToSub,
+    repeatRate,
+    arpu,
+    revenueMix,
+  ] = await Promise.all([
+    queryView('metric_letter_completion_rate', 'day', yesterdayStr),
+    queryView('metric_second_need_rate', 'day', yesterdayStr),
+    queryView('metric_per_case_take_rate', 'day', yesterdayStr),
+    queryView('metric_per_case_to_sub_rate', 'month', monthStart),
+    queryView('metric_repeat_rate', 'month', monthStart),
+    queryView('metric_blended_arpu', 'month', monthStart),
+    queryView('metric_revenue_mix', 'month', monthStart),
+  ]);
+
+  return {
+    date: yesterdayStr,
+    month: monthStart,
+    letterCompletionRate: letterCompletion?.completion_rate_pct ?? null,
+    secondNeedRate: secondNeed?.second_need_rate_pct ?? null,
+    perCaseTakeRate: takeRate?.take_rate_pct ?? null,
+    perCaseToSubRate: perCaseToSub?.conversion_rate_pct ?? null,
+    repeatRate: repeatRate?.repeat_rate_pct ?? null,
+    blendedArpu: arpu?.arpu_dollars ?? null,
+    subscriptionRevenuePct: revenueMix?.subscription_pct ?? null,
+  };
+}
+
+function fmtMetric(value, unit, target) {
+  if (value === null || value === undefined) return 'No data yet';
+  return `${value}${unit} (target: ${target})`;
+}
+
+function buildMetricsSummary(m) {
+  return `
+## PMP v19 §8 Business Metrics — ${m.date}
+1. Letter Completion Rate:       ${fmtMetric(m.letterCompletionRate, '%', '60–80%')}
+2. Free-to-Second-Need Rate:     ${fmtMetric(m.secondNeedRate, '%', '10–25%')}
+3. Per-Case Take Rate:           ${fmtMetric(m.perCaseTakeRate, '%', '20–40%')}
+4. Per-Case → Subscription Rate: ${fmtMetric(m.perCaseToSubRate, '%', '15–25%')} (month ${m.month})
+5. Per-Case Repeat Rate:         ${fmtMetric(m.repeatRate, '%', '<15%')} (month ${m.month})
+6. Blended ARPU:                 ${fmtMetric(m.blendedArpu, '/mo', '$5–12')} (month ${m.month})
+7. Subscription Revenue Mix:     ${fmtMetric(m.subscriptionRevenuePct, '%', '≥75%')} (month ${m.month})`.trim();
+}
+
 // ─── Claude: generate daily digest ───────────────────────────────────────────
-async function generateDigest(tasks) {
+async function generateDigest(tasks, metrics) {
   if (!CONFIG.generateDigest) {
     console.log('[daily.js] AI digest disabled (AI_DIGEST=false). Skipping.');
     return null;
@@ -201,6 +278,8 @@ async function generateDigest(tasks) {
   const doneTasks = tasks.filter((t) => t.status === 'Done');
   const blockedTasks = tasks.filter((t) => t.status === 'Blocked');
 
+  const metricsSummary = metrics ? buildMetricsSummary(metrics) : '(metrics unavailable)';
+
   const prompt = `You are the MyAdvocate operational assistant. Here is the current task board status:
 
 ## In Progress / To Do (${pendingTasks.length} tasks)
@@ -212,10 +291,13 @@ ${blockedTasks.map((t) => `- ${t.title}`).join('\n') || '(none)'}
 ## Completed recently (${doneTasks.length} total done)
 ${doneTasks.slice(0, 5).map((t) => `- ${t.title}`).join('\n') || '(none)'}
 
-Produce a brief daily digest (max 150 words) covering:
+${metricsSummary}
+
+Produce a brief daily digest (max 200 words) covering:
 1. What's in flight today
 2. Any blockers to flag
-3. One recommended focus area
+3. Yesterday's key metrics vs. targets — flag any metric outside target range
+4. One recommended focus area
 
 Keep it concise and actionable. This is a private digest for the founder.`;
 
@@ -269,8 +351,20 @@ async function run() {
     // 2. Sync to Supabase metric_events
     await recordSyncMetric(tasks);
 
-    // 3. Optionally generate daily digest
-    const digest = await generateDigest(tasks);
+    // 3. Fetch PMP v19 §8 business metrics (non-fatal if unavailable)
+    let metrics = null;
+    try {
+      metrics = await fetchMetricsSummary();
+      console.log('[daily.js] Metrics summary fetched.');
+      console.log('\n─── PMP v19 §8 Metrics ──────────────────────────────────');
+      console.log(buildMetricsSummary(metrics));
+      console.log('─────────────────────────────────────────────────────────\n');
+    } catch (metricsErr) {
+      console.warn('[daily.js] Could not fetch metrics (pre-launch?):', metricsErr.message);
+    }
+
+    // 4. Optionally generate daily digest
+    const digest = await generateDigest(tasks, metrics);
     result.digestGenerated = !!digest;
 
     if (digest) {

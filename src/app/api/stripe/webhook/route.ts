@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { upsertSubscription } from '@/lib/db/subscriptions'
 import { updateSubscriptionStatus } from '@/lib/db/users'
+import { logEvent } from '@/lib/db/metric-events'
 import type Stripe from 'stripe'
 
 // MA-SEC-002 P17: ALWAYS verify Stripe signature before processing any event
@@ -43,13 +44,26 @@ export async function POST(request: NextRequest) {
           stripeCustomerId: subscription.customer as string,
           stripeSubscriptionId: subscription.id,
           status: subscription.status === 'active' ? 'active' : 'canceled',
-          currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+          currentPeriodEnd: new Date((subscription as { current_period_end: number }).current_period_end * 1000),
         })
 
         await updateSubscriptionStatus(
           userId,
           subscription.status === 'active' ? 'active' : 'canceled'
         )
+
+        // PMP v19 §8 metric 4 — subscription_started (non-blocking)
+        if (event.type === 'customer.subscription.created' && subscription.status === 'active') {
+          // amount_cents: use plan amount if available (items[0].price.unit_amount)
+          const planAmount = subscription.items?.data?.[0]?.price?.unit_amount ?? null
+          logEvent({
+            eventType: 'subscription_started',
+            sourcePage: '/api/stripe/webhook',
+            userId,
+            subscriptionId: subscription.id,
+            amountCents: planAmount ?? undefined,
+          }).catch(() => {})
+        }
       } else {
         console.error('Stripe webhook: missing userId in subscription metadata', { type: event.type, subscriptionId: (event.data.object as Stripe.Subscription).id })
       }
@@ -62,6 +76,21 @@ export async function POST(request: NextRequest) {
         await updateSubscriptionStatus(userId, 'canceled')
       } else {
         console.error('Stripe webhook: missing userId in subscription metadata', { type: event.type, subscriptionId: (event.data.object as Stripe.Subscription).id })
+      }
+    }
+
+    // PMP v19 §8 metric 3 — per_case_purchased (non-blocking)
+    if (event.type === 'payment_intent.succeeded') {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent
+      const userId = paymentIntent.metadata?.userId
+      const isPerCase = paymentIntent.metadata?.productType === 'per_case'
+      if (userId && isPerCase) {
+        logEvent({
+          eventType: 'per_case_purchased',
+          sourcePage: '/api/stripe/webhook',
+          userId,
+          amountCents: paymentIntent.amount,
+        }).catch(() => {})
       }
     }
   } catch (err) {
