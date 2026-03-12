@@ -30,6 +30,7 @@ AI-powered patient advocacy platform. Helps people navigate insurance denials an
 | Database | Supabase (Postgres + RLS) | Service role for server; anon for client |
 | Auth | Supabase Auth | |
 | Payments | Stripe | Webhooks via `/api/webhooks/stripe` |
+| Email (Transactional / Ops) | Google Workspace | admin@getmyadvocate.org — verified ✅ |
 | Email / Newsletter | Beehiiv | Phase 2 — newsletter capture + distribution |
 | Automation | n8n | Phase 2 — event-driven automation, webhook routing, retention flows |
 | AI Provider | Anthropic | All calls via `generateLetter()` — Haiku default, Sonnet for complex/doc cases |
@@ -317,7 +318,7 @@ Syncs Notion tasks into Supabase, generates a daily digest via Claude, logs run 
 8. Activate content-production-orchestrator pipeline
 9. Beehiiv integration for newsletter capture
 10. n8n automation setup (event routing, retention flows, budget alert webhooks) — Parking Lot
-11. Landing page + /es Spanish page + custom domain
+11. Landing page + /es Spanish page + custom domain — Google Workspace verified, admin@getmyadvocate.org live ✅
 
 ---
 
@@ -332,6 +333,7 @@ This file should be reviewed whenever:
 Last reviewed: **2026-03-12**
 
 ### Recent Changes
+- 2026-03-12: Google Workspace verified — admin@getmyadvocate.org live. Stack table updated.
 - 2026-03-12: Projections v16 built on v14 framework — YouTube (MA-YT-001) and Instagram (MA-IG-001) integrated as additive traffic + revenue streams (6 new columns Y-AD, 3,344 formulas, 0 errors, 36 months, 3 scenarios). v14 archived to docs/pmp/archive/. docs/pmp/ confirmed as canonical file location; GitHub = master.
 - 2026-03-12: PMP v22 created — MA-YT-001 (YouTube & Spanish Strategy) and MA-IG-001 (Instagram Strategy v2.0) canonized into docs/social/. §6D (YouTube Revenue) and §6E (Instagram Revenue) added to PMP. Projections v16 replaces v15. CLAUDE.md canonical docs and docs/ structure updated.
 - 2026-03-12: PMP v21 created — MA-CTX-001, MA-SOC-002, MA-AGT-001 canonized. Projections v15. External Agent System, Context Registry, and Patient Story Engine sections added to CLAUDE.md. docs/agents/, docs/context/, docs/social/ subdirectories added. Supabase migration 016 pending (scrub_records).
