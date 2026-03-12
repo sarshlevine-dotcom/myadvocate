@@ -159,6 +159,7 @@ Before building any new feature or making an architectural change, run through t
 - `MA-YT-001` — YouTube & Spanish Channel Strategy — EN + ES channel model, phase cadence, QA pipeline — `docs/social/MA-YT-001_YouTube_Spanish_Strategy_Report.docx`
 - `MA-IG-001` — Instagram Strategy v2.0 — gate structure, direct/indirect revenue model, EN + ES dual channel — `docs/social/MA-IG-001_Instagram_Strategy_v2.docx`
 - `MA-AHP-001` — Anti-Hallucination Protocol — governs all agent outputs (in Notion Agent Registry)
+- `Projections v16` — Financial model M1–M24, all revenue streams — `docs/pmp/MyAdvocate_Projections_v16.xlsx`
 - `docs/security/security-audit-session-9.md` — security audit session notes
 - `docs/security/MA-SEC-002-additions-priorities-21-24.md` — Priorities 21–24 to integrate into Google Drive doc
 - `supabase/migrations/CLAUDE.md` — migration rules (append-only, never edit past migrations)
@@ -171,6 +172,7 @@ docs/
   cost/       MA-COST-001-api-cost-architecture.md
   security/   security-audit-session-9.md, MA-SEC-002-additions-priorities-21-24.md
   pmp/        MyAdvocate_PMP_v18.docx, MyAdvocate_PMP_v19.docx, MyAdvocate_PMP_v21.docx, MyAdvocate_PMP_v22.docx  ← CURRENT
+              MyAdvocate_Projections_v16.xlsx  ← CURRENT financial model (M1-M24, 3 scenarios)
   system/     claude-project-instructions.md
   superpowers/plans/
   agents/     MA-AGT-001 (External Agent Integration Plan)           ← NEW in v21
@@ -330,6 +332,7 @@ This file should be reviewed whenever:
 Last reviewed: **2026-03-12**
 
 ### Recent Changes
+- 2026-03-12: Projections v16 built on v14 framework — YouTube (MA-YT-001) and Instagram (MA-IG-001) integrated as additive traffic + revenue streams (6 new columns Y-AD, 3,344 formulas, 0 errors, 36 months, 3 scenarios). v14 archived to docs/pmp/archive/. docs/pmp/ confirmed as canonical file location; GitHub = master.
 - 2026-03-12: PMP v22 created — MA-YT-001 (YouTube & Spanish Strategy) and MA-IG-001 (Instagram Strategy v2.0) canonized into docs/social/. §6D (YouTube Revenue) and §6E (Instagram Revenue) added to PMP. Projections v16 replaces v15. CLAUDE.md canonical docs and docs/ structure updated.
 - 2026-03-12: PMP v21 created — MA-CTX-001, MA-SOC-002, MA-AGT-001 canonized. Projections v15. External Agent System, Context Registry, and Patient Story Engine sections added to CLAUDE.md. docs/agents/, docs/context/, docs/social/ subdirectories added. Supabase migration 016 pending (scrub_records).
 - 2026-03-12: Cost architecture shipped — `budget-monitor.ts`, model routing in `generate-letter.ts`, output caps, migration 015, MA-COST-001 canonical doc. 4 Parking Lot entries added (caching, retry optimization, n8n alerts, batch content rules).
