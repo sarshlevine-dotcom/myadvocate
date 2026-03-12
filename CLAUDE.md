@@ -79,11 +79,15 @@ boundary for scrubber enforcement, model selection, output caps, cost logging, a
 - NEVER commit `.env` files
 - NEVER edit past migrations — create a new one with `supabase migration new <name>`
 - NEVER use Sonnet as the default model — Haiku is the default; Sonnet requires explicit justification (see MA-COST-001)
+- NEVER publish SEO content before all 7 trust infrastructure pages are live and attorney-reviewed (MA-EEAT-001 §5.1 — launch blocker)
+- NEVER describe the clinical reviewer as RN — correct framing is LPN/LVN with 20+ years and nursing management experience (see MA-EEAT-001 §3.2)
+- NEVER let a content page enter the human review queue without passing the 5-layer automated EEAT safety stack (MA-EEAT-001 §8.1)
 
 ### Scope Gates
 - Check MA-LCH-004 before building any new feature (Phase 1 scope boundary)
 - Check MA-SEC-002 before any feature touching user data (24 controls, all must PASS)
 - Check MA-COST-001 before any new AI call site — classify as Bucket 1/2/3 first
+- Check MA-EEAT-001 before designing any content workflow, reviewer system, or trust infrastructure page
 - Check Parking Lot in Notion before adding infrastructure that has a deferred phase tag
 
 ### Model Strings
@@ -159,6 +163,7 @@ Before building any new feature or making an architectural change, run through t
 - `MA-AGT-001` — External Agent Integration Plan — 11 agents (GEO-01/02/03, DEV-01/02/03, CNT-01, MKT-01/02/03, PRD-01)
 - `MA-YT-001` — YouTube & Spanish Channel Strategy — EN + ES channel model, phase cadence, QA pipeline — `docs/social/MA-YT-001_YouTube_Spanish_Strategy_Report.docx`
 - `MA-IG-001` — Instagram Strategy v2.0 — gate structure, direct/indirect revenue model, EN + ES dual channel — `docs/social/MA-IG-001_Instagram_Strategy_v2.docx`
+- `MA-EEAT-001` — EEAT & YMYL Compliance Audit — shortfall analysis, trust infrastructure spec, 5-layer content safety stack, reviewer framing, gamification Trust XP — `docs/seo/MA-EEAT-001_EEAT_YMYL_Audit_Report.docx` ← hardwired into all SEO content
 - `MA-AHP-001` — Anti-Hallucination Protocol — governs all agent outputs (in Notion Agent Registry)
 - `Projections v16` — Financial model M1–M24, all revenue streams — `docs/pmp/MyAdvocate_Projections_v16.xlsx`
 - `docs/security/security-audit-session-9.md` — security audit session notes
@@ -172,6 +177,7 @@ Before building any new feature or making an architectural change, run through t
 docs/
   cost/       MA-COST-001-api-cost-architecture.md
   security/   security-audit-session-9.md, MA-SEC-002-additions-priorities-21-24.md
+  seo/        MA-EEAT-001_EEAT_YMYL_Audit_Report.docx  ← EEAT/YMYL compliance spec, hardwired into all content
   pmp/        MyAdvocate_PMP_v18.docx, MyAdvocate_PMP_v19.docx, MyAdvocate_PMP_v21.docx, MyAdvocate_PMP_v22.docx  ← CURRENT
               MyAdvocate_Projections_v16.xlsx  ← CURRENT financial model (M1-M24, 3 scenarios)
   system/     claude-project-instructions.md
@@ -333,6 +339,7 @@ This file should be reviewed whenever:
 Last reviewed: **2026-03-12**
 
 ### Recent Changes
+- 2026-03-12: MA-EEAT-001 canonized — EEAT/YMYL audit hardwired into all SEO content. 3 new Core Invariants added (no content before trust pages, LPN/LVN framing, 5-layer gate). MA-EEAT-001 added to Scope Gates. docs/seo/ subdirectory created.
 - 2026-03-12: Google Workspace verified — admin@getmyadvocate.org live. Stack table updated.
 - 2026-03-12: Projections v16 built on v14 framework — YouTube (MA-YT-001) and Instagram (MA-IG-001) integrated as additive traffic + revenue streams (6 new columns Y-AD, 3,344 formulas, 0 errors, 36 months, 3 scenarios). v14 archived to docs/pmp/archive/. docs/pmp/ confirmed as canonical file location; GitHub = master.
 - 2026-03-12: PMP v22 created — MA-YT-001 (YouTube & Spanish Strategy) and MA-IG-001 (Instagram Strategy v2.0) canonized into docs/social/. §6D (YouTube Revenue) and §6E (Instagram Revenue) added to PMP. Projections v16 replaces v15. CLAUDE.md canonical docs and docs/ structure updated.
