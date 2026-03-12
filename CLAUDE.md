@@ -30,6 +30,7 @@ AI-powered patient advocacy platform. Helps people navigate insurance denials an
 | Database | Supabase (Postgres + RLS) | Service role for server; anon for client |
 | Auth | Supabase Auth | |
 | Payments | Stripe | Webhooks via `/api/webhooks/stripe` |
+| Email (Transactional / Ops) | Google Workspace | admin@getmyadvocate.org — verified ✅ |
 | Email / Newsletter | Beehiiv | Phase 2 — newsletter capture + distribution |
 | Automation | n8n | Phase 2 — event-driven automation, webhook routing, retention flows |
 | AI Provider | Anthropic | All calls via `generateLetter()` — Haiku default, Sonnet for complex/doc cases |
@@ -78,11 +79,15 @@ boundary for scrubber enforcement, model selection, output caps, cost logging, a
 - NEVER commit `.env` files
 - NEVER edit past migrations — create a new one with `supabase migration new <name>`
 - NEVER use Sonnet as the default model — Haiku is the default; Sonnet requires explicit justification (see MA-COST-001)
+- NEVER publish SEO content before all 7 trust infrastructure pages are live and attorney-reviewed (MA-EEAT-001 §5.1 — launch blocker)
+- NEVER describe the clinical reviewer as RN — correct framing is LPN/LVN with 20+ years and nursing management experience (see MA-EEAT-001 §3.2)
+- NEVER let a content page enter the human review queue without passing the 5-layer automated EEAT safety stack (MA-EEAT-001 §8.1)
 
 ### Scope Gates
 - Check MA-LCH-004 before building any new feature (Phase 1 scope boundary)
 - Check MA-SEC-002 before any feature touching user data (24 controls, all must PASS)
 - Check MA-COST-001 before any new AI call site — classify as Bucket 1/2/3 first
+- Check MA-EEAT-001 before designing any content workflow, reviewer system, or trust infrastructure page
 - Check Parking Lot in Notion before adding infrastructure that has a deferred phase tag
 
 ### Model Strings
@@ -148,7 +153,7 @@ Before building any new feature or making an architectural change, run through t
 
 ## Canonical Docs
 - `SYSTEM.md` — constitutional layer (mission, ethics, legal, privacy) — read first
-- `MA-PMP-001` (PMP v21) — single source of truth for strategy, operations, financials — `docs/pmp/MyAdvocate_PMP_v21.docx`
+- `MA-PMP-001` (PMP v22) — single source of truth for strategy, operations, financials — `docs/pmp/MyAdvocate_PMP_v22.docx`
 - `MA-LCH-004` — Launch Truth (what ships in Phase 1)
 - `MA-SEC-002` — Security Checklist (24 controls — 20 original + 4 AI content security controls)
 - `MA-COST-001` — API Cost Architecture & Spend Control (model routing, output caps, budget tripwires)
@@ -156,7 +161,11 @@ Before building any new feature or making an architectural change, run through t
 - `MA-CTX-001` — Context Registry Specification — governs `context_registry/` folder and all JSON registries
 - `MA-SOC-002` — Patient Story Engine — dual-track sourcing, scrub protocol, rollout gates
 - `MA-AGT-001` — External Agent Integration Plan — 11 agents (GEO-01/02/03, DEV-01/02/03, CNT-01, MKT-01/02/03, PRD-01)
+- `MA-YT-001` — YouTube & Spanish Channel Strategy — EN + ES channel model, phase cadence, QA pipeline — `docs/social/MA-YT-001_YouTube_Spanish_Strategy_Report.docx`
+- `MA-IG-001` — Instagram Strategy v2.0 — gate structure, direct/indirect revenue model, EN + ES dual channel — `docs/social/MA-IG-001_Instagram_Strategy_v2.docx`
+- `MA-EEAT-001` — EEAT & YMYL Compliance Audit — shortfall analysis, trust infrastructure spec, 5-layer content safety stack, reviewer framing, gamification Trust XP — `docs/seo/MA-EEAT-001_EEAT_YMYL_Audit_Report.docx` ← hardwired into all SEO content
 - `MA-AHP-001` — Anti-Hallucination Protocol — governs all agent outputs (in Notion Agent Registry)
+- `Projections v17` — Financial model M1–M24, all revenue streams — `docs/pmp/MyAdvocate_Projections_v17.xlsx`
 - `docs/security/security-audit-session-9.md` — security audit session notes
 - `docs/security/MA-SEC-002-additions-priorities-21-24.md` — Priorities 21–24 to integrate into Google Drive doc
 - `supabase/migrations/CLAUDE.md` — migration rules (append-only, never edit past migrations)
@@ -168,12 +177,16 @@ Before building any new feature or making an architectural change, run through t
 docs/
   cost/       MA-COST-001-api-cost-architecture.md
   security/   security-audit-session-9.md, MA-SEC-002-additions-priorities-21-24.md
-  pmp/        MyAdvocate_PMP_v18.docx, MyAdvocate_PMP_v19.docx, MyAdvocate_PMP_v21.docx  ← CURRENT
+  seo/        MA-EEAT-001_EEAT_YMYL_Audit_Report.docx  ← EEAT/YMYL compliance spec, hardwired into all content
+  pmp/        MyAdvocate_PMP_v18.docx, MyAdvocate_PMP_v19.docx, MyAdvocate_PMP_v21.docx, MyAdvocate_PMP_v22.docx  ← CURRENT
+              MyAdvocate_Projections_v17.xlsx  ← CURRENT financial model (M1-M24, 3 scenarios)
   system/     claude-project-instructions.md
   superpowers/plans/
   agents/     MA-AGT-001 (External Agent Integration Plan)           ← NEW in v21
   context/    MA-CTX-001 (Context Registry Specification)            ← NEW in v21
   social/     MA-SOC-002 (Patient Story Engine)                      ← NEW in v21
+              MA-YT-001_YouTube_Spanish_Strategy_Report.docx         ← NEW in v22
+              MA-IG-001_Instagram_Strategy_v2.docx                   ← NEW in v22
 ```
 
 ---
@@ -311,7 +324,7 @@ Syncs Notion tasks into Supabase, generates a daily digest via Claude, logs run 
 8. Activate content-production-orchestrator pipeline
 9. Beehiiv integration for newsletter capture
 10. n8n automation setup (event routing, retention flows, budget alert webhooks) — Parking Lot
-11. Landing page + /es Spanish page + custom domain
+11. Landing page + /es Spanish page + custom domain — Google Workspace verified, admin@getmyadvocate.org live ✅
 
 ---
 
@@ -326,6 +339,12 @@ This file should be reviewed whenever:
 Last reviewed: **2026-03-12**
 
 ### Recent Changes
+- 2026-03-12: Projections v17 adopted as new operating base. v17 file saved to `docs/pmp/MyAdvocate_Projections_v17.xlsx`. v16 archived to `docs/pmp/archive/`. All canonical references updated.
+- 2026-03-12: EEAT infrastructure build complete (MA-EEAT-001 §5.1 + §8.1). Shipped: Supabase migration 017 (content_audit_log, service-role only), `src/lib/eeat-validator.ts` (5-layer validator — schema, citations, forbidden claims, disclaimer, tier routing), `src/lib/db/audit-log.ts` (logContentReview helper), `scripts/validate-content.ts` (CLI runner for pre-publish validation), ContentTier/ReviewMethod/EEATValidationResult/ContentPageSchema types in `src/types/domain.ts`, and all 7 trust infrastructure pages (about, editorial-policy, medical-review-policy, reviewer-credentials, medical-disclaimer, citation-policy, update-policy — all ATTORNEY REVIEW REQUIRED before publish). 6 Notion sprint tasks created (migration 017 deploy, attorney engagement, Kate credential file, trust page publish, footer nav, EEAT integration test). Commit: a5cc96d.
+- 2026-03-12: MA-EEAT-001 canonized — EEAT/YMYL audit hardwired into all SEO content. 3 new Core Invariants added (no content before trust pages, LPN/LVN framing, 5-layer gate). MA-EEAT-001 added to Scope Gates. docs/seo/ subdirectory created.
+- 2026-03-12: Google Workspace verified — admin@getmyadvocate.org live. Stack table updated.
+- 2026-03-12: Projections v16 built on v14 framework — YouTube (MA-YT-001) and Instagram (MA-IG-001) integrated as additive traffic + revenue streams (6 new columns Y-AD, 3,344 formulas, 0 errors, 36 months, 3 scenarios). v14 archived to docs/pmp/archive/. docs/pmp/ confirmed as canonical file location; GitHub = master.
+- 2026-03-12: PMP v22 created — MA-YT-001 (YouTube & Spanish Strategy) and MA-IG-001 (Instagram Strategy v2.0) canonized into docs/social/. §6D (YouTube Revenue) and §6E (Instagram Revenue) added to PMP. Projections v16 replaces v15. CLAUDE.md canonical docs and docs/ structure updated.
 - 2026-03-12: PMP v21 created — MA-CTX-001, MA-SOC-002, MA-AGT-001 canonized. Projections v15. External Agent System, Context Registry, and Patient Story Engine sections added to CLAUDE.md. docs/agents/, docs/context/, docs/social/ subdirectories added. Supabase migration 016 pending (scrub_records).
 - 2026-03-12: Cost architecture shipped — `budget-monitor.ts`, model routing in `generate-letter.ts`, output caps, migration 015, MA-COST-001 canonical doc. 4 Parking Lot entries added (caching, retry optimization, n8n alerts, batch content rules).
 - 2026-03-12: MA-SEC-002 extended to 24 controls (Priorities 21–24: AI Content Security). Additions in `docs/security/MA-SEC-002-additions-priorities-21-24.md` — pending manual update to Google Drive doc.
