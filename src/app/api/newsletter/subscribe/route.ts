@@ -4,7 +4,7 @@ import { apiRateLimit } from '@/lib/rate-limit'
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export async function POST(request: NextRequest) {
-  const ip = request.headers.get('x-forwarded-for') ?? 'anonymous'
+  const ip = (request.headers.get('x-forwarded-for') ?? 'anonymous').split(',')[0].trim()
   const { success } = await apiRateLimit.limit(ip)
   if (!success) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
 
