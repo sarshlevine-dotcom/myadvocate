@@ -20,6 +20,13 @@ export const metadata: Metadata = {
   },
   description:
     'MyAdvocate helps patients understand insurance denials and write professional appeal letters. Free denial code decoder. AI-powered appeal letters.',
+  alternates: {
+    canonical: 'https://getmyadvocate.org',
+    languages: {
+      'en': 'https://getmyadvocate.org',
+      'x-default': 'https://getmyadvocate.org',
+    },
+  },
   openGraph: {
     siteName: 'MyAdvocate',
     locale: 'en_US',

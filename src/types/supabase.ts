@@ -16,6 +16,7 @@ export interface Database {
           subscription_status: 'free' | 'active' | 'canceled'
           role: 'user' | 'admin'
           email_capture_consented_at: string | null
+          preferred_language: 'en' | 'es' | 'zh' | 'tl' | 'vi'
         }
         Insert: {
           id: string
@@ -24,6 +25,7 @@ export interface Database {
           subscription_status?: 'free' | 'active' | 'canceled'
           role?: 'user' | 'admin'
           email_capture_consented_at?: string | null
+          preferred_language?: 'en' | 'es' | 'zh' | 'tl' | 'vi'
         }
         Update: {
           id?: string
@@ -32,6 +34,7 @@ export interface Database {
           subscription_status?: 'free' | 'active' | 'canceled'
           role?: 'user' | 'admin'
           email_capture_consented_at?: string | null
+          preferred_language?: 'en' | 'es' | 'zh' | 'tl' | 'vi'
         }
       }
       cases: {
