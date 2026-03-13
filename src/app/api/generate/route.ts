@@ -62,24 +62,30 @@ export async function POST(request: NextRequest) {
 
   // MA-COST-001: Bucket 1 — friction event write, no AI call
   // Fire-and-forget — never block the HTTP response
+  // MA-DAT-ENG-P1-006: case_id now stored so ClaimAmountSelector can update this record
   if (letterType === 'denial_appeal') {
     writeFrictionEvent({
-      tool_used: 'appeal_letter',
-      denial_code:     typeof caseData?.denial_code     === 'string' ? caseData.denial_code     : undefined,
-      procedure_type:  typeof caseData?.procedure_type  === 'string' ? caseData.procedure_type  : undefined,
-      insurer:         typeof caseData?.insurer         === 'string' ? caseData.insurer         : undefined,
-      state:           typeof caseData?.state           === 'string' ? caseData.state           : undefined,
-      claim_amount_range: null, // Phase 2 optional selector — nurse co-founder approval required
+      tool_used:          'appeal_letter',
+      case_id:            caseId,
+      denial_code:        typeof caseData?.denial_code     === 'string' ? caseData.denial_code     : undefined,
+      procedure_type:     typeof caseData?.procedure_type  === 'string' ? caseData.procedure_type  : undefined,
+      insurer:            typeof caseData?.insurer         === 'string' ? caseData.insurer         : undefined,
+      state:              typeof caseData?.state           === 'string' ? caseData.state           : undefined,
+      claim_amount_range: null, // populated post-generation via ClaimAmountSelector
     }).catch(() => {})
   } else if (letterType === 'bill_dispute') {
     writeFrictionEvent({
-      tool_used: 'bill_dispute',
+      tool_used:           'bill_dispute',
+      case_id:             caseId,
       billing_error_type:  typeof caseData?.billing_error_type  === 'string' ? caseData.billing_error_type  : undefined,
       provider_category:   typeof caseData?.provider_category   === 'string' ? caseData.provider_category   : undefined,
       charge_amount_range: typeof caseData?.charge_amount_range === 'string' ? caseData.charge_amount_range : undefined,
       state:               typeof caseData?.state               === 'string' ? caseData.state               : undefined,
+      claim_amount_range:  null, // populated post-generation via ClaimAmountSelector
     }).catch(() => {})
   }
 
-  return NextResponse.json({ artifactId: artifact.id }, { status: 201 })
+  // Return artifactId, caseId, and letter content so the tool page can display
+  // the letter without a second storage round-trip.
+  return NextResponse.json({ artifactId: artifact.id, caseId, content: artifact.content }, { status: 201 })
 }

@@ -176,5 +176,7 @@ export async function generateLetter(params: {
     outputTokens,
   }).catch(() => {})
 
-  return artifact
+  // Return content alongside the DB record so callers can surface it without
+  // a round-trip back to Supabase Storage (it's already in memory here).
+  return { ...artifact, content: letterWithDisclaimer }
 }
