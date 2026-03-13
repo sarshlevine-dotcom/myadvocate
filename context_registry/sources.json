@@ -3,7 +3,7 @@
     "registry": "sources",
     "id_prefix": "src_",
     "description": "Intake registry for all source documents, files, and external references. Every extracted fact must trace to a src_ record.",
-    "last_updated": "2026-03-12T01:00:00Z",
+    "last_updated": "2026-03-13T00:00:00Z",
     "schema_version": "1.0",
     "authority": "MA-CTX-001"
   },
@@ -279,6 +279,41 @@
       "last_seen_at": "2026-03-12T00:00:00Z",
       "checksum": null,
       "notes": "Formalizes the Proprietary Data Engine as a long-term strategic pillar. Defines friction_events table schema (two datasets: insurance friction + appeal outcomes), four-layer privacy architecture compliance, publication thresholds (Phase 3+), competitive moat analysis, and 26-task sprint plan (MA-DAT-ENG-P1 through P4). Phase 1 obligation: migration 019 (friction_events stub) must be deployed before launch. Attorney HIPAA-adjacent review required before Phase 3 publication. Nurse co-founder sign-off required on claim_amount_range prompt language."
+    },
+    {
+      "id": "src_0013",
+      "status": "active",
+      "created_at": "2026-03-13T00:00:00Z",
+      "updated_at": "2026-03-13T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0003",
+        "src_0011",
+        "src_0006"
+      ],
+      "confidence": 1.0,
+      "source_type": "google_doc",
+      "title": "MA-SEO-SUP-001 — SEO Authority & Content Infrastructure Strategy v1.0",
+      "external_id": "docs/seo/MA-SEO-SUP-001_SEO_Authority_Content_Infrastructure_v1.docx",
+      "canonical_url": null,
+      "document_state": "current",
+      "content_type": "architecture_doc",
+      "tags": [
+        "seo",
+        "cornerstone",
+        "content-refresh",
+        "geo",
+        "eeat",
+        "anonymous-attribution",
+        "backlinks",
+        "spanish-content",
+        "annual-report",
+        "policy-cluster",
+        "agent-deployment"
+      ],
+      "last_seen_at": "2026-03-13T00:00:00Z",
+      "checksum": null,
+      "notes": "Formalizes 9 SEO operating decisions: (1) cornerstone library 10-guide sequence with Phase gates, (2) anonymous trust infrastructure 9 required pages, (3) editorial board attribution model, (4) backlink program Phase 3 activation, (5) policy interpretation cluster Phase 4, (6) content refresh tier thresholds and refresh_priority_score system, (7) Annual Outcomes Report Phase 5 data gate, (8) Spanish-language content Phase 4 pilot, (9) GEO template as Phase 1 standard. Section 10 revises agent deployment: Content Refresh Agent → Phase 2, Data/Insights Agent → Phase 3, CMO Outreach Module → Phase 3. Section 11 introduces 18 new dashboard metrics. Section 12 = master roadmap table. Document ID: MA-SEO-SUP-001. Authority: MA-SEO Family, Supporting Anchor."
     },
     {
       "id": "src_0011",

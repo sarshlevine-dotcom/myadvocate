@@ -3,7 +3,7 @@
     "registry": "decisions",
     "id_prefix": "dec_",
     "description": "Structured log of strategic and operational decisions with rationale. One of the highest-value registries \u2014 captures why, not just what.",
-    "last_updated": "2026-03-12T01:00:00Z",
+    "last_updated": "2026-03-13T00:00:00Z",
     "schema_version": "1.0",
     "authority": "MA-CTX-001"
   },
@@ -263,6 +263,169 @@
       ],
       "review_on": "2026-07-01",
       "notes": "Review trigger: Phase 2 Month 3-4 — activate outcome follow-up flow. Phase 3 gate: 1,000+ friction events AND attorney sign-off. See MA-SUP-DAT-001 §4 for full publication thresholds. Migration 019 creates the table stub."
+    },
+    {
+      "id": "dec_0010",
+      "status": "active",
+      "created_at": "2026-03-13T00:00:00Z",
+      "updated_at": "2026-03-13T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0013"
+      ],
+      "confidence": 1.0,
+      "title": "Cornerstone sequencing rule — no cluster pages before parent cornerstone is live and indexed",
+      "decision_type": "seo",
+      "summary": "Cluster pages under a cornerstone topic MUST NOT publish before the parent cornerstone guide is live and indexed. 10 cornerstone guides are phased across Phase 1 (1 guide) through Phase 4 (9 guides). Each cornerstone anchors a sub-cluster.",
+      "rationale": [
+        "Publishing cluster pages before the parent cornerstone wastes authority signal — clusters inherit trust from the cornerstone, not the other way around",
+        "Fragment topical authority prematurely and Google sees disconnected pages, not a topic authority",
+        "Phase 1 gate: Complete Guide to Insurance Claim Denials is required before any denial cluster pages publish",
+        "10-guide library covers the full patient advocacy topic space — phased rollout prevents premature infrastructure build"
+      ],
+      "affects_systems": [
+        "MA-SEO",
+        "MA-CNT",
+        "content_pages.json",
+        "seo_clusters.json"
+      ],
+      "supersedes_decision_ids": [],
+      "related_decision_ids": [
+        "dec_0005"
+      ],
+      "review_on": null,
+      "notes": "Full cornerstone library: (1) Insurance Claim Denials [Phase 1 launch gate], (2) Medical Billing Disputes [Phase 4 Wave 1], (3) Patient Rights in Hospitals [Phase 4 Wave 1], (4) Medicaid Appeals [Phase 4 Wave 2], (5) Medicare Appeals [Phase 4 Wave 2], (6) Prior Authorization [Phase 4 Wave 2], (7) No Surprises Act [Phase 4 Wave 3], (8) Nursing Home Rights [Phase 4 Wave 3], (9) Hospital Complaints [Phase 4 Wave 3], (10) Charity Care [Phase 4 Wave 4]. Each requires 4,000–6,000 words, 8–12 sections, 5+ authoritative citations, Kate sign-off, and GEO template compliance."
+    },
+    {
+      "id": "dec_0011",
+      "status": "active",
+      "created_at": "2026-03-13T00:00:00Z",
+      "updated_at": "2026-03-13T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0013"
+      ],
+      "confidence": 1.0,
+      "title": "GEO template is a Phase 1 publish standard — not a Phase 4 initiative",
+      "decision_type": "seo",
+      "summary": "Every page published from Day 1 must include 8 GEO elements: (1) direct-answer block within first 200 words, (2) H2 question-format headers, (3) numbered step lists for process content, (4) definition boxes for technical terms, (5) 5+ authoritative citations, (6) FAQPage/HowTo/Article schema markup, (7) summary box at page bottom, (8) visible review date. Content generation system must output these as standard fields. Non-compliant pages receive geo_compliance = false flag and enter refresh queue.",
+      "rationale": [
+        "AI search citation is a Phase 1 opportunity — waiting until Phase 4 to comply means all Phase 1/2/3 content was published without it and requires retroactive refresh at cost",
+        "GEO and traditional SEO are complementary, not competing — same page structure serves both Google featured snippets and AI citation extraction",
+        "Content Refresh Agent will retroactively enforce compliance, but clean-slate compliance is always cheaper than retroactive",
+        "Research shows direct-answer blocks in first 200 words are primary AI extraction target — this is the single highest-leverage formatting decision"
+      ],
+      "affects_systems": [
+        "MA-SEO",
+        "MA-CNT",
+        "content-production-orchestrator",
+        "seo-article-generator"
+      ],
+      "supersedes_decision_ids": [],
+      "related_decision_ids": [
+        "dec_0005",
+        "dec_0010"
+      ],
+      "review_on": null,
+      "notes": "Schema implementation plan: Organization schema site-wide; Article schema on every article (datePublished, dateModified, reviewedBy editorial board); FAQPage schema on denial code pages, policy pages, rights pages; HowTo schema on all process guides; MedicalWebPage schema where applicable. GEO compliance rate target: 100% new publishes, 80% retroactive within 6 months of Phase 4 activation."
+    },
+    {
+      "id": "dec_0012",
+      "status": "active",
+      "created_at": "2026-03-13T00:00:00Z",
+      "updated_at": "2026-03-13T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0013"
+      ],
+      "confidence": 1.0,
+      "title": "Agent deployment schedule revised — Content Refresh Agent to Phase 2, Data/Insights Agent to Phase 3, CMO modules accelerated",
+      "decision_type": "architecture",
+      "summary": "MA-SEO-SUP-001 §10 revises the Board of Agents deployment sequence. No new agents added; scope expansions and earlier activations only. Content Refresh Agent moves from Phase 4 → Phase 2 Sprint 1. Data/Insights Agent moves from Phase 5 → Phase 3. CMO Outreach Module moves from Phase 4 → Phase 3. CMO Spanish Track moves from Phase 5 → Phase 4. GEO Module moves from Phase 4 → Phase 1 (hardwired into content generation from Day 1). CMO Surge Detection is a new sub-module within CMO Agent, activates Phase 4.",
+      "rationale": [
+        "Content published in Phase 1/2 without a refresh agent has no monitoring — Phase 4 activation leaves months of content unmonitored and creates technical debt",
+        "Annual Outcomes Report (Section 7) requires 9–12 months of structured outcome data before Month 12 publish gate — Data/Insights Agent must come online at Phase 3 to meet this timeline",
+        "Backlink outreach (Section 4) requires CMO Agent tracking from Month 4 — Phase 4 activation misses the first outreach window",
+        "GEO compliance is a Day 1 standard per dec_0011 — the GEO Module must be active from first publish"
+      ],
+      "affects_systems": [
+        "MA-AGT",
+        "MA-SEO",
+        "MA-CNT",
+        ".claude/agents/"
+      ],
+      "supersedes_decision_ids": [],
+      "related_decision_ids": [
+        "dec_0011",
+        "dec_0009"
+      ],
+      "review_on": null,
+      "notes": "Original deployment gates in MA-AGT-001 are superseded by MA-SEO-SUP-001 §10 for the five affected agents. All other agent gates in MA-AGT-001 remain unchanged. Signal-gated agents (MKT-01, MKT-02, MKT-03, PRD-01) are unaffected by this revision."
+    },
+    {
+      "id": "dec_0013",
+      "status": "active",
+      "created_at": "2026-03-13T00:00:00Z",
+      "updated_at": "2026-03-13T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0013"
+      ],
+      "confidence": 1.0,
+      "title": "Anonymous institutional attribution model — MyAdvocate Editorial Board carries E-E-A-T authority, not named founders",
+      "decision_type": "strategy",
+      "summary": "Sarsh and Kate remain anonymous in all public-facing content. E-E-A-T authority is carried by the MyAdvocate brand and Editorial Board, not by individual attribution. Every published article must include the official attribution statement: 'Reviewed by the MyAdvocate Editorial Board, which includes a licensed medical professional with over 20 years of clinical healthcare experience.' Site schema uses Organization type, not Person type.",
+      "rationale": [
+        "Healthcare advocacy can attract hostile actors — founder anonymity is a legitimate and defensible safety decision",
+        "E-E-A-T does not require personal attribution; institutional attribution satisfies the framework when supported by process documentation",
+        "Nine required trust infrastructure pages create institutional credibility without personal exposure",
+        "The editorial board model is a structural protection: the board survives any individual personnel change"
+      ],
+      "affects_systems": [
+        "MA-SEO",
+        "MA-CNT",
+        "MA-EEAT",
+        "trust-pages"
+      ],
+      "supersedes_decision_ids": [],
+      "related_decision_ids": [
+        "dec_0007"
+      ],
+      "review_on": null,
+      "notes": "Attribution block placement: below article title, above first paragraph; secondary at bottom above disclaimer. Format: italicized, gray background box or border. All 9 trust infrastructure pages must be live before launch (MA-SEO-SUP-001 §2 — Phase 1 launch gate). Hard rule: NEVER reference Sarsh or Kate by name in any public-facing content. This aligns with and extends the anonymity decision in dec_0007 (AI actor character for video content)."
+    },
+    {
+      "id": "dec_0014",
+      "status": "active",
+      "created_at": "2026-03-13T00:00:00Z",
+      "updated_at": "2026-03-13T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0013"
+      ],
+      "confidence": 1.0,
+      "title": "Content refresh cadence formalized — four-tier threshold system with refresh_priority_score 0–100",
+      "decision_type": "architecture",
+      "summary": "All content pages carry a refresh_priority_score (0–100). Pages above 70 enter refresh queue automatically; pages above 90 escalate to founder dashboard as urgent. Four tiers: Tier 1 (programmatic denial codes) 18–24 month review; Tier 2 (cluster editorial) 9–12 month; Tier 3 (cornerstones, policy, state rights) 6 month; Surge (policy surge articles) 3 month post-publish. Refresh triggers include stale age, >20% impression drop, >30% CTR drop, statute changes, attorney or Kate flags.",
+      "rationale": [
+        "YMYL content that goes stale is a legal and ranking liability — structured refresh prevents drift",
+        "Score-based prioritization ensures highest-risk pages (Tier 3, statute-backed) are refreshed first",
+        "Phase 4 refresh-before-expand rule prevents cluster bloat: no new pages in a cluster with outstanding refresh queue",
+        "Refresh-to-traffic lift rate metric validates the system — if refreshed pages don't recover traffic, the refresh approach needs revision"
+      ],
+      "affects_systems": [
+        "MA-SEO",
+        "MA-CNT",
+        "content-refresh-engine",
+        "content_pages.json"
+      ],
+      "supersedes_decision_ids": [],
+      "related_decision_ids": [
+        "dec_0010",
+        "dec_0011"
+      ],
+      "review_on": null,
+      "notes": "Page metadata fields required: content_tier (1/2/3/surge), last_reviewed_date, source_dependency_type (statute_backed / regulatory_backed / editorial), refresh_priority_score (0–100, auto-calculated). Score weights: stale age vs tier threshold 30%, performance decay composite 25%, source dependency risk 20%, Tier 3 multiplier 1.5x 15%, tool CTA integrity 10%. Phase 2 Sprint 1 obligation: deploy these metadata fields before Content Refresh Agent activates."
     },
     {
       "id": "dec_0008",

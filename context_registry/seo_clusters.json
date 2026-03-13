@@ -3,9 +3,17 @@
     "registry": "seo_clusters",
     "id_prefix": "cluster_",
     "description": "SEO cluster definitions. Every cluster must be grounded in at least one denial code or regulation. Drives programmatic SEO and internal linking.",
-    "last_updated": "2026-03-12T00:00:00Z",
-    "schema_version": "1.0",
-    "authority": "MA-CTX-001"
+    "last_updated": "2026-03-13T00:00:00Z",
+    "schema_version": "1.1",
+    "authority": "MA-CTX-001",
+    "tier_model": {
+      "description": "Three-tier internal link architecture introduced in SEO Gap Analysis v1 (src_0011). Pillar pages sit at top. Category hub pages are mid-tier. Denial code pages are the base layer.",
+      "tiers": {
+        "pillar": "Top-level evergreen pages. Whole-topic coverage. Everything links up to these.",
+        "category_hub": "Mid-tier pages grouping denials by type (Administrative, Medical Necessity, Coverage/Network). Route users to the correct tool and link down to code pages.",
+        "code_cluster": "Base-layer denial code pages and supporting service-specific pages. Link up to the relevant category hub."
+      }
+    }
   },
   "records": [
     {
@@ -16,16 +24,22 @@
       "owner": "sarsh",
       "source_ids": [
         "src_0003",
-        "src_0006"
+        "src_0006",
+        "src_0011"
       ],
       "confidence": 0.9,
+      "tier": "code_cluster",
+      "parent_hub_cluster_id": "cluster_0008",
       "name": "Medical Necessity Denial Appeals",
       "cluster_type": "denial_cluster",
-      "pillar_page_id": "",
+      "pillar_page_id": "page_0006",
       "supporting_page_ids": [],
       "target_problem": "Patient's health insurance denied a service as not medically necessary and they need to appeal.",
       "search_intent": "high",
       "priority": "high",
+      "denial_volume_share": "25-35%",
+      "tool_route": "insurance_appeal_generator",
+      "referral_priority": "priority_1",
       "related_denial_ids": [
         "den_0001",
         "den_0012"
@@ -39,7 +53,7 @@
       ],
       "cluster_stage": "planned",
       "gap_count": 8,
-      "notes": "Highest priority cluster. CO-50 is the most searched denial code. Pillar page + denial-specific support pages."
+      "notes": "Highest priority cluster. CO-50 is the most searched denial code. 40-60% appeal win rate (KFF/OIG data through 2023). Primary referral intake surface at Month 6. Pillar page + denial-specific support pages. Phase 2 service expansion: MRI, PT, medications, sleep studies, mental health, emergency, DME, labs."
     },
     {
       "id": "cluster_0002",
@@ -52,13 +66,16 @@
         "src_0006"
       ],
       "confidence": 0.85,
+      "tier": "code_cluster",
+      "parent_hub_cluster_id": "cluster_0008",
       "name": "Prior Authorization Denials and Overrides",
       "cluster_type": "denial_cluster",
-      "pillar_page_id": "",
+      "pillar_page_id": "page_0006",
       "supporting_page_ids": [],
       "target_problem": "Patient's service was denied because prior authorization was not obtained, or was denied after requesting.",
       "search_intent": "high",
       "priority": "high",
+      "tool_route": "insurance_appeal_generator",
       "related_denial_ids": [
         "den_0003"
       ],
@@ -70,7 +87,7 @@
       ],
       "cluster_stage": "planned",
       "gap_count": 6,
-      "notes": "High search volume. Emergency exception angle is the unique GEO-optimized answer block."
+      "notes": "High search volume. Emergency exception angle is the unique GEO-optimized answer block. CO-151 (Authorization Required) is in the 12-code priority set."
     },
     {
       "id": "cluster_0003",
@@ -83,13 +100,17 @@
         "src_0006"
       ],
       "confidence": 0.85,
+      "tier": "code_cluster",
+      "parent_hub_cluster_id": "cluster_0008",
       "name": "Mental Health Insurance Parity Disputes",
       "cluster_type": "rights_cluster",
-      "pillar_page_id": "",
+      "pillar_page_id": "page_0006",
       "supporting_page_ids": [],
       "target_problem": "Patient's mental health or substance use treatment was denied or covered at worse rates than physical health services.",
       "search_intent": "high",
       "priority": "high",
+      "tool_route": "insurance_appeal_generator",
+      "referral_priority": "priority_2",
       "related_denial_ids": [
         "den_0002",
         "den_0012"
@@ -102,7 +123,7 @@
       ],
       "cluster_stage": "planned",
       "gap_count": 5,
-      "notes": "MHPAEA is the anchor law. Growing search volume post-COVID. Comparative analysis angle is differentiating."
+      "notes": "MHPAEA is the anchor law. Growing search volume post-COVID. Comparative analysis angle is differentiating. Phase 2 service cluster (flagged as missing in Gap Analysis). Strong referral potential under federal parity law."
     },
     {
       "id": "cluster_0004",
@@ -112,16 +133,21 @@
       "owner": "sarsh",
       "source_ids": [
         "src_0003",
-        "src_0006"
+        "src_0006",
+        "src_0011"
       ],
       "confidence": 0.8,
+      "tier": "code_cluster",
+      "parent_hub_cluster_id": "cluster_0007",
       "name": "Medical Bill Dispute and Negotiation",
       "cluster_type": "billing_cluster",
-      "pillar_page_id": "",
+      "pillar_page_id": "page_0004",
       "supporting_page_ids": [],
       "target_problem": "Patient received an unexpected or incorrect medical bill and needs to dispute or negotiate it.",
       "search_intent": "high",
       "priority": "high",
+      "denial_volume_share": "50-60% (administrative/documentation errors)",
+      "tool_route": "medical_bill_dispute_generator",
       "related_denial_ids": [
         "den_0004",
         "den_0006",
@@ -136,7 +162,7 @@
       ],
       "cluster_stage": "planned",
       "gap_count": 7,
-      "notes": "No Surprises Act and balance billing protections are key content angles. Medical Bill Dispute Tool is the CTA."
+      "notes": "No Surprises Act and balance billing protections are key content angles. Medical Bill Dispute Tool is the CTA. Administrative errors are the largest single denial category (50-60% per KFF data through 2023). Phase 2: add Claim Correction as a distinct SEO entry point (Gap 6 from SEO Gap Analysis v1)."
     },
     {
       "id": "cluster_0005",
@@ -149,6 +175,8 @@
         "src_0006"
       ],
       "confidence": 0.8,
+      "tier": "code_cluster",
+      "parent_hub_cluster_id": null,
       "name": "Patient Rights and HIPAA Records Access",
       "cluster_type": "rights_cluster",
       "pillar_page_id": "",
@@ -156,6 +184,7 @@
       "target_problem": "Patient needs to understand their rights to access medical records or challenge healthcare decisions.",
       "search_intent": "medium",
       "priority": "medium",
+      "tool_route": "medical_record_request_generator",
       "related_denial_ids": [],
       "related_strategy_ids": [],
       "related_regulation_ids": [
@@ -165,6 +194,408 @@
       "cluster_stage": "planned",
       "gap_count": 4,
       "notes": "HIPAA Records Request tool is the CTA. Good entry-point cluster for patients just starting to advocate."
+    },
+    {
+      "id": "cluster_0006",
+      "status": "planned",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0011",
+        "src_0009",
+        "src_0010"
+      ],
+      "confidence": 0.95,
+      "tier": "pillar",
+      "parent_hub_cluster_id": null,
+      "name": "How to Appeal an Insurance Denial \u2014 Pillar",
+      "cluster_type": "pillar_cluster",
+      "pillar_page_id": "page_0006",
+      "supporting_page_ids": [
+        "page_0007",
+        "page_0008",
+        "page_0009"
+      ],
+      "target_problem": "Patient received an insurance denial and does not know how to appeal it or where to start.",
+      "search_intent": "high",
+      "priority": "critical",
+      "brand_stat": "Fewer than 1% of patients appeal insurance denials, even though 40-60% of those who do win (KFF analysis of Healthcare.gov data through 2023). This stat anchors the pillar page, homepage hero, and all denial code page intro blocks.",
+      "tool_route": "insurance_appeal_generator",
+      "related_denial_ids": [
+        "den_0001",
+        "den_0003",
+        "den_0004",
+        "den_0007",
+        "den_0009",
+        "den_0011",
+        "den_0019"
+      ],
+      "related_strategy_ids": [],
+      "related_regulation_ids": [
+        "reg_0001",
+        "reg_0002"
+      ],
+      "cluster_stage": "planned",
+      "gap_count": 0,
+      "notes": "Top of the three-tier architecture. All hub pages and code pages link up here. This is the single highest-priority content asset in the business. Publish first. Brand stat must appear in the first 100 words. Requires all 7 EEAT trust pages to be attorney-reviewed before publish (MA-EEAT-001 gate)."
+    },
+    {
+      "id": "cluster_0007",
+      "status": "planned",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0011",
+        "src_0009",
+        "src_0010"
+      ],
+      "confidence": 0.95,
+      "tier": "category_hub",
+      "parent_hub_cluster_id": "cluster_0006",
+      "name": "Administrative Denial Category Hub",
+      "cluster_type": "hub_cluster",
+      "pillar_page_id": "page_0006",
+      "hub_page_id": "page_0007",
+      "supporting_page_ids": [
+        "page_0010",
+        "page_0011",
+        "page_0012",
+        "page_0013",
+        "page_0014",
+        "page_0016"
+      ],
+      "target_problem": "Patient's claim was denied for paperwork, billing, or documentation reasons \u2014 not because of a medical decision.",
+      "search_intent": "high",
+      "priority": "high",
+      "denial_volume_share": "50-60%",
+      "tool_route": "medical_bill_dispute_generator",
+      "referral_priority": "not_for_referral",
+      "related_denial_ids": [
+        "den_0004",
+        "den_0009",
+        "den_0021",
+        "den_0007",
+        "den_0019",
+        "den_0008"
+      ],
+      "related_strategy_ids": [],
+      "related_regulation_ids": [],
+      "cluster_stage": "planned",
+      "gap_count": 6,
+      "publish_sequence": 8,
+      "notes": "Mid-tier hub. Covers ~50-60% of all denials (KFF/CMS data through 2023). Code pages within this hub: CO-16 (missing/invalid info), CO-97 (bundled service), CO-18 (duplicate claim), CO-22 (coordination of benefits), CO-29 (timely filing), CO-45 (charge exceeds fee schedule). Routes to Medical Bill Dispute Tool. Administrative errors typically resolve with resubmission \u2014 not strong referral candidates. Links up to How to Appeal pillar (page_0006) and links down to all admin code pages."
+    },
+    {
+      "id": "cluster_0008",
+      "status": "planned",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0011",
+        "src_0009",
+        "src_0010"
+      ],
+      "confidence": 0.95,
+      "tier": "category_hub",
+      "parent_hub_cluster_id": "cluster_0006",
+      "name": "Medical Necessity Denial Category Hub",
+      "cluster_type": "hub_cluster",
+      "pillar_page_id": "page_0006",
+      "hub_page_id": "page_0008",
+      "supporting_page_ids": [
+        "page_0001",
+        "page_0002",
+        "page_0019"
+      ],
+      "target_problem": "Patient's insurance denied a service as not medically necessary, or a prior authorization was denied, and they need to formally appeal.",
+      "search_intent": "high",
+      "priority": "critical",
+      "denial_volume_share": "25-35%",
+      "tool_route": "insurance_appeal_generator",
+      "referral_priority": "priority_1",
+      "related_denial_ids": [
+        "den_0001",
+        "den_0003",
+        "den_0011"
+      ],
+      "related_strategy_ids": [
+        "str_0001",
+        "str_0003"
+      ],
+      "related_regulation_ids": [
+        "reg_0001",
+        "reg_0002"
+      ],
+      "cluster_stage": "planned",
+      "gap_count": 3,
+      "publish_sequence": 9,
+      "notes": "Mid-tier hub. Highest attorney referral potential of all three hubs. 40-60% appeal win rate (KFF/OIG data through 2023). Code pages within this hub: CO-50 (not medically necessary), CO-197/CO-151 (authorization required), and supporting prior auth pages. Phase 2 service expansion pages sit below this hub: MRI, PT, medications, sleep, mental health, emergency, DME, labs. This page is also the primary referral intake surface when Month 6 activates. Build Month 6 referral wiring in the draft now even though it will not activate until then."
+    },
+    {
+      "id": "cluster_0009",
+      "status": "planned",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0011",
+        "src_0009",
+        "src_0010"
+      ],
+      "confidence": 0.85,
+      "tier": "category_hub",
+      "parent_hub_cluster_id": "cluster_0006",
+      "name": "Coverage and Network Denial Category Hub",
+      "cluster_type": "hub_cluster",
+      "pillar_page_id": "page_0006",
+      "hub_page_id": "page_0009",
+      "supporting_page_ids": [
+        "page_0015",
+        "page_0017",
+        "page_0018",
+        "page_0020"
+      ],
+      "target_problem": "Patient's claim was denied because the service or provider is not covered under their plan, or is out of network.",
+      "search_intent": "medium",
+      "priority": "medium",
+      "denial_volume_share": "10-15%",
+      "tool_route": "insurance_appeal_generator",
+      "referral_priority": "priority_3",
+      "related_denial_ids": [
+        "den_0002",
+        "den_0014",
+        "den_0017",
+        "den_0022"
+      ],
+      "related_strategy_ids": [],
+      "related_regulation_ids": [
+        "reg_0001"
+      ],
+      "cluster_stage": "planned",
+      "gap_count": 4,
+      "publish_sequence": null,
+      "notes": "Mid-tier hub. Smallest volume of the three categories (10-15% of denials). Code pages within this hub: CO-96 (non-covered service), PR-204 (not covered under plan), CO-109 (wrong payer), CO-B7 (provider not certified). No Surprises Act content belongs here for emergency out-of-network denials. This hub is Phase 1 in the queue but lower priority than Administrative and Medical Necessity hubs. Referral potential is variable and depends on state law."
+    },
+    {
+      "id": "cluster_0010",
+      "status": "active",
+      "created_at": "2026-03-13T00:00:00Z",
+      "updated_at": "2026-03-13T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0013"
+      ],
+      "confidence": 1.0,
+      "tier": "pillar",
+      "parent_hub_cluster_id": null,
+      "name": "Cornerstone Guide Library",
+      "cluster_type": "cornerstone_library",
+      "pillar_page_id": null,
+      "supporting_page_ids": [],
+      "target_problem": "Patients navigating the full spectrum of insurance denials, billing disputes, and patient rights need comprehensive, authoritative reference guides.",
+      "search_intent": "high",
+      "priority": "critical",
+      "denial_volume_share": null,
+      "tool_route": "insurance_appeal_generator",
+      "referral_priority": "priority_1",
+      "related_denial_ids": [],
+      "related_strategy_ids": [],
+      "related_regulation_ids": [],
+      "cluster_stage": "in_production",
+      "gap_count": 9,
+      "publish_sequence": "Phase 1 (1 guide) → Phase 4 Wave 1 (2) → Wave 2 (3) → Wave 3 (3) → Wave 4 (1)",
+      "cornerstone_sequencing_rule": "No cluster pages under any cornerstone topic may publish before the parent cornerstone is live and indexed. Violating this rule fragments topical authority.",
+      "cornerstones": [
+        { "number": 1, "title": "The Complete Guide to Insurance Claim Denials", "phase": "Phase 1", "launch_gate": true, "cluster_anchors": "Denial codes, prior auth, claim processing", "status": "in_production" },
+        { "number": 2, "title": "The Complete Guide to Medical Billing Disputes", "phase": "Phase 4 Wave 1", "launch_gate": false, "cluster_anchors": "Hospital billing, itemized bills, negotiation", "status": "planned" },
+        { "number": 3, "title": "Patient Rights in Hospitals: The Complete Guide", "phase": "Phase 4 Wave 1", "launch_gate": false, "cluster_anchors": "Patient bill of rights, discharge rights, EMTALA", "status": "planned" },
+        { "number": 4, "title": "The Complete Guide to Medicaid Appeals", "phase": "Phase 4 Wave 2", "launch_gate": false, "cluster_anchors": "Medicaid eligibility, policy cluster, immigration-informational", "status": "planned" },
+        { "number": 5, "title": "The Complete Guide to Medicare Appeals", "phase": "Phase 4 Wave 2", "launch_gate": false, "cluster_anchors": "Medicare denials, prior auth, coverage gaps", "status": "planned" },
+        { "number": 6, "title": "How Prior Authorization Works: A Patient's Guide", "phase": "Phase 4 Wave 2", "launch_gate": false, "cluster_anchors": "Prior auth denials, appeal workflows", "status": "planned" },
+        { "number": 7, "title": "The No Surprises Act & Surprise Billing: Complete Guide", "phase": "Phase 4 Wave 3", "launch_gate": false, "cluster_anchors": "Emergency billing, out-of-network, balance billing", "status": "planned" },
+        { "number": 8, "title": "Nursing Home Rights & Abuse Reporting: Complete Guide", "phase": "Phase 4 Wave 3", "launch_gate": false, "cluster_anchors": "Elder care, neglect reporting, ombudsman", "status": "planned" },
+        { "number": 9, "title": "How to File Complaints Against Hospitals & Insurers", "phase": "Phase 4 Wave 3", "launch_gate": false, "cluster_anchors": "Regulatory complaints, CMS, state agencies", "status": "planned" },
+        { "number": 10, "title": "Hospital Financial Assistance & Charity Care Guide", "phase": "Phase 4 Wave 4", "launch_gate": false, "cluster_anchors": "Charity care, financial assistance, medical debt", "status": "planned" }
+      ],
+      "cornerstone_production_standard": {
+        "min_word_count": 4000,
+        "max_word_count": 6000,
+        "sections_required": "8–12 named sections with anchor links",
+        "citations_minimum": 5,
+        "citation_sources": "authoritative government/regulatory sources only",
+        "ymyl_review": "Kate sign-off required before publication",
+        "internal_links_minimum": 10,
+        "tool_cta_required": true,
+        "geo_direct_answer_block": "within first 200 words",
+        "disclaimer_block": "scope-of-guidance language, not legal advice",
+        "review_date_visible": true
+      },
+      "gamification": {
+        "phase_1_cornerstone_live": "+400 XP | Achievement: Foundation Stone",
+        "each_additional_cornerstone": "+150 XP each",
+        "wave_1_complete": "+500 XP | Achievement: Pillar Builder",
+        "all_10_cornerstones_live": "+1,200 XP | Achievement: Authority Architect"
+      },
+      "notes": "Cornerstone guides are the authority backbone of the SEO strategy. All cluster pages inherit their trust signal from the parent cornerstone. Tier 3 content — requires highest review level (Kate editorial board sign-off mandatory before publication). Annual review cycle minimum. Any linked statute or regulatory change triggers immediate re-review queue. See dec_0010 for cornerstone sequencing rule. See MA-SEO-SUP-001 §1 for full production standard."
+    },
+    {
+      "id": "cluster_0011",
+      "status": "draft",
+      "created_at": "2026-03-13T00:00:00Z",
+      "updated_at": "2026-03-13T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0013"
+      ],
+      "confidence": 1.0,
+      "tier": "category_hub",
+      "parent_hub_cluster_id": null,
+      "name": "Policy Interpretation Content Cluster",
+      "cluster_type": "policy_cluster",
+      "pillar_page_id": null,
+      "supporting_page_ids": [],
+      "target_problem": "Patients need plain-language explanations of healthcare policy changes (Medicaid, Medicare, ACA, No Surprises Act) that affect their coverage and appeal rights.",
+      "search_intent": "high",
+      "priority": "high",
+      "denial_volume_share": null,
+      "tool_route": "insurance_appeal_generator",
+      "referral_priority": "priority_1",
+      "related_denial_ids": [],
+      "related_strategy_ids": [],
+      "related_regulation_ids": [],
+      "cluster_stage": "planned",
+      "phase_gate": "Phase 4 SEO Engine",
+      "gap_count": null,
+      "publish_sequence": "Phase 4 Wave 2 — Medicaid sub-cluster first (10–15 pages), then Medicare, ACA, Insurance Regulation, Patient Rights Regulation",
+      "sub_clusters": [
+        {
+          "name": "Medicaid Policy",
+          "example_pages": ["Medicaid eligibility rules explained", "Medicaid appeal process", "What Medicaid covers", "Medicaid data privacy rules", "Medicaid and immigration status (informational only)"],
+          "spanish_priority": "high — pilot pages in Phase 4"
+        },
+        {
+          "name": "Medicare Policy",
+          "example_pages": ["Medicare prior authorization rules", "Medicare appeal rights", "Medicare coverage denials", "Medicare coverage gaps explained"],
+          "spanish_priority": "medium"
+        },
+        {
+          "name": "ACA / Marketplace",
+          "example_pages": ["Marketplace insurance appeals", "What ACA plans must cover", "Open enrollment explained", "Marketplace coverage denials"],
+          "spanish_priority": "medium"
+        },
+        {
+          "name": "Insurance Regulation",
+          "example_pages": ["What is prior authorization", "State laws on insurance appeals", "How insurance companies review claims", "Balance billing laws by state"],
+          "spanish_priority": "medium"
+        },
+        {
+          "name": "Patient Rights Regulation",
+          "example_pages": ["EMTALA explained", "No Surprises Act explained", "Hospital price transparency rules", "Emergency billing protections"],
+          "spanish_priority": "medium"
+        }
+      ],
+      "compliance_rules": {
+        "allowed": "Explaining policy changes, summarizing government guidance, linking to official sources, directing users to legal aid organizations",
+        "not_allowed": "Advising users whether to enroll or withdraw from any program, interpreting immigration consequences for specific individuals, predicting enforcement outcomes, providing immigration legal strategy",
+        "required_disclaimer": "This page provides general information only. MyAdvocate is not a legal or immigration service. For advice about your specific situation, please consult a licensed attorney.",
+        "attorney_review_required": "Any page touching immigration-adjacent content",
+        "kate_review_required": true,
+        "freshness_sensitivity": "high — regulatory changes trigger immediate re-review"
+      },
+      "sales_funnel": {
+        "funnel_position": "top-of-funnel",
+        "tool_cta_mapping": "denials → Insurance Denial Fighter; billing → Medical Bill Dispute Tool; complaint → complaint filing resource",
+        "email_capture": "Get updates when this regulation changes opt-in module",
+        "resource_connector": "route to legal aid for topics requiring attorney guidance",
+        "internal_links_minimum": 3
+      },
+      "surge_response_protocol": {
+        "trigger": "CMO Agent flags policy topic based on Ahrefs keyword movement or news signal",
+        "priority_queue": "ahead of standard cadence",
+        "attorney_review_window": "24 hours if immigration-adjacent",
+        "kate_review_window": "48 hours",
+        "surge_tag": "surge-timing tag applied at publish for performance tracking"
+      },
+      "metrics_targets": {
+        "page_count_month_9": 30,
+        "page_count_month_18": 75,
+        "review_cadence": "6 months minimum; any government source change triggers re-review"
+      },
+      "gamification": {
+        "first_cluster_10_pages": "+300 XP | Achievement: Policy Translator",
+        "first_surge_article_72h": "+250 XP | Achievement: Fast Advocate",
+        "cluster_50_pages": "+500 XP | Achievement: Policy Authority",
+        "zero_compliance_failures_quarter": "+150 XP/quarter streak"
+      },
+      "notes": "Policy cluster is top-of-funnel. All existing SEO architecture rules apply. Each policy page must pass YMYL compliance review before publish. Freshness-sensitive classification — registered in Content Refresh Agent as highest-priority re-review tier. CMO Agent Surge Detection module (Phase 4) monitors this cluster for keyword spikes tied to regulatory news events. See MA-SEO-SUP-001 §5 for full compliance rules."
+    },
+    {
+      "id": "cluster_0012",
+      "status": "draft",
+      "created_at": "2026-03-13T00:00:00Z",
+      "updated_at": "2026-03-13T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0013"
+      ],
+      "confidence": 1.0,
+      "tier": "category_hub",
+      "parent_hub_cluster_id": null,
+      "name": "Spanish-Language Content Cluster",
+      "cluster_type": "spanish_content",
+      "pillar_page_id": null,
+      "supporting_page_ids": [],
+      "target_problem": "Spanish-speaking patients are systematically underserved by healthcare navigation resources, particularly for Medicaid, billing disputes, and patient rights.",
+      "search_intent": "high",
+      "priority": "high",
+      "denial_volume_share": null,
+      "tool_route": "insurance_appeal_generator",
+      "referral_priority": "priority_1",
+      "related_denial_ids": [],
+      "related_strategy_ids": [],
+      "related_regulation_ids": [],
+      "cluster_stage": "planned",
+      "phase_gate": "Phase 4 pilot (policy cluster only) → Phase 5 scale (full library)",
+      "gap_count": null,
+      "publish_sequence": "Phase 4 Wave 2: 10–15 Medicaid policy pages translated → Phase 5: scale to 100+ pages",
+      "pilot_scope": {
+        "page_count": "10–15",
+        "priority_pages": ["Medicaid eligibility rules", "Medicaid data privacy", "public charge rule explained", "how to appeal a Medicaid denial"],
+        "translation_standard": "AI draft + human fluency review required before publication",
+        "kate_review": "applies equally to Spanish content (clinical framing, not language fluency)",
+        "attorney_review": "same rule as English — required for immigration-adjacent content",
+        "attribution_block": "same editorial board attribution, translated to Spanish"
+      },
+      "phase_5_scale_priorities": {
+        "denial_code_pages_top_50": "high — denial codes appear on EOBs received by Spanish speakers",
+        "medical_billing_dispute_guides": "high — financial impact content has broad demographic demand",
+        "patient_rights_state_specific": "medium — high value for Spanish-speaking hospital patients",
+        "cornerstone_guides": "medium — begin with Medicaid and Medical Billing cornerstones",
+        "nursing_home_rights": "high — elder care content is highly searched in Spanish"
+      },
+      "distribution_channels": ["WhatsApp networks", "Spanish-language media (local TV, radio, online)", "Community organizations and healthcare navigators", "211 network Spanish-language referrals"],
+      "compliance_rules": {
+        "ymyl_applies": true,
+        "eeat_applies": true,
+        "attorney_review_immigration": true,
+        "note": "All rules that apply to English content apply equally to Spanish content. This is not a lower-compliance track."
+      },
+      "metrics_targets": {
+        "phase_4_pilot_pages": "10–15",
+        "phase_5_target_pages": "100+ by Month 18",
+        "spanish_organic_traffic_target": "10% of total organic by Phase 5",
+        "tracking": "tracked as separate segment in Search Console and Ahrefs"
+      },
+      "gamification": {
+        "pilot_10_pages_live": "+350 XP | Achievement: Dos Idiomas",
+        "spanish_traffic_10pct_organic": "+500 XP | Achievement: Bilingual Advocate",
+        "first_spanish_backlink_community_org": "+300 XP",
+        "spanish_library_100_pages": "+800 XP | Achievement: La Voz del Paciente"
+      },
+      "notes": "Spanish-language content is a first-mover play in an underserved vertical — not a translation project. Phase 4 pilot validates search demand and review workflow before Phase 5 scale. CMO Agent Spanish Track (activated Phase 4) monitors Spanish keyword performance to inform Phase 5 scale decision. This cluster supplements MA-YT-001 Spanish channel strategy and MA-IG-001 Spanish content track. See MA-SEO-SUP-001 §8 for full strategy."
     }
   ]
 }
