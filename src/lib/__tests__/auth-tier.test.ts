@@ -80,7 +80,7 @@ describe('checkTierAuthorization', () => {
       })
     })
 
-    it('blocks a free user with null count (conservative fallback)', async () => {
+    it('authorizes a free user when artifact count returns null (null coerces to 0, under the limit)', async () => {
       // count: null can happen when the table has no matching rows via count query
       // In practice count should be 0, but guard against null just in case
       // null ?? 0 === 0 → 0 < 1 → authorized (not blocked by count, null treated as 0)
