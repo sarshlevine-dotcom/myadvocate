@@ -3,9 +3,12 @@ import { getCurrentUser } from '@/lib/auth'
 import { generateLetter, LetterType } from '@/lib/generate-letter'
 import { checkTierAuthorization } from '@/lib/auth-tier'
 import { getCaseById } from '@/lib/db/cases'
+import { createClient } from '@/lib/supabase/server'
 import { generateRateLimit } from '@/lib/rate-limit'
 import { writeFrictionEvent } from '@/lib/db/friction-events'
 import { logEvent } from '@/lib/db/metric-events'
+import { getReviewQueueDepth } from '@/lib/db/review-queue'
+import { sendCapacityAlert } from '@/lib/mailer'
 
 const ALLOWED_LETTER_TYPES: LetterType[] = [
   'denial_appeal',
@@ -26,21 +29,33 @@ export async function POST(request: NextRequest) {
     ? body.letterType
     : 'denial_appeal'
 
-  // Step 3: Tier authorization — MA-SEC-002 P25/P26
+  // Step 3: Admin bypass — founders skip tier authorization during testing
+  const supabase = await createClient()
+  const { data: profile } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  const isAdmin = profile?.role === 'admin'
+
+  // Step 4: Tier authorization — MA-SEC-002 P25/P26 (non-admin only)
   // MUST run before generateLetter(). Returns 403 on failure.
-  const authResult = await checkTierAuthorization(user.id, letterType)
-  if (!authResult.authorized) {
-    // P26: log authorization failures for abuse monitoring (non-blocking)
-    logEvent({
-      eventType:  'tool_use',
-      sourcePage: '/api/generate',
-      toolName:   letterType,
-      userId:     user.id,
-    }).catch(() => {})
-    return NextResponse.json(authResult, { status: 403 })
+  if (!isAdmin) {
+    const authResult = await checkTierAuthorization(user.id, letterType)
+    if (!authResult.authorized) {
+      // P26: log authorization failures for abuse monitoring (non-blocking)
+      logEvent({
+        eventType:  'tool_use',
+        sourcePage: '/api/generate',
+        toolName:   letterType,
+        userId:     user.id,
+      }).catch(() => {})
+      return NextResponse.json(authResult, { status: 403 })
+    }
   }
 
-  // Step 4: Rate limit
+  // Step 5: Rate limit
   const { success, remaining } = await generateRateLimit.limit(user.id)
   if (!success) {
     return NextResponse.json(
@@ -52,19 +67,39 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // Step 5: Validate case ownership
+  // Step 6: MA-SEC-002 P27: Queue depth cap — block generation when review queue is full
+  const queueDepth = await getReviewQueueDepth()
+  if (queueDepth >= 10) {
+    sendCapacityAlert().catch((err) =>
+      console.error('[generate] sendCapacityAlert failed:', err)
+    )
+    return NextResponse.json(
+      { error: 'review_queue_full', code: 'QUEUE_CAP' },
+      { status: 429 }
+    )
+  }
+
+  // Step 7: Validate case ownership
   const caseRecord = await getCaseById(caseId)
   if (!caseRecord || caseRecord.user_id !== user.id) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  // Step 6: Generate — tier check has already passed
+  // Step 8: Generate — tier check has already passed
   const artifact = await generateLetter({
     caseId,
     userId: user.id,
     letterType,
     caseData,
   })
+
+  // MA-SEC-002 P27: Fire-and-forget review notification — must never block letter delivery
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  fetch(`${appUrl}/api/internal/notify-review`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ artifactId: artifact.id }),
+  }).catch((err) => console.error('[generate] notify-review fire-and-forget failed:', err))
 
   // MA-COST-001: Bucket 1 — friction event write, no AI call
   // Fire-and-forget — never block the HTTP response
