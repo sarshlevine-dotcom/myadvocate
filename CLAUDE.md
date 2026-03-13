@@ -15,6 +15,8 @@
 
 **Now in Phase 2:** Content engine, SEO growth, automation pipeline, context registry scaffolding, patient story engine pre-launch setup, external agent deployment
 
+**⚠️ Retroactive LAUNCH GAPS (MA-AUT-006 v2):** G1 (LQE evaluator) and G6 (7-gate chain) were identified as launch blockers but shipped without implementation. These must be addressed in Phase 2 Sprint 1 before any AI output reaches users without Kate review.
+
 ---
 
 ## Why
@@ -86,6 +88,10 @@ boundary for scrubber enforcement, model selection, output caps, cost logging, a
 - NEVER publish content without GEO template compliance: direct-answer block within first 200 words, H2 question headers, FAQPage/HowTo/Article schema markup — this is a Phase 1 standard, not optional (MA-SEO-SUP-001 §9)
 - NEVER reference founders (Sarsh or Kate) by name in any public-facing content — always use institutional voice: "the MyAdvocate team", "our editorial board", "our licensed healthcare reviewer" (MA-SEO-SUP-001 §2)
 - NEVER publish new cluster pages in a cluster where any existing page has refresh_priority_score > 70 — refresh-before-expand rule applies in Phase 4 (MA-SEO-SUP-001 §6)
+- NEVER modify `generateLetter()` without running it through the 7-gate chain spec (G6) — all 7 gates must pass before any output reaches users; gate failures must halt execution (MA-AUT-006 §G6)
+- NEVER allow AI letter output to bypass the Letter Quality Evaluator (G1/LQE) — three sequential checks (denial code accuracy, YMYL safety, legal framing) must all PASS; failures route to Kate review queue with failure_reason logged (MA-AUT-006 §G1)
+- NEVER publish Spanish content (video scripts or web pages) before the Spanish Content Audit Agent (G7/SCAA) is operational — Month 9 YouTube gate; Month 12 web gate (MA-AUT-006 §G7)
+- NEVER deploy a new agent without defined stopping conditions: max retries, timeout ceiling, explicit failure state action — see stopping conditions table in MA-AUT-006 §G3
 
 ### Scope Gates
 - Check MA-LCH-004 before building any new feature (Phase 1 scope boundary)
@@ -93,6 +99,7 @@ boundary for scrubber enforcement, model selection, output caps, cost logging, a
 - Check MA-COST-001 before any new AI call site — classify as Bucket 1/2/3 first
 - Check MA-EEAT-001 before designing any content workflow, reviewer system, or trust infrastructure page
 - Check MA-SEO-SUP-001 before designing any SEO content cluster, cornerstone guide, refresh system, content tier classification, or GEO template — this document is the operating doctrine for all content infrastructure decisions
+- Check MA-AUT-006 before any modification to `generateLetter()`, any new agent deployment, or any change to the letter quality pipeline — G1/G6 are retroactive launch gaps that must be cleared; G4/G5 are signal-gated and must not be pulled forward
 - Check Parking Lot in Notion before adding infrastructure that has a deferred phase tag
 
 ### Model Strings
@@ -166,6 +173,7 @@ Before building any new feature or making an architectural change, run through t
 - `MA-CTX-001` — Context Registry Specification — governs `context_registry/` folder and all JSON registries
 - `MA-SOC-002` — Patient Story Engine — dual-track sourcing, scrub protocol, rollout gates
 - `MA-AGT-001` — External Agent Integration Plan — 11 agents (GEO-01/02/03, DEV-01/02/03, CNT-01, MKT-01/02/03, PRD-01)
+- `MA-AUT-006` — Agent System Architecture Audit v2 — 7 gaps (G1–G7) grounded in Anthropic best practices; G1+G6 are retroactive launch blockers; G7 is the Spanish Content Audit Agent (SCAA) design; G4/G5 are Phase 2 signal-gated — `docs/agents/MA-AUT-006_Agent_System_Audit_v2.docx` ← hardwired into all generateLetter() modifications and agent deployments
 - `MA-YT-001` — YouTube & Spanish Channel Strategy — EN + ES channel model, phase cadence, QA pipeline — `docs/social/MA-YT-001_YouTube_Spanish_Strategy_Report.docx`
 - `MA-IG-001` — Instagram Strategy v2.0 — gate structure, direct/indirect revenue model, EN + ES dual channel — `docs/social/MA-IG-001_Instagram_Strategy_v2.docx`
 - `MA-EEAT-001` — EEAT & YMYL Compliance Audit — shortfall analysis, trust infrastructure spec, 5-layer content safety stack, reviewer framing, gamification Trust XP — `docs/seo/MA-EEAT-001_EEAT_YMYL_Audit_Report.docx` ← hardwired into all SEO content
@@ -192,6 +200,7 @@ docs/
   system/     claude-project-instructions.md
   superpowers/plans/
   agents/     MA-AGT-001 (External Agent Integration Plan)           ← NEW in v21
+              MA-AUT-006_Agent_System_Audit_v2.docx                 ← NEW in v25 — agent architecture audit, 7 gaps, G1+G6 launch blockers
   context/    MA-CTX-001 (Context Registry Specification)            ← NEW in v21
   social/     MA-SOC-002 (Patient Story Engine)                      ← NEW in v21
               MA-YT-001_YouTube_Spanish_Strategy_Report.docx         ← NEW in v22
@@ -342,6 +351,14 @@ Syncs Notion tasks into Supabase, generates a daily digest via Claude, logs run 
 15. Beehiiv integration for newsletter capture
 16. n8n automation setup (event routing, retention flows, budget alert webhooks) — Parking Lot
 17. Landing page + /es Spanish page + custom domain — Google Workspace verified, admin@getmyadvocate.org live ✅
+18. **[MA-AUT-006 G6 — Sprint 1] Write formal 7-gate chain spec + implement gates 1–3 in `generateLetter()` (MA-AUT-006 §G6 — retroactive launch gap)** — **NEXT**
+19. **[MA-AUT-006 G1 — Sprint 2] Build LQE serial evaluator (3-check: denial code accuracy, YMYL, legal framing); calibrate with Kate; false positive rate <10% (MA-AUT-006 §G1 — retroactive launch gap)**
+20. **[MA-AUT-006 G6 — Sprint 2] Implement gates 4–7 in `generateLetter()` (API call, LQE hook, disclaimer version check, artifact state)**
+21. **[MA-AUT-006 G2 — Sprint 2] Document ACI tool schemas for CTO Sentinel + CFO Wealth Engineer with formal error behaviors**
+22. **[MA-AUT-006 G3 — Sprint 2] Add stopping conditions (max retries + timeouts + failure state actions) to CFO Wealth Engineer and all deployed agents**
+23. **[MA-AUT-006 G7 — Sprint 3] Draft MA-AUT-007 (Spanish Content Audit Agent spec); resolve Kate governance decision (Option A/B/C) before Month 7 hard deadline**
+24. **[MA-AUT-006 G4 — Phase 2 signal-gated] Parallel YMYL voting (3-node) — trigger: >200 letters/month OR Kate review load >20% after G1 live**
+25. **[MA-AUT-006 G5 — Phase 2 signal-gated] Chief of Staff Orchestrator — trigger: >15% multi-issue cases + attorney referral routing live**
 
 ---
 
@@ -356,6 +373,7 @@ This file should be reviewed whenever:
 Last reviewed: **2026-03-13**
 
 ### Recent Changes
+- 2026-03-13: MA-AUT-006 v2 integrated — Agent System Architecture Audit canonized. 7 gaps identified (G1–G7). G1 (LQE) and G6 (7-gate chain) are retroactive launch blockers requiring Phase 2 Sprint 1 remediation. G7 (Spanish Content Audit Agent/SCAA) is HIGH priority — design Sprint 3, build Phase 2, video activation Month 9, web activation Month 12. G4/G5 remain Phase 2 signal-gated. 4 new Core Invariants added (no generateLetter() modification without 7-gate spec, no letter output without LQE, no Spanish content without SCAA, no agent without stopping conditions). 1 new Scope Gate added (check MA-AUT-006 before any generateLetter() or agent change). Phase 2 Priorities updated (items 18–25 added). docs/agents/ updated with MA-AUT-006 docx. Conflicts with stale PMP reference (v20 → v24) and incorrect MA-SEC-001 ref (→ MA-SEC-002) flagged — MA-AUT-006 doc itself needs correction. MA-ARC-001 and MA-GAM-001 refs in MA-AUT-006 are unresolved (no matching canonical doc). Full spec: MA-AUT-006 in docs/agents/.
 - 2026-03-13: MA-SEO-SUP-001 integrated — SEO Authority & Content Infrastructure Strategy canonized. PMP v24 created with new §6G. docs/seo/ updated with canonical file. 4 new Core Invariants added (cornerstone sequencing, GEO template Phase 1 standard, anonymous institutional voice, refresh-before-expand). 1 new Scope Gate added (check MA-SEO-SUP-001 before any content infrastructure work). Phase 2 Priorities updated (items 10–12 added: Content Refresh Agent moved to Sprint 1, page metadata fields Sprint 1, outcome data schema Sprint 2). Context registry updated (src_0013, dec_0010–dec_0014, 3 new seo_clusters, 10 new content_pages). Agent deployment revisions: Content Refresh Agent → Phase 2, Data/Insights Agent → Phase 3, CMO Outreach Module → Phase 3, CMO Spanish Track → Phase 4, GEO Module → Phase 1. Full spec: MA-SEO-SUP-001 in docs/seo/.
 - 2026-03-12: MA-SUP-DAT-001 integrated — Proprietary Data Engine Strategy canonized. Supabase migration 019 (friction_events stub) created. PMP v23 created with new §6F. docs/data/ subdirectory created. Context registry updated (src_0012, dec_0009). 26 Notion sprint tasks created (MA-DAT-ENG-P1 through P4). Phase 2 Priorities updated (items 7–9 added). friction_events added to data architecture: two datasets (insurance friction events + appeal outcome events), four-layer privacy compliance, publication gates (Phase 3+), competitive moat analysis. Full spec: MA-SUP-DAT-001 in docs/data/.
 - 2026-03-12: Projections v17 adopted as new operating base. v17 file saved to `docs/pmp/MyAdvocate_Projections_v17.xlsx`. v16 archived to `docs/pmp/archive/`. All canonical references updated.
