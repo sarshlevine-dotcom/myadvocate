@@ -40,6 +40,11 @@ export async function sendReviewNotification(
       .filter(Boolean)
       .join(', ')
 
+    if (!to.trim()) {
+      console.warn('[mailer] sendReviewNotification: no recipients configured (KATE_EMAIL and SARSH_EMAIL are both unset)')
+      return false
+    }
+
     const reviewUrl = `${APP_URL}/admin/review`
 
     const text = [
@@ -75,6 +80,13 @@ export async function sendReviewNotification(
  */
 export async function sendCapacityAlert(): Promise<boolean> {
   try {
+    const to = process.env.SARSH_EMAIL ?? ''
+
+    if (!to.trim()) {
+      console.warn('[mailer] sendCapacityAlert: no recipient configured (SARSH_EMAIL is unset)')
+      return false
+    }
+
     const reviewUrl = `${APP_URL}/admin/review`
 
     const text = [
@@ -89,7 +101,7 @@ export async function sendCapacityAlert(): Promise<boolean> {
 
     await getTransport().sendMail({
       from:    FROM,
-      to:      process.env.SARSH_EMAIL ?? '',
+      to,
       subject: '[MyAdvocate] ALERT: Review queue at capacity — generation paused',
       text,
     })

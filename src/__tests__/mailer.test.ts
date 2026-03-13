@@ -32,7 +32,11 @@ const MOCK_ARTIFACT = {
 }
 
 describe('sendReviewNotification', () => {
-  beforeEach(() => mockSendMail.mockClear())
+  beforeEach(() => {
+    mockSendMail.mockClear()
+    vi.stubEnv('KATE_EMAIL', 'kate@example.com')
+    vi.stubEnv('SARSH_EMAIL', 'sarsh@example.com')
+  })
 
   it('sends email to both Kate and Sarsh', async () => {
     await sendReviewNotification(MOCK_ARTIFACT)
@@ -49,7 +53,7 @@ describe('sendReviewNotification', () => {
     expect(call.subject).toContain('[MyAdvocate]')
   })
 
-  it('includes artifact id and user id in body (no PII)', async () => {
+  it('includes artifact id and user id in body', async () => {
     await sendReviewNotification(MOCK_ARTIFACT)
     const call = mockSendMail.mock.calls[0][0]
     const body = call.text ?? call.html ?? ''
@@ -61,10 +65,21 @@ describe('sendReviewNotification', () => {
     mockSendMail.mockRejectedValueOnce(new Error('SMTP down'))
     await expect(sendReviewNotification(MOCK_ARTIFACT)).resolves.toBe(false)
   })
+
+  it('returns false and does not call sendMail when no recipients are configured', async () => {
+    vi.stubEnv('KATE_EMAIL', '')
+    vi.stubEnv('SARSH_EMAIL', '')
+    const result = await sendReviewNotification(MOCK_ARTIFACT)
+    expect(result).toBe(false)
+    expect(mockSendMail).not.toHaveBeenCalled()
+  })
 })
 
 describe('sendCapacityAlert', () => {
-  beforeEach(() => mockSendMail.mockClear())
+  beforeEach(() => {
+    mockSendMail.mockClear()
+    vi.stubEnv('SARSH_EMAIL', 'sarsh@example.com')
+  })
 
   it('sends email only to Sarsh (not Kate)', async () => {
     await sendCapacityAlert()
