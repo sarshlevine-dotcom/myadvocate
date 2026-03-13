@@ -5,6 +5,8 @@ import { getCaseById } from '@/lib/db/cases'
 import { createClient } from '@/lib/supabase/server'
 import { generateRateLimit } from '@/lib/rate-limit'
 import { writeFrictionEvent } from '@/lib/db/friction-events'
+import { getReviewQueueDepth } from '@/lib/db/review-queue'
+import { sendCapacityAlert } from '@/lib/mailer'
 
 const ALLOWED_LETTER_TYPES: LetterType[] = [
   'denial_appeal',
@@ -43,6 +45,18 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  // MA-SEC-002 P27: Queue depth cap — block generation when review queue is full
+  const queueDepth = await getReviewQueueDepth()
+  if (queueDepth >= 10) {
+    sendCapacityAlert().catch((err) =>
+      console.error('[generate] sendCapacityAlert failed:', err)
+    )
+    return NextResponse.json(
+      { error: 'review_queue_full', code: 'QUEUE_CAP' },
+      { status: 429 }
+    )
+  }
+
   const { caseId, caseData, letterType: rawLetterType } = await request.json()
   const letterType: LetterType = ALLOWED_LETTER_TYPES.includes(rawLetterType)
     ? rawLetterType
@@ -59,6 +73,14 @@ export async function POST(request: NextRequest) {
     letterType,
     caseData,
   })
+
+  // MA-SEC-002 P27: Fire-and-forget review notification — must never block letter delivery
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  fetch(`${appUrl}/api/internal/notify-review`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ artifactId: artifact.id }),
+  }).catch((err) => console.error('[generate] notify-review fire-and-forget failed:', err))
 
   // MA-COST-001: Bucket 1 — friction event write, no AI call
   // Fire-and-forget — never block the HTTP response
