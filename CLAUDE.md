@@ -17,6 +17,8 @@
 
 **⚠️ Retroactive LAUNCH GAPS (MA-AUT-006 v2):** G1 (LQE evaluator) and G6 (7-gate chain) were identified as launch blockers but shipped without implementation. These must be addressed in Phase 2 Sprint 1 before any AI output reaches users without Kate review.
 
+**⚠️ Additional launch gaps (Supplemental Audit 2026-03-13):** Server-side tier authorization, free-tier generation limits, and YMYL review operating model (MA-SEC-002 P25–P27) must be implemented before public traffic. Prompt versioning, backup restoration test, and incident response runbook (P28–P30) must be complete before Signal 1. Document upload **deferred to Phase 2** — NER-grade PII redaction + malware scanning required before re-enabling.
+
 ---
 
 ## Why
@@ -92,6 +94,9 @@ boundary for scrubber enforcement, model selection, output caps, cost logging, a
 - NEVER allow AI letter output to bypass the Letter Quality Evaluator (G1/LQE) — three sequential checks (denial code accuracy, YMYL safety, legal framing) must all PASS; failures route to Kate review queue with failure_reason logged (MA-AUT-006 §G1)
 - NEVER publish Spanish content (video scripts or web pages) before the Spanish Content Audit Agent (G7/SCAA) is operational — Month 9 YouTube gate; Month 12 web gate (MA-AUT-006 §G7)
 - NEVER deploy a new agent without defined stopping conditions: max retries, timeout ceiling, explicit failure state action — see stopping conditions table in MA-AUT-006 §G3
+- NEVER invoke `generateLetter()` without first running `checkTierAuthorization(userId, letterType)` server-side — free-tier limits and subscription entitlements must be verified at the API layer before generation proceeds (MA-SEC-002 P25/P26)
+- NEVER enable document upload without both malware scanning (VirusTotal API or equivalent) and NER-grade PII redaction (AWS Comprehend Medical or Azure Health NLP) — regex scrubbing is insufficient for insurance documents; upload is deferred to Phase 2 (MA-SEC-002 P22, Supplemental Audit 2026-03-13)
+- NEVER create an artifact without storing `prompt_version_hash` — SHA-256 of prompt template + model string + disclaimer version, captured at generation time (MA-SEC-002 P30)
 
 ### Scope Gates
 - Check MA-LCH-004 before building any new feature (Phase 1 scope boundary)
@@ -174,6 +179,8 @@ Before building any new feature or making an architectural change, run through t
 - `MA-SOC-002` — Patient Story Engine — dual-track sourcing, scrub protocol, rollout gates
 - `MA-AGT-001` — External Agent Integration Plan — 11 agents (GEO-01/02/03, DEV-01/02/03, CNT-01, MKT-01/02/03, PRD-01)
 - `MA-AUT-006` — Agent System Architecture Audit v2 — 7 gaps (G1–G7) grounded in Anthropic best practices; G1+G6 are retroactive launch blockers; G7 is the Spanish Content Audit Agent (SCAA) design; G4/G5 are Phase 2 signal-gated — `docs/agents/MA-AUT-006_Agent_System_Audit_v2.docx` ← hardwired into all generateLetter() modifications and agent deployments
+- `Supplemental Security Audit` — 10 operational/security gaps, 6 new PassFail controls (P25–P30), 3 required founder decisions; YMYL review model formalized, doc upload deferred, prompt versioning + incident runbook specified — `docs/security/myadvocate_supplemental_audit_report.docx` + `docs/security/MA-SEC-002-additions-priorities-25-30.md`
+- `Incident Response Runbook` — P1/P2/P3 severity definitions, response targets, P1 user notification template, key contacts — `docs/security/incident-response-runbook.md`
 - `MA-YT-001` — YouTube & Spanish Channel Strategy — EN + ES channel model, phase cadence, QA pipeline — `docs/social/MA-YT-001_YouTube_Spanish_Strategy_Report.docx`
 - `MA-IG-001` — Instagram Strategy v2.0 — gate structure, direct/indirect revenue model, EN + ES dual channel — `docs/social/MA-IG-001_Instagram_Strategy_v2.docx`
 - `MA-EEAT-001` — EEAT & YMYL Compliance Audit — shortfall analysis, trust infrastructure spec, 5-layer content safety stack, reviewer framing, gamification Trust XP — `docs/seo/MA-EEAT-001_EEAT_YMYL_Audit_Report.docx` ← hardwired into all SEO content
@@ -192,6 +199,9 @@ Before building any new feature or making an architectural change, run through t
 docs/
   cost/       MA-COST-001-api-cost-architecture.md
   security/   security-audit-session-9.md, MA-SEC-002-additions-priorities-21-24.md
+              MA-SEC-002-additions-priorities-25-30.md  ← NEW 2026-03-13 — 6 new PassFail controls from supplemental audit
+              myadvocate_supplemental_audit_report.docx  ← NEW 2026-03-13 — source supplemental audit
+              incident-response-runbook.md  ← NEW 2026-03-13 — P1/P2/P3 runbook
   seo/        MA-EEAT-001_EEAT_YMYL_Audit_Report.docx  ← EEAT/YMYL compliance spec, hardwired into all content
               MA-SEO-001_90Day_Publishing_Queue.md
               MA-SEO-SUP-001_SEO_Authority_Content_Infrastructure_v1.docx  ← NEW in v24 — SEO operating doctrine, cornerstone library, GEO standard, content refresh, annual report
@@ -236,6 +246,26 @@ All 32 MyAdvocate skills live in `.claude/skills/<skill-name>/SKILL.md`.
 | Orchestration | myadvocate-master-operator |
 
 **Governance rule:** `pii-sanitizer` MUST be invoked before any Anthropic API call. `legal-disclaimer-enforcer` MUST be invoked before any user-facing document delivery. `document-quality-checker` runs the compliance scan (forbidden determinations check) before every document is returned to the user.
+
+---
+
+## YMYL Review Operating Model
+
+**Defined 2026-03-13 per MA-SEC-002 P27 and Supplemental Audit Issue 1.**
+
+| Parameter | Value |
+|---|---|
+| Primary reviewer | Kate (clinical — LPN/LVN) |
+| Secondary / escalation | Sarsh (founder) |
+| Delivery SLA to user | 24 hours from generation |
+| Queue depth cap | 10 artifacts |
+| On queue > 10 | Generation pauses; Sarsh alerted immediately |
+| Kate unavailable | Escalate to Sarsh; SLA extends to 48 hours; user notified |
+| Phase 1 notification | Supabase webhook → email (Google Workspace: admin@getmyadvocate.org) to Kate + Sarsh on every new artifact |
+| Phase 2 notification | Replace email webhook with n8n workflow when n8n is live |
+| Post-G1 (LQE live) | LQE-passed letters bypass Kate queue and go direct-to-delivery; SLA applies to escalations only |
+
+**Notification setup required (Sprint 1):** Kate's email and Sarsh's email must be configured as webhook targets in Supabase. Supabase `artifacts` table insert trigger → HTTP POST to a Vercel API route → send email via Google Workspace SMTP. Test with a staging artifact before go-live.
 
 ---
 
@@ -373,6 +403,7 @@ This file should be reviewed whenever:
 Last reviewed: **2026-03-13**
 
 ### Recent Changes
+- 2026-03-13: Supplemental Security & Architecture Audit integrated — 10 gaps analyzed against recent work. 6 new MA-SEC-002 PassFail controls (P25–P30) added: server-side free-tier limits (P25/launch blocker), subscription tier authorization (P26/launch blocker), YMYL review operating model (P27/launch blocker), backup restoration test (P28/pre-Signal 1), incident response runbook (P29/pre-Signal 1), prompt version hash (P30/pre-Signal 1). Document upload formally deferred to Phase 2 — NER-grade PII redaction + malware scanning required. YMYL review operating model formalized: Kate primary/24hr SLA/queue cap 10/Sarsh escalation. Incident response runbook created (docs/security/incident-response-runbook.md). 3 new Core Invariants added (tier auth before generation, no doc upload without NER+malware, prompt_version_hash on every artifact). 11 Notion sprint tasks created. Quarterly backup test + 3-month VPN review scheduled as recurring tasks.
 - 2026-03-13: MA-AUT-006 v2 integrated — Agent System Architecture Audit canonized. 7 gaps identified (G1–G7). G1 (LQE) and G6 (7-gate chain) are retroactive launch blockers requiring Phase 2 Sprint 1 remediation. G7 (Spanish Content Audit Agent/SCAA) is HIGH priority — design Sprint 3, build Phase 2, video activation Month 9, web activation Month 12. G4/G5 remain Phase 2 signal-gated. 4 new Core Invariants added (no generateLetter() modification without 7-gate spec, no letter output without LQE, no Spanish content without SCAA, no agent without stopping conditions). 1 new Scope Gate added (check MA-AUT-006 before any generateLetter() or agent change). Phase 2 Priorities updated (items 18–25 added). docs/agents/ updated with MA-AUT-006 docx. Conflicts with stale PMP reference (v20 → v24) and incorrect MA-SEC-001 ref (→ MA-SEC-002) flagged — MA-AUT-006 doc itself needs correction. MA-ARC-001 and MA-GAM-001 refs in MA-AUT-006 are unresolved (no matching canonical doc). Full spec: MA-AUT-006 in docs/agents/.
 - 2026-03-13: MA-SEO-SUP-001 integrated — SEO Authority & Content Infrastructure Strategy canonized. PMP v24 created with new §6G. docs/seo/ updated with canonical file. 4 new Core Invariants added (cornerstone sequencing, GEO template Phase 1 standard, anonymous institutional voice, refresh-before-expand). 1 new Scope Gate added (check MA-SEO-SUP-001 before any content infrastructure work). Phase 2 Priorities updated (items 10–12 added: Content Refresh Agent moved to Sprint 1, page metadata fields Sprint 1, outcome data schema Sprint 2). Context registry updated (src_0013, dec_0010–dec_0014, 3 new seo_clusters, 10 new content_pages). Agent deployment revisions: Content Refresh Agent → Phase 2, Data/Insights Agent → Phase 3, CMO Outreach Module → Phase 3, CMO Spanish Track → Phase 4, GEO Module → Phase 1. Full spec: MA-SEO-SUP-001 in docs/seo/.
 - 2026-03-12: MA-SUP-DAT-001 integrated — Proprietary Data Engine Strategy canonized. Supabase migration 019 (friction_events stub) created. PMP v23 created with new §6F. docs/data/ subdirectory created. Context registry updated (src_0012, dec_0009). 26 Notion sprint tasks created (MA-DAT-ENG-P1 through P4). Phase 2 Priorities updated (items 7–9 added). friction_events added to data architecture: two datasets (insurance friction events + appeal outcome events), four-layer privacy compliance, publication gates (Phase 3+), competitive moat analysis. Full spec: MA-SUP-DAT-001 in docs/data/.
