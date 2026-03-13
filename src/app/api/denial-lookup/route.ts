@@ -26,22 +26,22 @@ export async function GET(request: NextRequest) {
   // PMP v19 §8 metric 2 — second_tool_use: fire if this authenticated user
   // already has a prior tool_use event recorded (count > 0 before this insert)
   if (userId) {
-    supabase
-      .from('metric_events')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('event_type', 'tool_use')
-      .then(({ count }) => {
-        if (count && count > 0) {
-          logEvent({
-            eventType: 'second_tool_use',
-            sourcePage: '/tools/denial-decoder',
-            toolName: 'denial_decoder',
-            userId,
-          }).catch(() => {})
-        }
-      })
-      .catch(() => {})
+    Promise.resolve(
+      supabase
+        .from('metric_events')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('event_type', 'tool_use')
+    ).then(({ count }) => {
+      if (count && count > 0) {
+        logEvent({
+          eventType: 'second_tool_use',
+          sourcePage: '/tools/denial-decoder',
+          toolName: 'denial_decoder',
+          userId,
+        }).catch(() => {})
+      }
+    }).catch(() => {})
   }
 
   return NextResponse.json(result)
