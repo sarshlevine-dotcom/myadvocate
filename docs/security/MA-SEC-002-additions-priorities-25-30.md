@@ -25,7 +25,7 @@ direct API call.
 - Limit is account-level (tied to authenticated Supabase user), not IP-level
 - Test: authenticated free user calling the API directly cannot exceed 1 letter/month
 
-**Pass/Fail**: [ ]
+**Pass/Fail**: [x] PASS — 2026-03-13
 
 **Block launch**: **Yes**
 
@@ -48,7 +48,7 @@ user can bypass disabled buttons by calling API routes directly.
 - Failure returns 403 with structured `{ error: "tier_insufficient", code: "AUTH_TIER" }`
 - Result logged to `metric_events` for abuse monitoring
 
-**Pass/Fail**: [ ]
+**Pass/Fail**: [x] PASS — 2026-03-13
 
 **Block launch**: **Yes**
 
