@@ -1,10 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import type { ArtifactReleaseState } from '@/types/domain'
+import type { LetterType } from '@/lib/generate-letter'
 
 export async function createArtifact(params: {
   caseId: string
   userId: string
-  artifactType: 'denial_appeal'
+  artifactType: LetterType
   releaseState: ArtifactReleaseState
   disclaimerVersion: string
   contentHash: string
