@@ -1,0 +1,17 @@
+{
+  "title": "PR-204 Denial Code: Service Not Covered Under Your Plan — What to Do",
+  "meta_description": "PR-204 means your insurance plan doesn't cover the service you received. Learn whether it was applied correctly, and what options you have even when coverage is excluded.",
+  "content_tier": 1,
+  "target_problem": "Patient received a PR-204 denial indicating the service is not covered under their plan and needs to understand their options.",
+  "cluster": "cluster_0009",
+  "primary_source_1": "https://www.cms.gov/CCIIO/Resources/Fact-Sheets-and-FAQs/aca_implementation_faqs15",
+  "primary_source_2": "https://www.healthcare.gov/coverage/what-marketplace-plans-cover/",
+  "reviewer_name": "MyAdvocate Clinical Review Team",
+  "review_date": "2026-03-12",
+  "last_updated_date": "2026-03-12",
+  "medical_disclaimer_included": true,
+  "forbidden_claims_check": "PASS",
+  "attorney_review_required": false,
+  "publish_approved_by": "sarsh",
+  "body": "PR-204 is a Claim Adjustment Reason Code meaning the service, equipment, or drug is not covered by the plan. It is a patient-responsibility code in the PR series, indicating that no insurance benefit applies.\n\nNot all PR-204 denials are correct. Before accepting this denial, verify: was the service coded correctly; is the service actually listed as excluded in your plan documents; was a CO-50 medical necessity denial incorrectly coded as PR-204.\n\nOptions after a PR-204 denial: appeal the denial if the code was applied incorrectly; request a coverage exception if no covered alternative exists; check whether the service is required under federal guidelines for essential health benefits.\n\nHow to appeal: get your denial letter and EOB; review your Summary of Benefits and Coverage for the exclusion; contact your provider's billing office to confirm the procedure code; write your appeal letter; submit before the deadline (typically 180 days).\n\nThis content does not constitute legal or medical advice. MyAdvocate is not a law firm. For questions specific to your situation, consult a qualified attorney or healthcare professional."
+}

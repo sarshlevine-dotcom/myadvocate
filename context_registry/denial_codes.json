@@ -735,6 +735,96 @@
       ],
       "appeal_priority": "high",
       "notes": "Retroactive enrollment, grace period, or continuous coverage argument. ACA special enrollment periods may apply."
+    },
+    {
+      "id": "den_0021",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009",
+        "src_0010",
+        "src_0011"
+      ],
+      "confidence": 1.0,
+      "code": "CO-18",
+      "title": "Duplicate Claim",
+      "category": "administrative",
+      "description": "The claim was submitted more than once for the same service and date of service.",
+      "payer_scope": [
+        "general",
+        "medicare",
+        "medicaid",
+        "commercial"
+      ],
+      "service_types": [
+        "all"
+      ],
+      "related_regulation_ids": [],
+      "related_strategy_ids": [],
+      "related_page_ids": [
+        "page_0012"
+      ],
+      "related_cluster_ids": [
+        "cluster_0007"
+      ],
+      "common_documents_needed": [
+        "original_claim_number",
+        "eob_showing_original_payment",
+        "resubmission_documentation"
+      ],
+      "appeal_priority": "medium",
+      "denial_volume_share": "5-8%",
+      "priority_sequence": 4,
+      "tool_route": "medical_bill_dispute_generator",
+      "notes": "Priority #4 in 12-code first publishing wave (SEO Gap Analysis v1, src_0011). High search intent because patients find the duplicate denial confusing. Often a billing system error or split claim. Resolution path: confirm original was paid, request duplicate review or provider resubmission. Administrative category — routes to Bill Dispute Tool."
+    },
+    {
+      "id": "den_0022",
+      "status": "active",
+      "created_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-12T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0009",
+        "src_0010",
+        "src_0011"
+      ],
+      "confidence": 1.0,
+      "code": "CO-B7",
+      "title": "Provider Not Certified",
+      "category": "coverage",
+      "description": "The rendering provider is not certified or credentialed by the payer for the service billed.",
+      "payer_scope": [
+        "general",
+        "medicare",
+        "medicaid",
+        "commercial"
+      ],
+      "service_types": [
+        "specialist",
+        "outpatient",
+        "inpatient"
+      ],
+      "related_regulation_ids": [],
+      "related_strategy_ids": [],
+      "related_page_ids": [
+        "page_0020"
+      ],
+      "related_cluster_ids": [
+        "cluster_0009"
+      ],
+      "common_documents_needed": [
+        "provider_credentialing_status",
+        "npi_lookup_documentation",
+        "network_participation_letter"
+      ],
+      "appeal_priority": "medium",
+      "denial_volume_share": "1-3%",
+      "priority_sequence": 12,
+      "tool_route": "insurance_appeal_generator",
+      "notes": "Priority #12 in 12-code first publishing wave (SEO Gap Analysis v1, src_0011). Credentialing denial — the fix path often runs through the provider, not the patient. Patient advocacy role: understand whether this is a payer credentialing lag vs. a genuine out-of-network issue, and route accordingly. Coverage/Network category — routes to Denial Fighter. No Surprises Act may apply if this was an emergency service."
     }
   ]
 }

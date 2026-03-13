@@ -1,0 +1,17 @@
+{
+  "title": "CO-97 Denial Code: Bundled Billing — What It Means and How to Dispute",
+  "meta_description": "CO-97 means a service was included in the payment for another procedure. Learn whether the bundling was correct and how to dispute an improper CO-97 denial.",
+  "content_tier": 1,
+  "target_problem": "Patient received a CO-97 denial and wants to know if the bundling was correct and how to dispute it.",
+  "cluster": "cluster_0007",
+  "primary_source_1": "https://www.cms.gov/medicare/coding-billing/place-of-service-codes/code-sets",
+  "primary_source_2": "https://www.cms.gov/outreach-and-education/medicare-learning-network-mln/mlnproducts/downloads/how-to-read-an-eob.pdf",
+  "reviewer_name": "MyAdvocate Clinical Review Team",
+  "review_date": "2026-03-12",
+  "last_updated_date": "2026-03-12",
+  "medical_disclaimer_included": true,
+  "forbidden_claims_check": "PASS",
+  "attorney_review_required": false,
+  "publish_approved_by": "sarsh",
+  "body": "CO-97 is issued when an insurer or Medicare determines that a billed service is considered part of a bundled procedure — meaning payment for that service is included in the primary procedure's reimbursement.\n\n## When Is CO-97 Correct?\n\nBundling rules are defined by CMS's National Correct Coding Initiative (NCCI) edits. If a service is on the NCCI bundled code list for the primary procedure, CO-97 may be applied correctly.\n\n## When Can You Dispute CO-97?\n\nA CO-97 denial may be disputable if:\n- The services were rendered on different dates\n- A modifier (such as -59 or -XS) applies to indicate a distinct service\n- The bundling was applied by error\n\n## How to Dispute\n\n1. Request your Explanation of Benefits (EOB) from your insurer.\n2. Ask your provider to review the NCCI edits and confirm whether a modifier applies.\n3. File a claim correction with the appropriate modifier if the services were distinct.\n\n## Disclaimer\n\nThis content does not constitute legal or medical advice. MyAdvocate is not a law firm. For questions specific to your situation, consult a qualified attorney or healthcare professional."
+}

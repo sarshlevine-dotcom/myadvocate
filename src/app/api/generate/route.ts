@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
 import { generateLetter, LetterType } from '@/lib/generate-letter'
+import { checkTierAuthorization } from '@/lib/auth-tier'
 import { getCaseById } from '@/lib/db/cases'
-import { createClient } from '@/lib/supabase/server'
 import { generateRateLimit } from '@/lib/rate-limit'
 import { writeFrictionEvent } from '@/lib/db/friction-events'
-import { getReviewQueueDepth } from '@/lib/db/review-queue'
-import { sendCapacityAlert } from '@/lib/mailer'
+import { logEvent } from '@/lib/db/metric-events'
 
 const ALLOWED_LETTER_TYPES: LetterType[] = [
   'denial_appeal',
@@ -16,24 +15,32 @@ const ALLOWED_LETTER_TYPES: LetterType[] = [
 ]
 
 export async function POST(request: NextRequest) {
+  // Step 1: Auth — verify user identity
   const user = await getCurrentUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // Subscription check — only active subscribers can generate letters
-  const supabase = await createClient()
-  const { data: profile } = await supabase
-    .from('users')
-    .select('subscription_status, role')
-    .eq('id', user.id)
-    .single()
+  // Step 2: Parse body — needed before tier check to get letterType
+  const body = await request.json()
+  const { caseId, caseData } = body
+  const letterType: LetterType = ALLOWED_LETTER_TYPES.includes(body.letterType)
+    ? body.letterType
+    : 'denial_appeal'
 
-  if (profile?.role !== 'admin' && profile?.subscription_status !== 'active') {
-    return NextResponse.json(
-      { error: 'Active subscription required' },
-      { status: 402 }
-    )
+  // Step 3: Tier authorization — MA-SEC-002 P25/P26
+  // MUST run before generateLetter(). Returns 403 on failure.
+  const authResult = await checkTierAuthorization(user.id, letterType)
+  if (!authResult.authorized) {
+    // P26: log authorization failures for abuse monitoring (non-blocking)
+    logEvent({
+      eventType:  'tool_use',
+      sourcePage: '/api/generate',
+      toolName:   letterType,
+      userId:     user.id,
+    }).catch(() => {})
+    return NextResponse.json(authResult, { status: 403 })
   }
 
+  // Step 4: Rate limit
   const { success, remaining } = await generateRateLimit.limit(user.id)
   if (!success) {
     return NextResponse.json(
@@ -45,28 +52,13 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // MA-SEC-002 P27: Queue depth cap — block generation when review queue is full
-  const queueDepth = await getReviewQueueDepth()
-  if (queueDepth >= 10) {
-    sendCapacityAlert().catch((err) =>
-      console.error('[generate] sendCapacityAlert failed:', err)
-    )
-    return NextResponse.json(
-      { error: 'review_queue_full', code: 'QUEUE_CAP' },
-      { status: 429 }
-    )
-  }
-
-  const { caseId, caseData, letterType: rawLetterType } = await request.json()
-  const letterType: LetterType = ALLOWED_LETTER_TYPES.includes(rawLetterType)
-    ? rawLetterType
-    : 'denial_appeal'
-
+  // Step 5: Validate case ownership
   const caseRecord = await getCaseById(caseId)
   if (!caseRecord || caseRecord.user_id !== user.id) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
+  // Step 6: Generate — tier check has already passed
   const artifact = await generateLetter({
     caseId,
     userId: user.id,
@@ -74,17 +66,8 @@ export async function POST(request: NextRequest) {
     caseData,
   })
 
-  // MA-SEC-002 P27: Fire-and-forget review notification — must never block letter delivery
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-  fetch(`${appUrl}/api/internal/notify-review`, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ artifactId: artifact.id }),
-  }).catch((err) => console.error('[generate] notify-review fire-and-forget failed:', err))
-
   // MA-COST-001: Bucket 1 — friction event write, no AI call
   // Fire-and-forget — never block the HTTP response
-  // MA-DAT-ENG-P1-006: case_id now stored so ClaimAmountSelector can update this record
   if (letterType === 'denial_appeal') {
     writeFrictionEvent({
       tool_used:          'appeal_letter',
@@ -93,7 +76,7 @@ export async function POST(request: NextRequest) {
       procedure_type:     typeof caseData?.procedure_type  === 'string' ? caseData.procedure_type  : undefined,
       insurer:            typeof caseData?.insurer         === 'string' ? caseData.insurer         : undefined,
       state:              typeof caseData?.state           === 'string' ? caseData.state           : undefined,
-      claim_amount_range: null, // populated post-generation via ClaimAmountSelector
+      claim_amount_range: null,
     }).catch(() => {})
   } else if (letterType === 'bill_dispute') {
     writeFrictionEvent({
@@ -103,11 +86,9 @@ export async function POST(request: NextRequest) {
       provider_category:   typeof caseData?.provider_category   === 'string' ? caseData.provider_category   : undefined,
       charge_amount_range: typeof caseData?.charge_amount_range === 'string' ? caseData.charge_amount_range : undefined,
       state:               typeof caseData?.state               === 'string' ? caseData.state               : undefined,
-      claim_amount_range:  null, // populated post-generation via ClaimAmountSelector
+      claim_amount_range:  null,
     }).catch(() => {})
   }
 
-  // Return artifactId, caseId, and letter content so the tool page can display
-  // the letter without a second storage round-trip.
   return NextResponse.json({ artifactId: artifact.id, caseId, content: artifact.content }, { status: 201 })
 }

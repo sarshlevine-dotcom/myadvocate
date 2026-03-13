@@ -1,0 +1,18 @@
+{
+  "_test_intent": "FAIL Layer 4 (Disclaimer Presence) — medical_disclaimer_included is false",
+  "title": "CO-45 Denial Code: Charge Exceeds Fee Schedule",
+  "meta_description": "CO-45 means the billed amount exceeds your insurer's maximum allowed fee. Learn how to dispute this and what your options are.",
+  "content_tier": 1,
+  "target_problem": "Patient received a CO-45 denial and wants to understand the fee schedule dispute process.",
+  "cluster": "cluster_0007",
+  "primary_source_1": "https://www.cms.gov/medicare/billing/physicianfeeschedule",
+  "primary_source_2": "https://www.cms.gov/outreach-and-education/medicare-learning-network-mln/mlnproducts/downloads/physicianfeeschedulecontracts.pdf",
+  "reviewer_name": "MyAdvocate Clinical Review Team",
+  "review_date": "2026-03-12",
+  "last_updated_date": "2026-03-12",
+  "medical_disclaimer_included": false,
+  "forbidden_claims_check": "PASS",
+  "attorney_review_required": false,
+  "publish_approved_by": "sarsh",
+  "body": "CO-45 means the billed charge exceeds the insurer's maximum allowable fee for that service. This is a contractual adjustment — the provider has agreed to accept the insurer's fee schedule as full payment. The patient is generally not responsible for the difference.\n\nIf you believe the fee schedule was applied incorrectly, ask your provider to review the contracted rate and submit a corrected claim if appropriate."
+}

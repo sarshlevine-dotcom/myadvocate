@@ -1,0 +1,14 @@
+{
+  "_test_intent": "FAIL Layer 1 (Schema Completeness) — missing: meta_description, reviewer_name, review_date, publish_approved_by",
+  "title": "CO-50 Insurance Denial Appeal Guide",
+  "content_tier": 2,
+  "target_problem": "Patient received a CO-50 denial and needs to appeal.",
+  "cluster": "cluster_0001",
+  "primary_source_1": "https://www.cms.gov/files/document/appeals-and-grievances.pdf",
+  "primary_source_2": "https://www.healthcare.gov/appeal-insurance-company-decision/appeals/",
+  "last_updated_date": "2026-03-12",
+  "medical_disclaimer_included": true,
+  "forbidden_claims_check": "PASS",
+  "attorney_review_required": false,
+  "body": "This content does not constitute legal or medical advice. MyAdvocate is not a law firm. For questions specific to your situation, consult a qualified attorney or healthcare professional."
+}

@@ -1,0 +1,17 @@
+{
+  "title": "PR-204 Denial Code: Service Not Covered Under Your Plan",
+  "meta_description": "PR-204 means your insurance plan doesn't cover this service. Learn how to verify coverage, request exceptions, and what options you have.",
+  "content_tier": 1,
+  "target_problem": "Patient received a PR-204 denial indicating the service is not covered under their plan and needs to understand their options.",
+  "cluster": "cluster_0009",
+  "primary_source_1": "https://www.cms.gov/CCIIO/Resources/Fact-Sheets-and-FAQs/aca_implementation_faqs15",
+  "primary_source_2": "https://www.healthcare.gov/coverage/what-marketplace-plans-cover/",
+  "reviewer_name": "MyAdvocate Clinical Review Team",
+  "review_date": "2026-03-12",
+  "last_updated_date": "2026-03-12",
+  "medical_disclaimer_included": true,
+  "forbidden_claims_check": "PASS",
+  "attorney_review_required": false,
+  "publish_approved_by": "sarsh",
+  "body": "PR-204 indicates that the service is not covered under your insurance plan. This is a patient-responsibility code, meaning your insurer has determined no benefit payment applies to this service under your current plan.\n\n## What to Check First\n\n1. Verify the service code billed matches the service you received — billing errors are common.\n2. Request your Summary of Benefits and Coverage (SBC) to confirm whether the service is listed as excluded.\n3. Review your plan documents for any exceptions process, such as a medical necessity override.\n\n## What You Can Do\n\nEven for services technically excluded from coverage, you may have options:\n- File an appeal if you believe the exclusion was applied incorrectly.\n- Ask whether an exception can be made if there are no covered alternatives for your condition.\n- Review whether a different, covered service could address the same clinical need.\n\n## Disclaimer\n\nThis content does not constitute legal or medical advice. MyAdvocate is not a law firm. For questions specific to your situation, consult a qualified attorney or healthcare professional."
+}

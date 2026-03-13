@@ -1,0 +1,18 @@
+{
+  "_test_intent": "FAIL Layer 3 (Forbidden Claims) — body contains 'this appeal will succeed' (outcome guarantee)",
+  "title": "CO-50 Insurance Denial: How to Win Your Appeal",
+  "meta_description": "Learn how to appeal a CO-50 denial with strategies that work.",
+  "content_tier": 2,
+  "target_problem": "Patient received a CO-50 denial and wants to appeal.",
+  "cluster": "cluster_0001",
+  "primary_source_1": "https://www.cms.gov/files/document/appeals-and-grievances.pdf",
+  "primary_source_2": "https://www.healthcare.gov/appeal-insurance-company-decision/appeals/",
+  "reviewer_name": "MyAdvocate Clinical Review Team",
+  "review_date": "2026-03-12",
+  "last_updated_date": "2026-03-12",
+  "medical_disclaimer_included": true,
+  "forbidden_claims_check": "PENDING",
+  "attorney_review_required": false,
+  "publish_approved_by": "sarsh",
+  "body": "A CO-50 denial means your insurer determined the service was not medically necessary. With the right documentation, this appeal will succeed in most cases. Follow these steps to build your strongest case.\n\nStep 1: Get the denial letter and request the insurer's medical necessity criteria.\nStep 2: Have your doctor write a Letter of Medical Necessity.\nStep 3: Submit your internal appeal before the deadline.\n\nThis content does not constitute legal or medical advice. MyAdvocate is not a law firm. For questions specific to your situation, consult a qualified attorney or healthcare professional."
+}

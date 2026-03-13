@@ -1,0 +1,17 @@
+{
+  "title": "CO-50 Insurance Denial: What It Means and How to Appeal",
+  "meta_description": "CO-50 means your insurer determined a service was not medically necessary. Learn exactly what to do, what to include in your appeal, and how to win.",
+  "content_tier": 3,
+  "target_problem": "Patient received a CO-50 denial (not medically necessary) and needs to appeal.",
+  "cluster": "cluster_0001",
+  "primary_source_1": "https://www.cms.gov/files/document/appeals-and-grievances.pdf",
+  "primary_source_2": "https://www.healthcare.gov/appeal-insurance-company-decision/appeals/",
+  "reviewer_name": "MyAdvocate Clinical Review Team",
+  "review_date": "2026-03-12",
+  "last_updated_date": "2026-03-12",
+  "medical_disclaimer_included": true,
+  "forbidden_claims_check": "PASS",
+  "attorney_review_required": true,
+  "publish_approved_by": "sarsh",
+  "body": "A CO-50 denial means your insurance company determined the service was not medically necessary under your plan's criteria.\n\nFewer than 1% of patients appeal denials, even though 40–60% of those who do win.\n\n## What CO-50 Means\n\nCO-50 is a Claim Adjustment Reason Code (CARC) used by insurers to indicate that a service was denied because the plan does not consider it medically necessary for your diagnosis or clinical situation.\n\n## How to Appeal a CO-50 Denial\n\n1. Request the insurer's medical necessity criteria in writing — they are required to provide this under federal law.\n2. Ask your doctor to write a Letter of Medical Necessity documenting the clinical rationale.\n3. Submit a formal internal appeal within your plan's deadline (typically 180 days from the denial date).\n4. If the internal appeal fails, request an Independent Medical Review — a third party must review the decision.\n\n## Disclaimer\n\nThis content does not constitute legal or medical advice. MyAdvocate is not a law firm. For questions specific to your situation, consult a qualified attorney or healthcare professional."
+}

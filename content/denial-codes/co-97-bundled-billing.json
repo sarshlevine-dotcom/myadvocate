@@ -1,0 +1,17 @@
+{
+  "title": "CO-97 Denial Code: Bundled Billing — What It Means and How to Dispute It",
+  "meta_description": "CO-97 means a service was included in a bundled payment for another procedure. Find out when you can dispute a CO-97 denial and exactly how to do it.",
+  "content_tier": 1,
+  "target_problem": "Patient received a CO-97 denial and wants to know if the bundling was applied correctly and how to dispute it.",
+  "cluster": "cluster_0007",
+  "primary_source_1": "https://www.cms.gov/medicare/coding-billing/place-of-service-codes/code-sets",
+  "primary_source_2": "https://www.cms.gov/outreach-and-education/medicare-learning-network-mln/mlnproducts/downloads/mln006379.pdf",
+  "reviewer_name": "MyAdvocate Clinical Review Team",
+  "review_date": "2026-03-12",
+  "last_updated_date": "2026-03-12",
+  "medical_disclaimer_included": true,
+  "forbidden_claims_check": "PASS",
+  "attorney_review_required": false,
+  "publish_approved_by": "sarsh",
+  "body": "CO-97 is a Claim Adjustment Reason Code that means the benefit for a service is included in the payment for another service that has already been adjudicated. In plain terms: your insurer bundled two services together and denied separate payment for one of them.\n\nCO-97 is one of the most frequent administrative denial codes, particularly for outpatient procedures, lab work performed during surgery, and multi-step treatments billed on the same date.\n\nMost CO-97 denials trace back to the National Correct Coding Initiative (NCCI), a CMS program that identifies pairs of procedure codes that should be billed as one unit rather than two.\n\nA CO-97 denial may be disputable when: the services were performed on different dates; a modifier (-59 or XS) applies to show the services were distinct; or the bundling rule does not apply to your specific plan.\n\nTo dispute: request your EOB, check whether a modifier applies, verify the dates of service, and file a formal appeal if needed with documentation that the services were distinct.\n\nThis content does not constitute legal or medical advice. MyAdvocate is not a law firm. For questions specific to your situation, consult a qualified attorney or healthcare professional."
+}

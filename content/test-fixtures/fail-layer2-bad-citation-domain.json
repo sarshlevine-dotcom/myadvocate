@@ -1,0 +1,18 @@
+{
+  "_test_intent": "FAIL Layer 2 (Citation Validity) — citations are not on the approved domain list (non-.gov sources)",
+  "title": "CO-50 Insurance Denial: What It Means",
+  "meta_description": "Learn what a CO-50 denial means and how to appeal a not medically necessary determination.",
+  "content_tier": 2,
+  "target_problem": "Patient received a CO-50 denial and needs to understand it.",
+  "cluster": "cluster_0001",
+  "primary_source_1": "https://www.webmd.com/health-insurance/insurance-claim-denial",
+  "primary_source_2": "https://www.healthline.com/health/insurance-denial-appeal",
+  "reviewer_name": "MyAdvocate Clinical Review Team",
+  "review_date": "2026-03-12",
+  "last_updated_date": "2026-03-12",
+  "medical_disclaimer_included": true,
+  "forbidden_claims_check": "PASS",
+  "attorney_review_required": false,
+  "publish_approved_by": "sarsh",
+  "body": "A CO-50 denial means your insurance company determined the service was not medically necessary.\n\nThis content does not constitute legal or medical advice. MyAdvocate is not a law firm. For questions specific to your situation, consult a qualified attorney or healthcare professional."
+}

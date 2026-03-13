@@ -1,0 +1,17 @@
+{
+  "title": "CO-151 Denial Code: Prior Authorization Required — How to Respond",
+  "meta_description": "CO-151 means your claim was denied because prior authorization was not obtained. Learn your rights and how to appeal or get retroactive approval.",
+  "content_tier": 2,
+  "target_problem": "Patient's claim was denied with CO-151 because prior authorization was not obtained before the service.",
+  "cluster": "cluster_0002",
+  "primary_source_1": "https://www.cms.gov/medicare/appeal-and-grievance",
+  "primary_source_2": "https://www.hhs.gov/about/news/2023/07/07/hhs-departments-announce-final-rule-improving-prior-authorization.html",
+  "reviewer_name": "MyAdvocate Clinical Review Team",
+  "review_date": "2026-03-12",
+  "last_updated_date": "2026-03-12",
+  "medical_disclaimer_included": true,
+  "forbidden_claims_check": "PASS",
+  "attorney_review_required": false,
+  "publish_approved_by": "sarsh",
+  "body": "CO-151 indicates your claim was denied because the service required prior authorization that was not obtained before the service was rendered.\n\n## What You Can Do\n\nMany CO-151 denials can be reversed by requesting retroactive authorization or filing an appeal. Under federal law, insurers must provide you with a written explanation and an opportunity to appeal any adverse benefit determination.\n\nSteps to take:\n\n1. Contact your insurer immediately to ask if retroactive authorization is available.\n2. Ask your provider to submit the prior authorization request with supporting clinical documentation.\n3. File a formal internal appeal if retroactive authorization is denied.\n4. Document all communications with dates and names.\n\n## Timeline Rules\n\nMost plans require internal appeals to be submitted within 180 days of the denial. Emergency situations may allow expedited review within 72 hours.\n\n## Disclaimer\n\nThis content does not constitute legal or medical advice. MyAdvocate is not a law firm. For questions specific to your situation, consult a qualified attorney or healthcare professional."
+}

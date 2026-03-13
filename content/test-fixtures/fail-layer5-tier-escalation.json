@@ -1,0 +1,18 @@
+{
+  "_test_intent": "FAIL Layer 5 (Tier Routing) — Tier 1 page containing Tier 3 triggers (ERISA, state law references) without attorney_review_required",
+  "title": "CO-50 Denial and ERISA Appeals: What Employees Need to Know",
+  "meta_description": "If your employer-sponsored insurance denied a CO-50 claim, ERISA and state law may affect your appeal rights. Learn the differences.",
+  "content_tier": 1,
+  "target_problem": "Employee on employer-sponsored health plan received CO-50 denial and wants to understand ERISA appeal rights.",
+  "cluster": "cluster_0001",
+  "primary_source_1": "https://www.dol.gov/agencies/ebsa/about-ebsa/our-activities/resource-center/publications/filing-a-claim-for-your-health-insurance-benefits",
+  "primary_source_2": "https://www.cms.gov/files/document/appeals-and-grievances.pdf",
+  "reviewer_name": "MyAdvocate Clinical Review Team",
+  "review_date": "2026-03-12",
+  "last_updated_date": "2026-03-12",
+  "medical_disclaimer_included": true,
+  "forbidden_claims_check": "PASS",
+  "attorney_review_required": false,
+  "publish_approved_by": "sarsh",
+  "body": "If you are covered through an employer-sponsored health plan, your appeal rights may differ from those under individual or marketplace plans. ERISA (29 USC § 1001) governs most employer-sponsored plans and provides specific protections around claim denials and appeals.\n\nUnder ERISA, you have the right to receive a full and fair review of any denied claim. State law may also provide additional protections depending on whether your plan is fully insured or self-funded.\n\nPatient rights under state law and federal statute can overlap in complex ways. Consulting a patient advocate or attorney who specializes in ERISA matters may be appropriate for complex cases.\n\nThis content does not constitute legal or medical advice. MyAdvocate is not a law firm. For questions specific to your situation, consult a qualified attorney or healthcare professional."
+}
