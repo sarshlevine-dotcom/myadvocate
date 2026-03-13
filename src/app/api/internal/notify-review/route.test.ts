@@ -48,7 +48,7 @@ describe('POST /api/internal/notify-review', () => {
   })
 
   it('returns 404 when artifact not found in DB', async () => {
-    mockSingle.mockResolvedValueOnce({ data: null, error: null })
+    mockSingle.mockResolvedValueOnce({ data: null, error: { code: 'PGRST116', message: 'JSON object requested, multiple (or no) rows returned' } })
     const res = await POST(makeRequest({ artifactId: 'missing' }))
     expect(res.status).toBe(404)
   })
@@ -62,7 +62,7 @@ describe('POST /api/internal/notify-review', () => {
   })
 
   it('returns 500 when DB query fails', async () => {
-    mockSingle.mockResolvedValueOnce({ data: null, error: new Error('db fail') })
+    mockSingle.mockResolvedValueOnce({ data: null, error: { code: 'PGRST301', message: 'db fail' } })
     const res = await POST(makeRequest({ artifactId: 'art-123' }))
     expect(res.status).toBe(500)
   })

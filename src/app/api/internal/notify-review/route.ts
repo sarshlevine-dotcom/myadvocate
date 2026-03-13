@@ -28,12 +28,16 @@ export async function POST(request: NextRequest) {
     .eq('id', artifactId)
     .single()
 
+  if (dbError?.code === 'PGRST116') {
+    // Supabase .single() returns PGRST116 when no rows match
+    return NextResponse.json({ error: 'Artifact not found' }, { status: 404 })
+  }
   if (dbError) {
     console.error('[notify-review] DB error:', dbError.message)
     return NextResponse.json({ error: 'Failed to query artifact' }, { status: 500 })
   }
-
   if (!artifact) {
+    // Defensive fallback — should not be reached in practice
     return NextResponse.json({ error: 'Artifact not found' }, { status: 404 })
   }
 
