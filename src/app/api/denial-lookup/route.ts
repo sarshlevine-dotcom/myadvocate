@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDenialCodeByCode } from '@/lib/db/denial-codes'
 import { logEvent } from '@/lib/db/metric-events'
+import { writeFrictionEvent } from '@/lib/db/friction-events'
 import { createClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
@@ -43,6 +44,15 @@ export async function GET(request: NextRequest) {
       }
     }).catch(() => {})
   }
+
+  // MA-COST-001: Bucket 1 — friction event write, no AI call
+  writeFrictionEvent({
+    tool_used: 'denial_decoder',
+    denial_code: code,
+    insurer: request.nextUrl.searchParams.get('insurer') ?? undefined,
+    state: request.nextUrl.searchParams.get('state') ?? undefined,
+    service_category: result.category ?? undefined,
+  }).catch(() => {})
 
   return NextResponse.json(result)
 }
