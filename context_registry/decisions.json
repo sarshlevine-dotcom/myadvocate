@@ -3,7 +3,7 @@
     "registry": "decisions",
     "id_prefix": "dec_",
     "description": "Structured log of strategic and operational decisions with rationale. One of the highest-value registries \u2014 captures why, not just what.",
-    "last_updated": "2026-03-12T00:00:00Z",
+    "last_updated": "2026-03-12T01:00:00Z",
     "schema_version": "1.0",
     "authority": "MA-CTX-001"
   },
@@ -226,6 +226,43 @@
       "related_decision_ids": [],
       "review_on": null,
       "notes": "HeyGen avatar selection: test 3 EN + 3 ES candidates with same script before committing. Story bank needs 3 approved stories before Month 3 YouTube launch."
+    },
+    {
+      "id": "dec_0009",
+      "status": "active",
+      "created_at": "2026-03-12T01:00:00Z",
+      "updated_at": "2026-03-12T01:00:00Z",
+      "owner": "sarsh",
+      "source_ids": [
+        "src_0012"
+      ],
+      "confidence": 1.0,
+      "title": "Proprietary Data Engine: stub friction_events in Phase 1, publish nothing until Phase 3 thresholds met",
+      "decision_type": "strategy",
+      "summary": "The friction_events table (MA-SUP-DAT-001) is a Phase 1 schema obligation, not a Phase 3 feature. Collection begins at launch; publication is gated on statistical thresholds (1,000+ events for first content) and attorney review of insurer-naming framing. The competitive moat accrues only if the clock starts now.",
+      "rationale": [
+        "Data collection must begin before the dataset is useful — a competitor starting two years later starts with zero data",
+        "friction_events schema must be stubbed in Phase 1 to avoid a breaking migration later when outcome columns are added in Phase 2",
+        "Publishing prematurely with small samples destroys credibility and creates legal exposure — gate on thresholds in MA-SUP-DAT-001 §4",
+        "claim_amount_range is the highest-leverage optional field: converts pattern data into a financial impact figure citable in press outreach",
+        "Four-layer privacy architecture (structured input, PII scrubber, context firewall, stateless API) makes collection safe within the existing compliance model",
+        "Attorney HIPAA-adjacent risk assessment of insurer+procedure_type+state field combination is required before Phase 3 publication — not before collection",
+        "This is the same authority pattern used by NerdWallet, Glassdoor, and Zillow — moat is user relationship and time investment, not technology"
+      ],
+      "affects_systems": [
+        "MA-DAT",
+        "MA-SEC",
+        "MA-PMP",
+        "supabase/migrations/",
+        "friction_events"
+      ],
+      "supersedes_decision_ids": [],
+      "related_decision_ids": [
+        "dec_0003",
+        "dec_0004"
+      ],
+      "review_on": "2026-07-01",
+      "notes": "Review trigger: Phase 2 Month 3-4 — activate outcome follow-up flow. Phase 3 gate: 1,000+ friction events AND attorney sign-off. See MA-SUP-DAT-001 §4 for full publication thresholds. Migration 019 creates the table stub."
     },
     {
       "id": "dec_0008",

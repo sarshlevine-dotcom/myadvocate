@@ -165,6 +165,7 @@ Before building any new feature or making an architectural change, run through t
 - `MA-IG-001` — Instagram Strategy v2.0 — gate structure, direct/indirect revenue model, EN + ES dual channel — `docs/social/MA-IG-001_Instagram_Strategy_v2.docx`
 - `MA-EEAT-001` — EEAT & YMYL Compliance Audit — shortfall analysis, trust infrastructure spec, 5-layer content safety stack, reviewer framing, gamification Trust XP — `docs/seo/MA-EEAT-001_EEAT_YMYL_Audit_Report.docx` ← hardwired into all SEO content
 - `MA-AHP-001` — Anti-Hallucination Protocol — governs all agent outputs (in Notion Agent Registry)
+- `MA-SUP-DAT-001` — Proprietary Data Engine Strategy — two compounding datasets (friction events + appeal outcomes), collection schema, publication gates, phase/sprint task plan, competitive moat analysis — `docs/data/myadvocate_business_supplemental_proprietary_data_engine_v1.docx` ← hardwired into data architecture and Phase 2+ data intelligence builds
 - `Projections v17` — Financial model M1–M24, all revenue streams — `docs/pmp/MyAdvocate_Projections_v17.xlsx`
 - `docs/security/security-audit-session-9.md` — security audit session notes
 - `docs/security/MA-SEC-002-additions-priorities-21-24.md` — Priorities 21–24 to integrate into Google Drive doc
@@ -178,7 +179,7 @@ docs/
   cost/       MA-COST-001-api-cost-architecture.md
   security/   security-audit-session-9.md, MA-SEC-002-additions-priorities-21-24.md
   seo/        MA-EEAT-001_EEAT_YMYL_Audit_Report.docx  ← EEAT/YMYL compliance spec, hardwired into all content
-  pmp/        MyAdvocate_PMP_v18.docx, MyAdvocate_PMP_v19.docx, MyAdvocate_PMP_v21.docx, MyAdvocate_PMP_v22.docx  ← CURRENT
+  pmp/        MyAdvocate_PMP_v18.docx, MyAdvocate_PMP_v19.docx, MyAdvocate_PMP_v21.docx, MyAdvocate_PMP_v22.docx, MyAdvocate_PMP_v23.docx  ← CURRENT
               MyAdvocate_Projections_v17.xlsx  ← CURRENT financial model (M1-M24, 3 scenarios)
   system/     claude-project-instructions.md
   superpowers/plans/
@@ -187,6 +188,7 @@ docs/
   social/     MA-SOC-002 (Patient Story Engine)                      ← NEW in v21
               MA-YT-001_YouTube_Spanish_Strategy_Report.docx         ← NEW in v22
               MA-IG-001_Instagram_Strategy_v2.docx                   ← NEW in v22
+  data/       MA-SUP-DAT-001 (Proprietary Data Engine Strategy)      ← NEW in v23
 ```
 
 ---
@@ -320,11 +322,14 @@ Syncs Notion tasks into Supabase, generates a daily digest via Claude, logs run 
 4. Install external agents: GEO-01/02/03, CNT-01 (see Agent System above) — **IN PROGRESS**
 5. Scaffold `/context_registry/` — 8 JSON files (MA-CTX-001) — **IN PROGRESS**
 6. Deploy Supabase migration 016 — scrub_records table (MA-SOC-002 pre-launch)
-7. Launch SEO content engine (target: 20 GEO-optimized articles in 60 days)
-8. Activate content-production-orchestrator pipeline
-9. Beehiiv integration for newsletter capture
-10. n8n automation setup (event routing, retention flows, budget alert webhooks) — Parking Lot
-11. Landing page + /es Spanish page + custom domain — Google Workspace verified, admin@getmyadvocate.org live ✅
+7. **Deploy Supabase migration 019 — friction_events table stub (MA-SUP-DAT-001 Phase 1 P0)** — **NEXT**
+8. Add friction event writes to Denial Decoder, Appeal Letter, and Bill Dispute tools (MA-SUP-DAT-001 Tasks 2–4)
+9. Nurse co-founder review of claim_amount_range prompt language (MA-SUP-DAT-001 Task 5 — BLOCK for prompt deploy)
+10. Launch SEO content engine (target: 20 GEO-optimized articles in 60 days)
+11. Activate content-production-orchestrator pipeline
+12. Beehiiv integration for newsletter capture
+13. n8n automation setup (event routing, retention flows, budget alert webhooks) — Parking Lot
+14. Landing page + /es Spanish page + custom domain — Google Workspace verified, admin@getmyadvocate.org live ✅
 
 ---
 
@@ -339,6 +344,7 @@ This file should be reviewed whenever:
 Last reviewed: **2026-03-12**
 
 ### Recent Changes
+- 2026-03-12: MA-SUP-DAT-001 integrated — Proprietary Data Engine Strategy canonized. Supabase migration 019 (friction_events stub) created. PMP v23 created with new §6F. docs/data/ subdirectory created. Context registry updated (src_0012, dec_0009). 26 Notion sprint tasks created (MA-DAT-ENG-P1 through P4). Phase 2 Priorities updated (items 7–9 added). friction_events added to data architecture: two datasets (insurance friction events + appeal outcome events), four-layer privacy compliance, publication gates (Phase 3+), competitive moat analysis. Full spec: MA-SUP-DAT-001 in docs/data/.
 - 2026-03-12: Projections v17 adopted as new operating base. v17 file saved to `docs/pmp/MyAdvocate_Projections_v17.xlsx`. v16 archived to `docs/pmp/archive/`. All canonical references updated.
 - 2026-03-12: EEAT infrastructure build complete (MA-EEAT-001 §5.1 + §8.1). Shipped: Supabase migration 017 (content_audit_log, service-role only), `src/lib/eeat-validator.ts` (5-layer validator — schema, citations, forbidden claims, disclaimer, tier routing), `src/lib/db/audit-log.ts` (logContentReview helper), `scripts/validate-content.ts` (CLI runner for pre-publish validation), ContentTier/ReviewMethod/EEATValidationResult/ContentPageSchema types in `src/types/domain.ts`, and all 7 trust infrastructure pages (about, editorial-policy, medical-review-policy, reviewer-credentials, medical-disclaimer, citation-policy, update-policy — all ATTORNEY REVIEW REQUIRED before publish). 6 Notion sprint tasks created (migration 017 deploy, attorney engagement, Kate credential file, trust page publish, footer nav, EEAT integration test). Commit: a5cc96d.
 - 2026-03-12: MA-EEAT-001 canonized — EEAT/YMYL audit hardwired into all SEO content. 3 new Core Invariants added (no content before trust pages, LPN/LVN framing, 5-layer gate). MA-EEAT-001 added to Scope Gates. docs/seo/ subdirectory created.
