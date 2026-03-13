@@ -98,3 +98,13 @@ export const ARTIFACT_TRANSITIONS: Record<ArtifactReleaseState, ArtifactReleaseS
   released: ['archived'],
   archived: [],
 }
+
+// ─── MA-SEC-002 P25/P26: Tier authorization result ───────────────────────────
+
+export type TierAuthCode = 'AUTH_LIMIT' | 'AUTH_TIER' | 'AUTH_USER'
+
+export type TierAuthResult =
+  | { authorized: true }
+  | { authorized: false; reason: 'generation_limit_reached'; code: 'AUTH_LIMIT' }
+  | { authorized: false; reason: 'tier_insufficient';        code: 'AUTH_TIER' }
+  | { authorized: false; reason: 'user_not_found';           code: 'AUTH_USER' }
