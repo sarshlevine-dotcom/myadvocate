@@ -49,3 +49,21 @@ export async function updateReviewDecision(params: {
     .eq('id', params.reviewQueueId)
   if (error) throw error
 }
+
+/**
+ * Returns the number of artifacts currently pending review.
+ * MA-SEC-002 P27: Used to enforce the 10-artifact queue cap.
+ * Returns 0 on error (safe default — prevents false capacity blocks).
+ */
+export async function getReviewQueueDepth(): Promise<number> {
+  const supabase = await createClient()
+  const { count, error } = await supabase
+    .from('review_queue')
+    .select('id', { count: 'exact', head: true })
+    .eq('decision', 'pending')
+  if (error) {
+    console.error('[review-queue] getReviewQueueDepth failed:', error)
+    return 0
+  }
+  return count ?? 0
+}
