@@ -10,6 +10,8 @@ import { createArtifact } from '@/lib/db/artifacts'
 import { addToReviewQueue } from '@/lib/db/review-queue'
 import { logEvent } from '@/lib/db/metric-events'
 import { recordApiSpend } from '@/lib/budget-monitor'
+import { trackedExecution } from '@/lib/tracked-execution'
+import type { CanonicalFunctionName } from '@/lib/tracked-execution'
 import { createHash } from 'crypto'
 import type { ModelTier } from '@/types/domain'
 
@@ -50,6 +52,30 @@ const OUTPUT_CONFIG: Record<LetterType, { maxTokens: number }> = {
   bill_dispute:       { maxTokens: 500 },   // dispute letter, ~350–400 words
   hipaa_request:      { maxTokens: 400 },   // formal records request, ~250–300 words
   negotiation_script: { maxTokens: 200 },   // phone script, strictly under 150 words
+}
+
+// ─── MA-AUT-006 §G1: Known letter types (runtime guard for Gate 1) ───────────
+const VALID_LETTER_TYPES: readonly string[] = [
+  'denial_appeal', 'bill_dispute', 'hipaa_request', 'negotiation_script',
+]
+
+// ─── MA-AUT-006 §G3: Context Firewall allowlist ───────────────────────────────
+// Per letter type: only these keys in caseData may reach the prompt.
+// Any key not listed here is stripped silently at Gate 3 before the API call.
+const CONTEXT_ALLOWLIST: Record<LetterType, string[]> = {
+  denial_appeal:      ['denialCode', 'insurerType', 'state', 'denialDate', 'planType', 'serviceType', 'denialReason'],
+  bill_dispute:       ['billAmount', 'serviceType', 'serviceDate', 'facilityType', 'state', 'disputeReason', 'chargesChallenged'],
+  hipaa_request:      ['state', 'facilityType', 'recordsRequested', 'preferredFormat', 'deliveryMethod'],
+  negotiation_script: ['billAmount', 'serviceType', 'state', 'targetAmount', 'paymentCapacity'],
+}
+
+// ─── MA-ARC-FUNC-001: Letter type → canonical function name ──────────────────
+// Used by trackedExecution() to label Langfuse traces.
+const FUNCTION_NAME_MAP: Record<LetterType, CanonicalFunctionName> = {
+  denial_appeal:      'generateAppealLetter',
+  bill_dispute:       'generateDisputeLetter',
+  hipaa_request:      'generateHIPAARequest',
+  negotiation_script: 'generateNegotiationScript',
 }
 
 // ─── Prompts ──────────────────────────────────────────────────────────────────
@@ -110,8 +136,50 @@ export async function generateLetter(params: {
   caseData:     Record<string, unknown>
   hasDocument?: boolean   // MA-COST-001: triggers Sonnet routing for document-upload cases
 }) {
-  // Step 1: Scrub PII (MA-SEC-002 P2) — MUST run before every API call
-  const scrubbed = scrubPII(params.caseData)
+  // ── Gate 1: Input Validation (MA-AUT-006 §G6) ─────────────────────────────
+  // Required fields must be present and non-empty. letterType must be one of the four known values.
+  const requiredFields = ['caseId', 'userId', 'letterType', 'caseData'] as const
+  const missingFields = requiredFields.filter(f => {
+    const val = params[f]
+    return val === undefined || val === null || val === ''
+  })
+  if (missingFields.length > 0) {
+    logEvent({ eventType: 'gate_failure', sourcePage: 'generateLetter', toolName: params.letterType }).catch(() => {})
+    throw new Error(`GATE_1_FAILED: missing required fields: ${missingFields.join(', ')}`)
+  }
+  if (!VALID_LETTER_TYPES.includes(params.letterType)) {
+    logEvent({ eventType: 'gate_failure', sourcePage: 'generateLetter' }).catch(() => {})
+    throw new Error(`GATE_1_FAILED: invalid letterType: ${params.letterType}`)
+  }
+
+  // ── Gate 2: PII Scrub (MA-AUT-006 §G6 + MA-SEC-002 P2) ───────────────────
+  // scrubPII() MUST run before any data reaches the prompt or the API.
+  // Any exception from scrubPII is caught and re-thrown as GATE_2_FAILED.
+  let scrubbed: Record<string, unknown>
+  try {
+    scrubbed = scrubPII(params.caseData)
+  } catch {
+    logEvent({ eventType: 'gate_failure', sourcePage: 'generateLetter', toolName: params.letterType }).catch(() => {})
+    throw new Error('GATE_2_FAILED: PII_SCRUB_ERROR')
+  }
+
+  // ── Gate 3: Context Firewall (MA-AUT-006 §G6) ─────────────────────────────
+  // Only allowlisted keys per letterType reach the prompt. Non-permitted keys are
+  // stripped silently and logged. Gate 3 never throws — strip and continue.
+  const allowedKeys = new Set(CONTEXT_ALLOWLIST[params.letterType])
+  const blockedFields: string[] = []
+  const filteredData: Record<string, unknown> = {}
+  for (const [key, val] of Object.entries(scrubbed)) {
+    if (allowedKeys.has(key)) {
+      filteredData[key] = val
+    } else {
+      blockedFields.push(key)
+    }
+  }
+  if (blockedFields.length > 0) {
+    logEvent({ eventType: 'gate_failure', sourcePage: 'generateLetter', toolName: params.letterType }).catch(() => {})
+    console.warn(`GATE_3_STRIPPED [${params.letterType}]: ${blockedFields.join(', ')}`)
+  }
 
   // Step 2: Resolve model tier (MA-COST-001)
   const routing    = MODEL_ROUTER[params.letterType]
@@ -119,15 +187,38 @@ export async function generateLetter(params: {
   const modelString = MODEL_STRINGS[modelTier]
   const { maxTokens } = OUTPUT_CONFIG[params.letterType]
 
-  // Step 3: Call Anthropic
-  const anthropic = getAnthropicClient()
-  const response = await anthropic.messages.create({
-    model:      modelString,
-    max_tokens: maxTokens,
-    messages:   [{ role: 'user', content: PROMPTS[params.letterType](scrubbed) }],
-  })
+  // Step 3: Call Anthropic via trackedExecution (MA-ARC-FUNC-001)
+  // userId is SHA-256 hashed — never pass raw Supabase auth UUID to the trace layer
+  const hashedUserId = createHash('sha256').update(params.userId).digest('hex')
+  const anthropic    = getAnthropicClient()
+
+  const { result: response, trace } = await trackedExecution(
+    {
+      functionName:         FUNCTION_NAME_MAP[params.letterType],
+      callSource:           'app',
+      userId:               hashedUserId,
+      piiScrubberConfirmed: true,   // scrubPII ran in Step 1
+      qualityScore:         null,   // populated by LQE evaluator in future sprint (MA-AUT-006 §G1)
+    },
+    async () => {
+      const res = await anthropic.messages.create({
+        model:      modelString,
+        max_tokens: maxTokens,
+        messages:   [{ role: 'user', content: PROMPTS[params.letterType](filteredData) }],
+      })
+      return {
+        result: res,
+        usage:  {
+          model:        res.model,
+          inputTokens:  res.usage.input_tokens,
+          outputTokens: res.usage.output_tokens,
+        },
+      }
+    },
+  )
+
   const letterText = response.content[0].type === 'text' ? response.content[0].text : ''
-  const { input_tokens: inputTokens, output_tokens: outputTokens } = response.usage
+  const { inputTokens, outputTokens } = trace   // sourced from trackedExecution — single source of truth
 
   // Step 4: Append disclaimer (MA-SEC-002 P7)
   const letterWithDisclaimer = appendDisclaimer(letterText)

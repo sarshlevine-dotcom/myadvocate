@@ -20,6 +20,7 @@ export type EventType =
   | 'per_case_purchased'
   | 'subscription_started'
   | 'second_tool_use'
+  | 'gate_failure'
 
 // Denial code types
 export type DenialCodeCategory =
