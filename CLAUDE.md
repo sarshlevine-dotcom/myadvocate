@@ -228,6 +228,9 @@ docs/
               myadvocate_business_supplemental_proprietary_data_engine_v1.docx
   intelligence/ MA-IMPL-001_Strategic_Implementation_Plan.docx       ← NEW 2026-03-19 — 21-doc integration plan, Phase 2 build sequence
               MA-IMPL-002_PreLaunch_Intelligence_Architecture.docx   ← NEW 2026-03-19 — BitNet SEO engine, staging pipeline, data collection, LQE hybrid, competitive signals
+  review/     Reviewer-facing operational materials for Kate + Sarsh ONLY. Not for technical architecture docs.
+              LQE_Calibration_Guide_Kate.docx  ← LQE calibration session guide (Sprint 2 Kate handoff)
+              [future: YMYL_Review_Checklist.docx, Kate_Onboarding_Guide.docx, Content_Review_SOP.docx]
 ```
 
 ---
