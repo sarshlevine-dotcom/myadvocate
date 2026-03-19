@@ -39,7 +39,7 @@ AI-powered patient advocacy platform. Helps people navigate insurance denials an
 | Automation | n8n | Phase 2 — event-driven automation, webhook routing, retention flows, budget alert webhooks |
 | AI Provider | Anthropic | All calls via `generateLetter()` — Haiku default, Sonnet for complex/doc cases |
 | Local Intelligence | BitNet | **Pre-launch internal layer** — classification, scoring, routing. NEVER user-facing. Powers SEO intelligence engine, LQE pre-screener, book keyword scan, competitive signal classification. See BitNet Architecture section. |
-| Scoring Engine | FastAPI V4 (internal) | **Pre-launch internal layer** — /analyze + /feedback; 5-score model (Confidence/Impact/Risk/Urgency/Learning); CTO/CMO/CFO/UX agents; state-backed (Supabase); NEVER public. See V4 Scoring Service Architecture section. |
+| Scoring Engine | FastAPI V4 Modular (internal) | **Pre-launch internal layer** — /analyze + /feedback; 5-score model (Confidence/Impact/Risk/Urgency/Learning); CTO/CMO/CFO/UX/COMPLIANCE agents; `autonomous_allowed` safety flag; modular structure (app/models.py, app/engine.py, app/main.py); state-backed (Supabase); NEVER public. See V4 Scoring Service Architecture section. |
 | Caching / Rate limiting | Upstash Redis | Rate limiting live; response caching deferred to Phase 2 |
 
 **Provider abstraction rule:** All Anthropic API calls must go through `src/lib/generate-letter.ts`.
@@ -108,6 +108,9 @@ boundary for scrubber enforcement, model selection, output caps, cost logging, a
 - NEVER permit AUTO tier scoring decisions for Bucket 1 AI outputs (letter generation) — AUTO is restricted to SEO/content sequencing, cluster prioritization, content refresh, and infrastructure cost alerts only; letter generation always requires the human approval path (MA-IMPL-003)
 - NEVER activate the CMO Content Refresh n8n workflow before BitNet cluster scoring has produced a valid ranked_queue.json — the workflow depends on the scored queue as its data source (MA-IMPL-003)
 - NEVER adjust scoring service agent_weights or decision thresholds without a corresponding /feedback entry — all weight evolution must be traceable through feedback_history.jsonl and the Supabase scoring_feedback table (MA-IMPL-003)
+- NEVER set `autonomous_allowed: true` on a scoring service request for Bucket 1 AI outputs (letter generation) — the `autonomous_allowed` flag is a hard API-layer gate; it is only permitted for SEO/content sequencing, content refresh, and infrastructure cost alert decisions (MA-IMPL-003)
+- NEVER write to `billing_events`, `page_metrics_daily`, `tool_sessions`, or `decision_log` from API routes or page handlers — these tables are written exclusively by n8n real-data intake workflows and the scoring service (MA-IMPL-003)
+- NEVER activate the real-data intake n8n workflows (`stripe_webhook_to_supabase`, `cmo_real_data_refresh_queue`, `cfo_cohort_scoring`) until Supabase migration 023 has been applied and the target tables are confirmed live (MA-IMPL-003)
 
 ### Scope Gates
 - Check MA-LCH-004 before building any new feature (Phase 1 scope boundary)
@@ -443,13 +446,16 @@ PII scrubber, output contract validation, disclaimer, and artifact state write a
 | Urgency | trend, decay, window | — |
 | Learning | uncertainty, experiment, gap | — |
 
-**Agent weightings (DEFAULT_AGENT_WEIGHTS):**
+**`autonomous_allowed` safety flag:** Every `/analyze` request carries `autonomous_allowed: bool` (default `false`). AUTO tier only fires when this is explicitly `true`. Bucket 1 AI calls (letter generation) **never** set this flag. COMPLIANCE agent sets `compliance_flag: true` → unconditional BLOCK regardless of score.
+
+**Agent weightings (DEFAULT_AGENT_WEIGHTS in app/engine.py):**
 | Agent | Primary Focus | Decision Formula |
 |---|---|---|
 | CTO | Risk + Urgency | 0.40×risk + 0.30×urgency + 0.20×impact + 0.10×confidence |
 | CFO | Impact − Risk | 0.45×impact + 0.25×confidence + 0.15×urgency + 0.15×learning − 0.30×risk |
 | CMO | Impact + Confidence | 0.35×impact + 0.25×confidence + 0.20×urgency + 0.20×learning − 0.20×risk |
 | UX | Impact + Learning | 0.30×impact + 0.30×learning + 0.20×confidence + 0.20×urgency − 0.15×risk |
+| COMPLIANCE | Risk-blocking | 0.50×risk + 0.20×confidence + 0.20×urgency + 0.10×impact — always BLOCK if compliance_flag=true or risk≥0.50 |
 
 **Decision routing (applied in order — risk check first):**
 | Condition | Action | n8n Behavior |
@@ -461,10 +467,35 @@ PII scrubber, output contract validation, disclaimer, and artifact state write a
 | score 0.45–0.65 | LOG | Supabase digest; surfaces in daily founder digest |
 | score < 0.45 | IGNORE | No-op |
 
-**n8n starter workflows (from scoring_service pack):**
+**n8n workflows (all in `scoring_service/n8n_workflows/`):**
+
+*Scoring-logic workflows (internal signal routing):*
 - `cto_sentinel.json` — Every 6h; api_cost_spike detection; CTO agent → S0-01
 - `cmo_content_refresh.json` — Weekly Sunday 3am; content decay signals; CMO agent → S1-02
 - `cfo_conversion_insight.json` — Weekly Tuesday 6am; funnel metrics; CFO agent → S2-01
+
+*Real-data intake workflows (Supabase wiring calendar):*
+- `stripe_webhook_to_supabase.json` — Week 1; Stripe webhook → billing_events; CFO revenue signals
+- `cmo_real_data_refresh_queue.json` — Week 2; Google Search Console → page_metrics_daily; CMO decay scoring
+- `cfo_cohort_scoring.json` — Week 3; GA4 → tool_sessions + v_funnel_rollup; UX/CFO conversion scoring
+
+**Real-data wiring calendar (approval-only for all of Year 1):**
+| Week | Source | Target Table | Agent | First Decisions |
+|------|--------|-------------|-------|----------------|
+| Week 1 | Stripe webhooks | billing_events | CFO | Failed-payment recovery, offer timing |
+| Week 2 | Google Search Console | page_metrics_daily | CMO | Declining pages, high-impression/low-CTR queue |
+| Week 3 | GA4 events | tool_sessions | UX / CFO | Funnel drop-off, cohort paid-offer timing |
+| Week 4 | App/API logs | decision_log (CTO) | CTO | Cost spikes, latency, workflow failures |
+| Week 5+ | All sources joined | All tables | All agents | Unified scoring with AUTO tier validation |
+
+**Slack channel architecture:**
+| Channel | Purpose | Who gets pinged |
+|---------|---------|----------------|
+| `#agent-alerts-critical` | BLOCK conditions; CTO risk > 0.75 | Sarsh immediately |
+| `#agent-approvals` | APPROVAL tier cards; all agents | Sarsh within 24h |
+| `#content-growth` | CMO content refresh actions | Sarsh weekly digest |
+| `#cfo-insights` | CFO revenue + conversion signals | Sarsh weekly digest |
+| `#cto-sentinel` | CTO cost + reliability monitoring | Sarsh on-threshold alert |
 
 **Agent coordination hierarchy (conflict resolution):**
 Priority order: CTO (BLOCK absolute) → Compliance/LQE → CFO → CMO → UX. When two agents have pending APPROVAL actions in the same 6h window, priority_score = agent_weight × decision_score determines which wins. CTO BLOCK overrides unconditionally.
@@ -502,6 +533,7 @@ Priority order: CTO (BLOCK absolute) → Compliance/LQE → CFO → CMO → UX. 
 4. Install external agents: GEO-01/02/03, CNT-01 (see Agent System above) — **IN PROGRESS**
 5. Scaffold `/context_registry/` — 8 JSON files (MA-CTX-001) — **IN PROGRESS**
 6. **[MA-IMPL-002 S1-01] Deploy migrations 016, 019, 020, 021, 022 — scrub_records, friction_events, appeal_outcome_events, bitnet_calibration, competitive_signals** — **NEXT**
+6a. **[MA-IMPL-003 S0-01] Apply migration 023 (`023_real_data_pipeline.sql`) — creates pages, page_metrics_daily, tool_sessions, billing_events, decision_log, content_queue, experiments, feedback_outcomes tables + 2 views** — **NEXT**
 7. **[MA-IMPL-002 S1-01] Instrument tools — write friction_events on every tool interaction (Denial Decoder, Appeal, Bill Dispute)** — **NEXT**
 8. **[MA-IMPL-002 S1-01] Instrument generateLetter() — write appeal_outcome_events stub on every letter generation** — **NEXT**
 9. **[MA-IMPL-002 S1-01] n8n skeleton — CTO Sentinel + budget webhooks (replace console.log tripwires)** — **NEXT**
@@ -548,6 +580,14 @@ Priority order: CTO (BLOCK absolute) → Compliance/LQE → CFO → CMO → UX. 
 50. **[MA-IMPL-003 S2-02] BitNet fast path calibration gate review — ≥50 Kate records + false positive <10% check; Sarsh sign-off required**
 51. **[MA-IMPL-003 S2-02] Scoring service AUTO tier validation — first autonomous decisions with Slack audit trail; content/infra only**
 52. **[MA-IMPL-003 S2-02] Full agent coordination hierarchy live — CTO→Compliance→CFO→CMO→UX via priority_score conflict resolution**
+53. **[MA-IMPL-003 S0-01 Real Data] Configure Stripe webhook → `stripe_webhook_to_supabase` n8n workflow; write billing_events; approval-only** — **NEXT (Week 1)**
+54. **[MA-IMPL-003 S0-01 Real Data] Wire Google Search Console → `cmo_real_data_refresh_queue` n8n workflow; populate page_metrics_daily; CMO refresh queue** — **NEXT (Week 2)**
+55. **[MA-IMPL-003 S1-01 Real Data] Wire GA4 events → `cfo_cohort_scoring` n8n workflow; populate tool_sessions; UX/CFO funnel scoring** — **NEXT (Week 3)**
+56. **[MA-IMPL-003 S1-01 Real Data] App/API log collection → CTO Sentinel; cost_per_call + latency + failure_rate → decision_log** — **(Week 4)**
+57. **[MA-IMPL-003 S1-02 Real Data] Normalize all source fields to 0-1 scoring inputs per FIELD_MAPPING.md; validate against /analyze endpoint**
+58. **[MA-IMPL-003 S1-02 Real Data] Configure Slack channel architecture: #agent-alerts-critical, #agent-approvals, #content-growth, #cfo-insights, #cto-sentinel**
+59. **[MA-IMPL-003 S2-01 Real Data] Join all 4 data sources in Supabase; unified scoring across CMO/CFO/CTO/UX agents; begin feedback-based calibration**
+60. **[MA-IMPL-003 S2-02 Real Data] Scoring service COMPLIANCE agent activation — compliance_flag enforcement wired to all real-data decision paths**
 
 ---
 
@@ -562,6 +602,7 @@ This file should be reviewed whenever:
 Last reviewed: **2026-03-19**
 
 ### Recent Changes
+- 2026-03-19: Real Data Wiring Build Pack integrated — Scoring service upgraded to v2.0 modular structure (app/models.py + app/engine.py + app/main.py + tests/test_engine.py). COMPLIANCE agent (5th agent, risk-blocking formula) added. `autonomous_allowed: bool` safety flag added to every /analyze request — AUTO tier now requires explicit opt-in, never fires on Bucket 1 AI calls. 3 real-data intake n8n workflows added to scoring_service/n8n_workflows/: stripe_webhook_to_supabase (Week 1), cmo_real_data_refresh_queue (Week 2), cfo_cohort_scoring (Week 3). Supabase migration 023 created (8 tables: pages, page_metrics_daily, tool_sessions, billing_events, decision_log, content_queue, experiments, feedback_outcomes; 2 views: v_page_refresh_candidates, v_funnel_rollup). Real-data wiring calendar added (Weeks 1-4 phased source rollout). Slack channel architecture documented (5 channels). 3 new Core Invariants added (autonomous_allowed never true for Bucket 1, real-data tables write-only from n8n/scoring service, real-data workflows gated on migration 023). Phase 2 Priorities expanded to 60 items (53-60: real-data wiring sprint). Field mapping + implementation checklist in scoring_service/docs/.
 - 2026-03-19: MA-IMPL-003 integrated — V4 Scoring Service & Autonomous Agent Architecture canonized. FastAPI scoring service (main.py from scoring pack) formalized as internal intelligence layer: /analyze + /feedback endpoints; 5-score model (Confidence/Impact/Risk/Urgency/Learning); 4-agent weightings (CTO/CMO/CFO/UX); 5-tier decision routing (AUTO/APPROVAL/LOG/BLOCK/IGNORE). 3 n8n starter workflows registered (CTO Sentinel S0-01, CMO Content Refresh S1-02, CFO Conversion Insight S2-01). Month 0-12 activation gates defined. Learning loop spec (historical_accuracy_by_decision_type). Agent coordination hierarchy + conflict resolution protocol. 4 new Core Invariants added (scoring service never public, AUTO never Bucket 1, CMO workflow gated on ranked_queue.json, all weight changes logged). 1 new Scope Gate added (check MA-IMPL-003 before any scoring/n8n changes). 14 new Phase 2 Priority items added (39–52). V4 Scoring Service Architecture section added. Stack table updated with Scoring Engine row. Docs structure updated (MA-IMPL-003 added to intelligence/). 15 Notion sprint tasks created across S0-01 through S2-02. Canonical doc: docs/intelligence/MA-IMPL-003_BitNet_V4_Month0-12_Rollout.docx.
 - 2026-03-19: MA-IMPL-002 integrated — Pre-Launch Intelligence & Automation Architecture canonized. 6 workstreams accelerated to pre-launch (internal only, no public rollout): SEO Intelligence Engine (BitNet hub/spoke cluster scoring + book monitoring), content staging pipeline (50-page queue, 9-state machine), pre-launch data collection (migrations 020-022: appeal_outcome_events, bitnet_calibration, competitive_signals), LQE + BitNet hybrid 3-path routing (fast/standard/review; fast path disabled until ≥50 calibration samples), competitive signal collection (CMS/NAIC/payer bulletins via n8n). 3 new Core Invariants added (BitNet never user-facing, fast path calibration gate, no registry writes from product code). 1 new Scope Gate added (check MA-IMPL-002 before any BitNet/signal pipeline change). 4 new context registry files added (ranked_queue.json, payer_intelligence.json, book_keyword_signals.json, spanish_keyword_signals.json). BitNet Architecture section added. Content Staging Pipeline section added. Phase 2 Priorities expanded to 38 items. Stack table updated with BitNet. 25 Notion sprint tasks created (S1-01 through S2-02). 10 Parking Lot entries created (signal-gated and Phase 3+ items). Canonical docs updated: MA-IMPL-001 + MA-IMPL-002 added to docs/intelligence/. docs/intelligence/ subdirectory created.
 - 2026-03-13: Supplemental Security & Architecture Audit integrated — 10 gaps analyzed against recent work. 6 new MA-SEC-002 PassFail controls (P25–P30) added: server-side free-tier limits (P25/launch blocker), subscription tier authorization (P26/launch blocker), YMYL review operating model (P27/launch blocker), backup restoration test (P28/pre-Signal 1), incident response runbook (P29/pre-Signal 1), prompt version hash (P30/pre-Signal 1). Document upload formally deferred to Phase 2 — NER-grade PII redaction + malware scanning required. YMYL review operating model formalized: Kate primary/24hr SLA/queue cap 10/Sarsh escalation. Incident response runbook created (docs/security/incident-response-runbook.md). 3 new Core Invariants added (tier auth before generation, no doc upload without NER+malware, prompt_version_hash on every artifact). 11 Notion sprint tasks created. Quarterly backup test + 3-month VPN review scheduled as recurring tasks.
