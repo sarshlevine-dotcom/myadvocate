@@ -1,0 +1,182 @@
+{
+  "name": "CTO Sentinel via Scoring Service",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "cron-1",
+      "name": "Every 6 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{agent:'CTO',decision_type:'api_cost_spike',volume:0.9,consistency:0.7,accuracy:0.8,revenue:0.3,traffic:0.4,compounding:0.2,volatility:0.8,dependency:0.7,compliance:0.2,trend:0.9,decay:0.6,window:0.8,uncertainty:0.3,experiment:0.1,gap:0.5,metadata:{source:'api_logs'}}}];"
+      },
+      "id": "code-1",
+      "name": "Prepare CTO Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/analyze",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}"
+      },
+      "id": "http-1",
+      "name": "Call Scoring Service",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.action}}",
+              "operation": "equal",
+              "value2": "APPROVAL"
+            }
+          ]
+        }
+      },
+      "id": "if-1",
+      "name": "Needs Approval?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        890,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "agent-approvals"
+        },
+        "text": "=CTO Alert: {{$json.reason}} | score {{$json.decision_score}}",
+        "otherOptions": {
+          "blocksUi": {
+            "blockValues": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*CTO Alert*\\nAction: `{{$json.action}}`\\nReason: `{{$json.reason}}`\\nScore: `{{$json.decision_score}}`"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "id": "slack-1",
+      "name": "Send Slack Approval",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        1120,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "agent-alerts-critical"
+        },
+        "text": "=CTO AUTO/BLOCK: {{$json.action}} | {{$json.reason}} | score {{$json.decision_score}}"
+      },
+      "id": "slack-2",
+      "name": "Send Slack Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        1120,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Every 6 Hours": {
+      "main": [
+        [
+          {
+            "node": "Prepare CTO Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare CTO Payload": {
+      "main": [
+        [
+          {
+            "node": "Call Scoring Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Scoring Service": {
+      "main": [
+        [
+          {
+            "node": "Needs Approval?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs Approval?": {
+      "main": [
+        [
+          {
+            "node": "Send Slack Approval",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Slack Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

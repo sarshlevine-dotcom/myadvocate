@@ -1,0 +1,110 @@
+{
+  "name": "CMO Content Refresh via Scoring Service",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "sched-1",
+      "name": "Daily Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        180,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{agent:'CMO',decision_type:'refresh_declining_page',volume:0.7,consistency:0.7,accuracy:0.75,revenue:0.5,traffic:0.9,compounding:0.8,volatility:0.2,dependency:0.2,compliance:0.1,trend:0.8,decay:0.9,window:0.7,uncertainty:0.4,experiment:0.5,gap:0.8,metadata:{page:'/denial-code-co45',last_refreshed_days:93,last_indexed_days:7}}}];"
+      },
+      "id": "code-2",
+      "name": "Prepare CMO Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/analyze",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}"
+      },
+      "id": "http-2",
+      "name": "Call Scoring Service",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        640,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "content-growth"
+        },
+        "text": "=CMO Recommendation: {{$json.action}} | {{$json.metadata.page}} | score {{$json.decision_score}}"
+      },
+      "id": "slack-3",
+      "name": "Post CMO Recommendation",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        900,
+        280
+      ]
+    }
+  ],
+  "connections": {
+    "Daily Trigger": {
+      "main": [
+        [
+          {
+            "node": "Prepare CMO Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare CMO Payload": {
+      "main": [
+        [
+          {
+            "node": "Call Scoring Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Scoring Service": {
+      "main": [
+        [
+          {
+            "node": "Post CMO Recommendation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

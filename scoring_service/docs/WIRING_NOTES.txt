@@ -1,0 +1,45 @@
+
+MyAdvocate v5 Wiring Notes
+
+1. Learning loop
+- POST /feedback after a tested decision concludes.
+- Success nudges historical accuracy up.
+- Failure nudges it down.
+- This automatically changes future confidence scores for similar decision types.
+
+2. n8n routing
+- Use HTTP Request node against /analyze.
+- Read `action`:
+  - AUTO -> execute workflow step
+  - APPROVAL -> send Slack approval card
+  - LOG -> store in Supabase / digest
+  - BLOCK -> critical alert only
+  - IGNORE -> no-op
+
+3. Metrics to include in payloads
+SEO / content:
+- page_last_refreshed_days
+- page_last_indexed_days
+- impressions_7d
+- impressions_28d
+- avg_position
+- position_delta_7d
+- ctr
+
+Funnel / revenue:
+- tool_start_rate
+- tool_completion_rate
+- email_capture_rate
+- paid_conversion_rate
+- revenue_per_user
+- segment_conversion_gap
+
+System:
+- cost_per_call
+- calls_per_user
+- failure_rate
+- latency
+
+4. Slack recommendation
+- Keep Slack as approvals + alerts only.
+- Keep deep logs in Supabase/dashboard.

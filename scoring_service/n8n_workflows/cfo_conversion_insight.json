@@ -1,0 +1,110 @@
+{
+  "name": "CFO Conversion Insight via Scoring Service",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "sched-2",
+      "name": "Daily Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        180,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{agent:'CFO',decision_type:'paid_offer_after_failed_appeal',volume:0.8,consistency:0.7,accuracy:0.75,revenue:0.9,traffic:0.8,compounding:0.6,volatility:0.2,dependency:0.3,compliance:0.1,trend:0.7,decay:0.5,window:0.6,uncertainty:0.4,experiment:0.6,gap:0.7,metadata:{segment:'failed_appeal_users',page_last_indexed:'2026-03-10',page_last_refreshed:'2026-02-01'}}}];"
+      },
+      "id": "code-3",
+      "name": "Prepare CFO Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/analyze",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}"
+      },
+      "id": "http-3",
+      "name": "Call Scoring Service",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "agent-approvals"
+        },
+        "text": "=CFO Insight: {{$json.decision_type}} | {{$json.action}} | score {{$json.decision_score}}"
+      },
+      "id": "slack-4",
+      "name": "Send CFO Insight",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        920,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Daily Trigger": {
+      "main": [
+        [
+          {
+            "node": "Prepare CFO Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare CFO Payload": {
+      "main": [
+        [
+          {
+            "node": "Call Scoring Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Scoring Service": {
+      "main": [
+        [
+          {
+            "node": "Send CFO Insight",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

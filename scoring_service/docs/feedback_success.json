@@ -1,0 +1,7 @@
+{
+  "agent": "CFO",
+  "decision_type": "paid_offer_after_failed_appeal",
+  "outcome": "success",
+  "actual_lift": 0.22,
+  "notes": "Conversion improved in test cohort."
+}

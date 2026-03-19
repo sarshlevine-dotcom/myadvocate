@@ -3,12 +3,12 @@
     "registry": "content_pages",
     "id_prefix": "page_",
     "description": "Structured record of every content page. A page exists here before it is published.",
-    "last_updated": "2026-03-18T00:00:00Z",
+    "last_updated": "2026-03-19T00:00:00Z",
     "schema_version": "1.1",
     "authority": "MA-CTX-001",
     "total_planned": 237,
     "published": 0,
-    "eeat_gate": "HARD BLOCKER — no page may be published until all 7 trust infrastructure pages are attorney-reviewed and live (MA-EEAT-001 §5.1). publish_sequence numbers reflect order to draft and queue, NOT order to go live.",
+    "eeat_gate": "HARD BLOCKER \u2014 no page may be published until all 7 trust infrastructure pages are attorney-reviewed and live (MA-EEAT-001 \u00a75.1). publish_sequence numbers reflect order to draft and queue, NOT order to go live.",
     "publish_queue_notes": "publish_sequence reflects the revised priority order from SEO Gap Analysis v1 (src_0011). Sequences 1-10 are the 90-day Phase 2 queue. null = Phase 2 backlog after traffic gate. brand_stat_required: true means the <1% appeal / 40-60% win rate stat must appear in first 100 words per Gap Analysis Part 4.",
     "notes": "200 denial code pages + 10 foundational articles + 3 category hub pages + 14 priority-sequenced pages planned per Phase 2 content engine. Original 5 seed entries preserved; publish_sequence and tier fields added in schema v1.1."
   },
@@ -52,7 +52,7 @@
       "publish_state": "not_published",
       "review_level": "clinical_review_needed",
       "last_reviewed_at": null,
-      "notes": "Priority #4 in 90-day publishing queue (publish_sequence). CO-50 is the highest-emotion denial code — routes to Denial Fighter. 40-60% appeal win rate relevant here. GEO-optimized answer block required. Citability score target ≥70. Internal links: up to Medical Necessity Hub (page_0008), up to Pillar (page_0006).",
+      "notes": "Priority #4 in 90-day publishing queue (publish_sequence). CO-50 is the highest-emotion denial code \u2014 routes to Denial Fighter. 40-60% appeal win rate relevant here. GEO-optimized answer block required. Citability score target \u226570. Internal links: up to Medical Necessity Hub (page_0008), up to Pillar (page_0006).",
       "eeat_validated": true
     },
     {
@@ -91,7 +91,7 @@
       "publish_state": "not_published",
       "review_level": "clinical_review_needed",
       "last_reviewed_at": null,
-      "notes": "Emergency exception angle is differentiating GEO content. ACA §2719A citation required. Not in the 12-code priority set — sequenced after priority codes are published."
+      "notes": "Emergency exception angle is differentiating GEO content. ACA \u00a72719A citation required. Not in the 12-code priority set \u2014 sequenced after priority codes are published."
     },
     {
       "id": "page_0003",
@@ -251,13 +251,13 @@
       "publish_state": "not_published",
       "review_level": "clinical_review_needed",
       "last_reviewed_at": null,
-      "notes": "Priority #1. Top of the three-tier architecture — everything links up here. This is the single highest-priority content asset. Internal links down to: Administrative Hub (page_0007), Medical Necessity Hub (page_0008), Coverage Hub (page_0009), and the 'How to Read a Denial Letter' page (page_0021). EEAT gate applies: all 7 trust pages must be attorney-reviewed before publish. GEO-optimized answer block required. Citability score target ≥80."
+      "notes": "Priority #1. Top of the three-tier architecture \u2014 everything links up here. This is the single highest-priority content asset. Internal links down to: Administrative Hub (page_0007), Medical Necessity Hub (page_0008), Coverage Hub (page_0009), and the 'How to Read a Denial Letter' page (page_0021). EEAT gate applies: all 7 trust pages must be attorney-reviewed before publish. GEO-optimized answer block required. Citability score target \u226580."
     },
     {
       "id": "page_0007",
-      "status": "draft",
+      "status": "draft_complete",
       "created_at": "2026-03-12T00:00:00Z",
-      "updated_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-19T00:00:00Z",
       "owner": "sarsh",
       "source_ids": [
         "src_0011",
@@ -292,13 +292,13 @@
       "publish_state": "not_published",
       "review_level": "founder_review",
       "last_reviewed_at": null,
-      "notes": "Mid-tier hub. Priority #8 in publish queue. Covers ~50-60% of all denials. Internal links: up to Pillar (page_0006), down to CO-16 (page_0010), CO-97 (page_0011), CO-18 (page_0012), CO-22 (page_0013), CO-29 (page_0014), CO-45 (page_0016). Routes users to Medical Bill Dispute Tool. Not a strong referral surface — administrative errors typically resolve with resubmission."
+      "notes": "Mid-tier hub. Priority #8 in publish queue. Covers ~50-60% of all denials. Internal links: up to Pillar (page_0006), down to CO-16 (page_0010), CO-97 (page_0011), CO-18 (page_0012), CO-22 (page_0013), CO-29 (page_0014), CO-45 (page_0016). Routes users to Medical Bill Dispute Tool. Not a strong referral surface \u2014 administrative errors typically resolve with resubmission."
     },
     {
       "id": "page_0008",
-      "status": "draft",
+      "status": "draft_complete",
       "created_at": "2026-03-12T00:00:00Z",
-      "updated_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-19T00:00:00Z",
       "owner": "sarsh",
       "source_ids": [
         "src_0011",
@@ -337,7 +337,7 @@
       "publish_state": "not_published",
       "review_level": "clinical_review_needed",
       "last_reviewed_at": null,
-      "notes": "Mid-tier hub. Priority #9 in publish queue. Highest attorney referral potential of all three hubs. 40-60% appeal win rate relevant here. Internal links: up to Pillar (page_0006), down to CO-50 (page_0001), CO-151 (page_0019), CO-197 (page_0002). Phase 2: service expansion pages (MRI, PT, medications, etc.) link here. CRITICAL: build Month 6 referral wiring placeholders in the draft — activate at Month 6 only. Requires clinical review before publish."
+      "notes": "Mid-tier hub. Priority #9 in publish queue. Highest attorney referral potential of all three hubs. 40-60% appeal win rate relevant here. Internal links: up to Pillar (page_0006), down to CO-50 (page_0001), CO-151 (page_0019), CO-197 (page_0002). Phase 2: service expansion pages (MRI, PT, medications, etc.) link here. CRITICAL: build Month 6 referral wiring placeholders in the draft \u2014 activate at Month 6 only. Requires clinical review before publish."
     },
     {
       "id": "page_0009",
@@ -396,7 +396,7 @@
       "tier": "code_page",
       "publish_sequence": 3,
       "brand_stat_required": true,
-      "title": "CO-16 Denial Code: Missing or Invalid Information — What It Means and How to Fix It",
+      "title": "CO-16 Denial Code: Missing or Invalid Information \u2014 What It Means and How to Fix It",
       "url_slug": "/denial-codes/co-16-missing-invalid-information",
       "page_type": "denial_code_page",
       "cluster_id": "cluster_0007",
@@ -415,7 +415,7 @@
       "publish_state": "not_published",
       "review_level": "founder_review",
       "last_reviewed_at": null,
-      "notes": "Priority #3 in 90-day queue. Highest-volume single denial code (15-20% of all denials). Pure paperwork issue — routes to Bill Dispute Tool. GEO answer block: what specific information is missing, where to find it, how to resubmit. Internal links: up to Administrative Hub (page_0007), up to Pillar (page_0006)."
+      "notes": "Priority #3 in 90-day queue. Highest-volume single denial code (15-20% of all denials). Pure paperwork issue \u2014 routes to Bill Dispute Tool. GEO answer block: what specific information is missing, where to find it, how to resubmit. Internal links: up to Administrative Hub (page_0007), up to Pillar (page_0006)."
     },
     {
       "id": "page_0011",
@@ -432,7 +432,7 @@
       "tier": "code_page",
       "publish_sequence": 5,
       "brand_stat_required": true,
-      "title": "CO-97 Denial Code: Bundled or Included Service — How to Dispute a Billing Rollup",
+      "title": "CO-97 Denial Code: Bundled or Included Service \u2014 How to Dispute a Billing Rollup",
       "url_slug": "/denial-codes/co-97-bundled-included-service",
       "page_type": "denial_code_page",
       "cluster_id": "cluster_0007",
@@ -451,7 +451,7 @@
       "publish_state": "not_published",
       "review_level": "founder_review",
       "last_reviewed_at": null,
-      "notes": "Priority #5 (first in the CO-97/CO-18/CO-22 wave). Billing rollup confusion — provider billed separately for a service the payer considers bundled. Routes to Bill Dispute Tool. Internal links up to Administrative Hub.",
+      "notes": "Priority #5 (first in the CO-97/CO-18/CO-22 wave). Billing rollup confusion \u2014 provider billed separately for a service the payer considers bundled. Routes to Bill Dispute Tool. Internal links up to Administrative Hub.",
       "eeat_validated": true
     },
     {
@@ -469,7 +469,7 @@
       "tier": "code_page",
       "publish_sequence": 6,
       "brand_stat_required": true,
-      "title": "CO-18 Denial Code: Duplicate Claim — Why You Got This and How to Fix It",
+      "title": "CO-18 Denial Code: Duplicate Claim \u2014 Why You Got This and How to Fix It",
       "url_slug": "/denial-codes/co-18-duplicate-claim",
       "page_type": "denial_code_page",
       "cluster_id": "cluster_0007",
@@ -488,7 +488,7 @@
       "publish_state": "not_published",
       "review_level": "founder_review",
       "last_reviewed_at": null,
-      "notes": "Priority #6. High confusion potential — patients don't understand why their claim was called a duplicate. Resolution: confirm original was processed, request claim status, escalate to provider billing if needed. Internal links up to Administrative Hub.",
+      "notes": "Priority #6. High confusion potential \u2014 patients don't understand why their claim was called a duplicate. Resolution: confirm original was processed, request claim status, escalate to provider billing if needed. Internal links up to Administrative Hub.",
       "eeat_validated": true
     },
     {
@@ -506,7 +506,7 @@
       "tier": "code_page",
       "publish_sequence": 7,
       "brand_stat_required": true,
-      "title": "CO-22 Denial Code: Coordination of Benefits — What It Means When You Have Two Insurance Plans",
+      "title": "CO-22 Denial Code: Coordination of Benefits \u2014 What It Means When You Have Two Insurance Plans",
       "url_slug": "/denial-codes/co-22-coordination-of-benefits",
       "page_type": "denial_code_page",
       "cluster_id": "cluster_0007",
@@ -525,7 +525,7 @@
       "publish_state": "not_published",
       "review_level": "founder_review",
       "last_reviewed_at": null,
-      "notes": "Priority #7. Common family insurance confusion — dual coverage, primary vs secondary payer. Explain coordination of benefits clearly; high volume of people searching this without understanding what it means. Internal links up to Administrative Hub.",
+      "notes": "Priority #7. Common family insurance confusion \u2014 dual coverage, primary vs secondary payer. Explain coordination of benefits clearly; high volume of people searching this without understanding what it means. Internal links up to Administrative Hub.",
       "eeat_validated": true
     },
     {
@@ -543,7 +543,7 @@
       "tier": "code_page",
       "publish_sequence": 11,
       "brand_stat_required": true,
-      "title": "CO-29 Denial Code: Timely Filing Limit Exceeded — What to Do When the Deadline Has Passed",
+      "title": "CO-29 Denial Code: Timely Filing Limit Exceeded \u2014 What to Do When the Deadline Has Passed",
       "url_slug": "/denial-codes/co-29-timely-filing",
       "page_type": "denial_code_page",
       "cluster_id": "cluster_0007",
@@ -562,7 +562,7 @@
       "publish_state": "not_published",
       "review_level": "founder_review",
       "last_reviewed_at": null,
-      "notes": "Priority #11. Timely filing creates urgency — the user's appeal window may also be closing. GEO angle: explain that timely filing limits apply to the provider, not always to the patient appeal. Exceptions exist. Internal links up to Administrative Hub."
+      "notes": "Priority #11. Timely filing creates urgency \u2014 the user's appeal window may also be closing. GEO angle: explain that timely filing limits apply to the provider, not always to the patient appeal. Exceptions exist. Internal links up to Administrative Hub."
     },
     {
       "id": "page_0015",
@@ -579,7 +579,7 @@
       "tier": "code_page",
       "publish_sequence": 12,
       "brand_stat_required": true,
-      "title": "CO-96 Denial Code: Non-Covered Service — How to Appeal a Plan Exclusion",
+      "title": "CO-96 Denial Code: Non-Covered Service \u2014 How to Appeal a Plan Exclusion",
       "url_slug": "/denial-codes/co-96-non-covered-service",
       "page_type": "denial_code_page",
       "cluster_id": "cluster_0009",
@@ -617,7 +617,7 @@
       "tier": "code_page",
       "publish_sequence": 13,
       "brand_stat_required": true,
-      "title": "CO-45 Denial Code: Charge Exceeds Fee Schedule — Why Your Bill Was Reduced",
+      "title": "CO-45 Denial Code: Charge Exceeds Fee Schedule \u2014 Why Your Bill Was Reduced",
       "url_slug": "/denial-codes/co-45-charge-exceeds-fee-schedule",
       "page_type": "denial_code_page",
       "cluster_id": "cluster_0007",
@@ -636,7 +636,7 @@
       "publish_state": "not_published",
       "review_level": "founder_review",
       "last_reviewed_at": null,
-      "notes": "Priority #13. Billing correction — the provider charged above the contracted rate. Often not a patient action item, but patient needs to understand what happened to the bill. Routes to Bill Dispute Tool. Internal links up to Administrative Hub."
+      "notes": "Priority #13. Billing correction \u2014 the provider charged above the contracted rate. Often not a patient action item, but patient needs to understand what happened to the bill. Routes to Bill Dispute Tool. Internal links up to Administrative Hub."
     },
     {
       "id": "page_0017",
@@ -653,7 +653,7 @@
       "tier": "code_page",
       "publish_sequence": 14,
       "brand_stat_required": true,
-      "title": "PR-204 Denial Code: Service Not Covered Under Your Plan — What Your Options Are",
+      "title": "PR-204 Denial Code: Service Not Covered Under Your Plan \u2014 What Your Options Are",
       "url_slug": "/denial-codes/pr-204-service-not-covered-under-plan",
       "page_type": "denial_code_page",
       "cluster_id": "cluster_0009",
@@ -674,7 +674,7 @@
       "publish_state": "not_published",
       "review_level": "founder_review",
       "last_reviewed_at": null,
-      "notes": "Priority #14. Plan exclusion — requires rights education (ACA essential health benefits, state mandates). Routes to Denial Fighter. Internal links up to Coverage Hub (page_0009)."
+      "notes": "Priority #14. Plan exclusion \u2014 requires rights education (ACA essential health benefits, state mandates). Routes to Denial Fighter. Internal links up to Coverage Hub (page_0009)."
     },
     {
       "id": "page_0018",
@@ -691,7 +691,7 @@
       "tier": "code_page",
       "publish_sequence": 15,
       "brand_stat_required": true,
-      "title": "CO-109 Denial Code: Claim Not Covered by This Payer — What to Do When Your Claim Went to the Wrong Insurer",
+      "title": "CO-109 Denial Code: Claim Not Covered by This Payer \u2014 What to Do When Your Claim Went to the Wrong Insurer",
       "url_slug": "/denial-codes/co-109-claim-not-covered-this-payer",
       "page_type": "denial_code_page",
       "cluster_id": "cluster_0009",
@@ -710,7 +710,7 @@
       "publish_state": "not_published",
       "review_level": "founder_review",
       "last_reviewed_at": null,
-      "notes": "Priority #15. Wrong payer filed — typically a quick fix where the provider resubmits to the correct insurer. Patient advocacy role is to understand who the correct payer is and instruct the provider. Internal links up to Coverage Hub (page_0009)."
+      "notes": "Priority #15. Wrong payer filed \u2014 typically a quick fix where the provider resubmits to the correct insurer. Patient advocacy role is to understand who the correct payer is and instruct the provider. Internal links up to Coverage Hub (page_0009)."
     },
     {
       "id": "page_0019",
@@ -727,7 +727,7 @@
       "tier": "code_page",
       "publish_sequence": 16,
       "brand_stat_required": true,
-      "title": "CO-151 Denial Code: Authorization Required — How to Appeal a Prior Auth Denial",
+      "title": "CO-151 Denial Code: Authorization Required \u2014 How to Appeal a Prior Auth Denial",
       "url_slug": "/denial-codes/co-151-authorization-required",
       "page_type": "denial_code_page",
       "cluster_id": "cluster_0002",
@@ -749,7 +749,7 @@
       "publish_state": "not_published",
       "review_level": "clinical_review_needed",
       "last_reviewed_at": null,
-      "notes": "Priority #16. Prior auth was required but not obtained — or was denied retroactively. Retroactive authorization appeal path is the key GEO angle. Routes to Denial Fighter. Internal links up to Medical Necessity Hub (page_0008). Requires clinical review."
+      "notes": "Priority #16. Prior auth was required but not obtained \u2014 or was denied retroactively. Retroactive authorization appeal path is the key GEO angle. Routes to Denial Fighter. Internal links up to Medical Necessity Hub (page_0008). Requires clinical review."
     },
     {
       "id": "page_0020",
@@ -766,7 +766,7 @@
       "tier": "code_page",
       "publish_sequence": 17,
       "brand_stat_required": true,
-      "title": "CO-B7 Denial Code: Provider Not Certified — What It Means and How to Respond",
+      "title": "CO-B7 Denial Code: Provider Not Certified \u2014 What It Means and How to Respond",
       "url_slug": "/denial-codes/co-b7-provider-not-certified",
       "page_type": "denial_code_page",
       "cluster_id": "cluster_0009",
@@ -785,7 +785,7 @@
       "publish_state": "not_published",
       "review_level": "founder_review",
       "last_reviewed_at": null,
-      "notes": "Priority #17 (completes the 12-code set). Credentialing denial — fix path often runs through provider. Patient advocacy: help user understand whether this is a credentialing lag or genuine out-of-network issue. No Surprises Act may apply if emergency. Internal links up to Coverage Hub (page_0009)."
+      "notes": "Priority #17 (completes the 12-code set). Credentialing denial \u2014 fix path often runs through provider. Patient advocacy: help user understand whether this is a credentialing lag or genuine out-of-network issue. No Surprises Act may apply if emergency. Internal links up to Coverage Hub (page_0009)."
     },
     {
       "id": "page_0021",
@@ -817,7 +817,7 @@
       "publish_state": "not_published",
       "review_level": "founder_review",
       "last_reviewed_at": null,
-      "notes": "Priority #10. Bridge page — most patients do nothing because they don't understand the denial letter (SEO Gap Analysis v1). Sits between the main pillar and the code pages. Explains EOB vs denial letter, reason codes, appeal rights language, timelines. Routes to Denial Fighter for next step. Internal links up to Pillar (page_0006), down to relevant code pages."
+      "notes": "Priority #10. Bridge page \u2014 most patients do nothing because they don't understand the denial letter (SEO Gap Analysis v1). Sits between the main pillar and the code pages. Explains EOB vs denial letter, reason codes, appeal rights language, timelines. Routes to Denial Fighter for next step. Internal links up to Pillar (page_0006), down to relevant code pages."
     },
     {
       "id": "page_0022",
@@ -844,7 +844,7 @@
       "related_regulation_ids": [],
       "freshness_state": "new",
       "publish_state": "in_production",
-      "phase_gate": "Phase 1 — LAUNCH GATE — required before any denial cluster pages publish",
+      "phase_gate": "Phase 1 \u2014 LAUNCH GATE \u2014 required before any denial cluster pages publish",
       "review_level": "kate_editorial_board",
       "last_reviewed_at": null,
       "source_dependency_type": "regulatory_backed",
@@ -1027,7 +1027,7 @@
       "geo_compliance": false,
       "attribution_status": "pending",
       "anchors_cluster": "Prior auth denials, appeal workflows",
-      "notes": "Phase 4 Wave 2. Freshness-sensitive — CMS prior auth rules evolving 2024+."
+      "notes": "Phase 4 Wave 2. Freshness-sensitive \u2014 CMS prior auth rules evolving 2024+."
     },
     {
       "id": "page_0028",
@@ -1062,7 +1062,7 @@
       "geo_compliance": false,
       "attribution_status": "pending",
       "anchors_cluster": "Emergency billing, out-of-network, balance billing",
-      "notes": "Phase 4 Wave 3. Statute-backed (No Surprises Act). Highest litigation risk in cornerstone library — attorney review required before publish."
+      "notes": "Phase 4 Wave 3. Statute-backed (No Surprises Act). Highest litigation risk in cornerstone library \u2014 attorney review required before publish."
     },
     {
       "id": "page_0029",
@@ -1097,7 +1097,7 @@
       "geo_compliance": false,
       "attribution_status": "pending",
       "anchors_cluster": "Elder care, neglect reporting, ombudsman",
-      "notes": "Phase 4 Wave 3. Spanish version high priority in Phase 5 — elder care highly searched in Spanish."
+      "notes": "Phase 4 Wave 3. Spanish version high priority in Phase 5 \u2014 elder care highly searched in Spanish."
     },
     {
       "id": "page_0030",
@@ -1132,7 +1132,7 @@
       "geo_compliance": false,
       "attribution_status": "pending",
       "anchors_cluster": "Regulatory complaints, CMS, state agencies",
-      "notes": "Phase 4 Wave 3. High internal link value — routes from nearly every other cluster."
+      "notes": "Phase 4 Wave 3. High internal link value \u2014 routes from nearly every other cluster."
     },
     {
       "id": "page_0031",
@@ -1167,7 +1167,7 @@
       "geo_compliance": false,
       "attribution_status": "pending",
       "anchors_cluster": "Charity care, financial assistance, medical debt",
-      "notes": "Phase 4 Wave 4. Final cornerstone — completes the 10-guide library. IRS 501(r) backed. High alignment with MA-SUP-DAT-001 financial impact data."
+      "notes": "Phase 4 Wave 4. Final cornerstone \u2014 completes the 10-guide library. IRS 501(r) backed. High alignment with MA-SUP-DAT-001 financial impact data."
     }
   ]
 }

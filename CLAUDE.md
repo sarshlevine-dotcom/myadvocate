@@ -39,6 +39,7 @@ AI-powered patient advocacy platform. Helps people navigate insurance denials an
 | Automation | n8n | Phase 2 — event-driven automation, webhook routing, retention flows, budget alert webhooks |
 | AI Provider | Anthropic | All calls via `generateLetter()` — Haiku default, Sonnet for complex/doc cases |
 | Local Intelligence | BitNet | **Pre-launch internal layer** — classification, scoring, routing. NEVER user-facing. Powers SEO intelligence engine, LQE pre-screener, book keyword scan, competitive signal classification. See BitNet Architecture section. |
+| Scoring Engine | FastAPI V4 (internal) | **Pre-launch internal layer** — /analyze + /feedback; 5-score model (Confidence/Impact/Risk/Urgency/Learning); CTO/CMO/CFO/UX agents; state-backed (Supabase); NEVER public. See V4 Scoring Service Architecture section. |
 | Caching / Rate limiting | Upstash Redis | Rate limiting live; response caching deferred to Phase 2 |
 
 **Provider abstraction rule:** All Anthropic API calls must go through `src/lib/generate-letter.ts`.
@@ -103,6 +104,10 @@ boundary for scrubber enforcement, model selection, output caps, cost logging, a
 - NEVER let BitNet output reach users — BitNet is classification, scoring, and routing only; zero user-facing output; all letter generation still goes through generateLetter() → LQE → Kate path (MA-IMPL-002)
 - NEVER enable BitNet fast path (confidence ≥ 0.95 LQE bypass) until `bitnet_calibration` table has ≥ 50 Kate-reviewed records AND false positive rate is confirmed <10% (MA-IMPL-002 §4.3)
 - NEVER write to `context_registry/` JSON files directly from product code — only BitNet jobs, n8n workflows, and Claude agents write to registries; never from API routes or page handlers (MA-CTX-001)
+- NEVER expose the V4 Scoring Service endpoint publicly — it is internal infrastructure only; no user data, no PII, and no letter content flows through /analyze or /feedback (MA-IMPL-003)
+- NEVER permit AUTO tier scoring decisions for Bucket 1 AI outputs (letter generation) — AUTO is restricted to SEO/content sequencing, cluster prioritization, content refresh, and infrastructure cost alerts only; letter generation always requires the human approval path (MA-IMPL-003)
+- NEVER activate the CMO Content Refresh n8n workflow before BitNet cluster scoring has produced a valid ranked_queue.json — the workflow depends on the scored queue as its data source (MA-IMPL-003)
+- NEVER adjust scoring service agent_weights or decision thresholds without a corresponding /feedback entry — all weight evolution must be traceable through feedback_history.jsonl and the Supabase scoring_feedback table (MA-IMPL-003)
 
 ### Scope Gates
 - Check MA-LCH-004 before building any new feature (Phase 1 scope boundary)
@@ -113,6 +118,7 @@ boundary for scrubber enforcement, model selection, output caps, cost logging, a
 - Check MA-AUT-006 before any modification to `generateLetter()`, any new agent deployment, or any change to the letter quality pipeline — G1/G6 are retroactive launch gaps that must be cleared; G4/G5 are signal-gated and must not be pulled forward
 - Check Parking Lot in Notion before adding infrastructure that has a deferred phase tag
 - Check MA-IMPL-002 before any BitNet job deployment, competitive signal pipeline change, content staging state machine change, or LQE hybrid routing modification
+- Check MA-IMPL-003 before any V4 Scoring Service modification (main.py), n8n workflow deployment or change, agent weighting adjustment, decision threshold change, or new decision_type registration
 
 ### Model Strings
 | Tier | String | When to use |
@@ -193,7 +199,8 @@ Before building any new feature or making an architectural change, run through t
 - `MA-EEAT-001` — EEAT & YMYL Compliance Audit — shortfall analysis, trust infrastructure spec, 5-layer content safety stack, reviewer framing, gamification Trust XP — `docs/seo/MA-EEAT-001_EEAT_YMYL_Audit_Report.docx` ← hardwired into all SEO content
 - `MA-SEO-SUP-001` — SEO Authority & Content Infrastructure Strategy — 9-section operating doctrine: cornerstone library (10 guides, phased), anonymous trust infrastructure, editorial board attribution model, backlink program, policy interpretation cluster, content refresh formalization, Annual Outcomes Report, Spanish-language content, GEO hardwiring; agent deployment revisions and consolidated metrics dashboard — `docs/seo/MA-SEO-SUP-001_SEO_Authority_Content_Infrastructure_v1.docx` ← hardwired into all content infrastructure decisions
 - `MA-IMPL-001` — Strategic Implementation Plan — canonical source of truth for integrating 21 uploaded build pack documents into Phase 2 roadmap; supersession chain for all source docs — `docs/MA-IMPL-001_Strategic_Implementation_Plan.docx` ← read before any Phase 2 architecture decision
-- `MA-IMPL-002` — Pre-Launch Intelligence & Automation Architecture — BitNet SEO intelligence engine (hub/spoke scoring, book monitoring), content staging pipeline (50-page queue, 9-state machine), pre-launch data collection (migrations 020–022), LQE + BitNet hybrid 3-path routing, competitive signal collection (CMS/NAIC/payer bulletins), integration sequence (8-week calendar). **All six workstreams are internal-only and pre-launch safe.** — `docs/MA-IMPL-002_PreLaunch_Intelligence_Architecture.docx` ← hardwired into all BitNet, n8n, and data collection decisions
+- `MA-IMPL-002` — Pre-Launch Intelligence & Automation Architecture — BitNet SEO intelligence engine (hub/spoke scoring, book monitoring), content staging pipeline (50-page queue, 9-state machine), pre-launch data collection (migrations 020–022), LQE + BitNet hybrid 3-path routing, competitive signal collection (CMS/NAIC/payer bulletins), integration sequence (8-week calendar). **All six workstreams are internal-only and pre-launch safe.** — `docs/intelligence/MA-IMPL-002_PreLaunch_Intelligence_Architecture.docx` ← hardwired into all BitNet, n8n, and data collection decisions
+- `MA-IMPL-003` — V4 Scoring Service & Autonomous Agent Architecture — Month 0-12 rollout plan; FastAPI scoring service (/analyze + /feedback); 5-dimension scoring math; 4-agent model (CTO/CMO/CFO/UX); n8n wiring guide (3 starter workflows); decision routing thresholds (AUTO/APPROVAL/LOG/BLOCK/IGNORE); learning loop spec; agent coordination hierarchy; stopping conditions — `docs/intelligence/MA-IMPL-003_BitNet_V4_Month0-12_Rollout.docx` ← hardwired into all Scoring Service, n8n workflow, and agent coordination decisions
 - `MA-AHP-001` — Anti-Hallucination Protocol — governs all agent outputs (in Notion Agent Registry)
 - `MA-SUP-DAT-001` — Proprietary Data Engine Strategy — two compounding datasets (friction events + appeal outcomes), collection schema, publication gates, phase/sprint task plan, competitive moat analysis — `docs/data/myadvocate_business_supplemental_proprietary_data_engine_v1.docx` ← hardwired into data architecture and Phase 2+ data intelligence builds
 - `Projections v17` — Financial model M1–M24, all revenue streams — `docs/pmp/MyAdvocate_Projections_v17.xlsx`
@@ -228,6 +235,7 @@ docs/
               myadvocate_business_supplemental_proprietary_data_engine_v1.docx
   intelligence/ MA-IMPL-001_Strategic_Implementation_Plan.docx       ← NEW 2026-03-19 — 21-doc integration plan, Phase 2 build sequence
               MA-IMPL-002_PreLaunch_Intelligence_Architecture.docx   ← NEW 2026-03-19 — BitNet SEO engine, staging pipeline, data collection, LQE hybrid, competitive signals
+              MA-IMPL-003_BitNet_V4_Month0-12_Rollout.docx         ← NEW 2026-03-19 — V4 scoring service, n8n wiring, Month 0-12 gates, agent coordination
   review/     Reviewer-facing operational materials for Kate + Sarsh ONLY. Not for technical architecture docs.
               LQE_Calibration_Guide_Kate.docx  ← LQE calibration session guide (Sprint 2 Kate handoff)
               [future: YMYL_Review_Checklist.docx, Kate_Onboarding_Guide.docx, Content_Review_SOP.docx]
@@ -414,6 +422,65 @@ PII scrubber, output contract validation, disclaimer, and artifact state write a
 
 ---
 
+## V4 Scoring Service Architecture (MA-IMPL-003)
+
+**Role:** Internal autonomous decision engine. Never user-facing. Orchestrates agent-level decisions for SEO content prioritization, infrastructure cost alerts, and conversion optimization. Sits between BitNet (classification/scoring output) and n8n (workflow execution). Single FastAPI instance per environment.
+
+**Canonical doc:** `docs/intelligence/MA-IMPL-003_BitNet_V4_Month0-12_Rollout.docx`
+
+**Endpoints:**
+- `POST /analyze` — 16 metric inputs + agent + decision_type → 5 scores + action + reason
+- `POST /feedback` — learning loop update; nudges historical_accuracy after each outcome
+- `GET /state` — full weights + historical accuracy per decision_type
+- `GET /health` — service health check
+
+**5-dimension scoring model:**
+| Score | Key Inputs | Historical Boost |
+|---|---|---|
+| Confidence | volume, consistency, accuracy | +15% from historical_accuracy_by_decision_type |
+| Impact | revenue, traffic, compounding | — |
+| Risk | volatility, dependency, compliance | — |
+| Urgency | trend, decay, window | — |
+| Learning | uncertainty, experiment, gap | — |
+
+**Agent weightings (DEFAULT_AGENT_WEIGHTS):**
+| Agent | Primary Focus | Decision Formula |
+|---|---|---|
+| CTO | Risk + Urgency | 0.40×risk + 0.30×urgency + 0.20×impact + 0.10×confidence |
+| CFO | Impact − Risk | 0.45×impact + 0.25×confidence + 0.15×urgency + 0.15×learning − 0.30×risk |
+| CMO | Impact + Confidence | 0.35×impact + 0.25×confidence + 0.20×urgency + 0.20×learning − 0.20×risk |
+| UX | Impact + Learning | 0.30×impact + 0.30×learning + 0.20×confidence + 0.20×urgency − 0.15×risk |
+
+**Decision routing (applied in order — risk check first):**
+| Condition | Action | n8n Behavior |
+|---|---|---|
+| risk > 0.75 | BLOCK | Critical Slack alert only |
+| confidence < 0.50 | IGNORE | No-op |
+| score ≥ 0.80 | AUTO | Execute + Slack audit trail (never Bucket 1 AI calls) |
+| score 0.65–0.80 | APPROVAL | Slack approval card; Sarsh reviews within 24h |
+| score 0.45–0.65 | LOG | Supabase digest; surfaces in daily founder digest |
+| score < 0.45 | IGNORE | No-op |
+
+**n8n starter workflows (from scoring_service pack):**
+- `cto_sentinel.json` — Every 6h; api_cost_spike detection; CTO agent → S0-01
+- `cmo_content_refresh.json` — Weekly Sunday 3am; content decay signals; CMO agent → S1-02
+- `cfo_conversion_insight.json` — Weekly Tuesday 6am; funnel metrics; CFO agent → S2-01
+
+**Agent coordination hierarchy (conflict resolution):**
+Priority order: CTO (BLOCK absolute) → Compliance/LQE → CFO → CMO → UX. When two agents have pending APPROVAL actions in the same 6h window, priority_score = agent_weight × decision_score determines which wins. CTO BLOCK overrides unconditionally.
+
+**Month 0–12 activation gates:**
+- Month 0 (now): Scoring service deployed. CTO Sentinel live. All actions at APPROVAL/LOG — no AUTO.
+- Month 1–2 (S1-01/S1-02): Action routing live. CMO Content Refresh live. ranked_queue.json initialized.
+- Month 3–4 (S2-01): CFO Conversion Insight live. Learning loop 50-decision checkpoint.
+- Month 4–6 (S2-02): Fast path calibration gate. AUTO tier validation (content/infra only, never letters).
+- Month 7–9 (S3-01, future): Full 4-agent coordination. SCAA spec. Signal 1 prep.
+- Month 9–12 (S4-01, signal-gated): Parallel YMYL voting (if triggered). MKT agents. Scale path.
+
+**Amendability:** Scoring service is independently deployable. Add a new agent by: (1) adding weight profile to DEFAULT_AGENT_WEIGHTS in main.py, (2) creating/updating the corresponding n8n workflow, (3) registering the new decision_type in Supabase scoring_decisions table, (4) logging a /feedback entry. No changes to generateLetter() or BitNet required.
+
+---
+
 ## Content Staging Pipeline (MA-IMPL-002)
 
 **50-page staging pool.** State machine: `draft` → `bitnet_scored` → `eeat_pending` → `eeat_passed` → `review_queue` → `approved` → `scheduled` → `published` → `needs_refresh`
@@ -467,6 +534,20 @@ PII scrubber, output contract validation, disclaimer, and artifact state write a
 36. **[MA-AUT-006 G7 — Sprint 3] Draft MA-AUT-007 (Spanish Content Audit Agent spec); resolve Kate governance decision before Month 7**
 37. **[MA-AUT-006 G4 — signal-gated] Parallel YMYL voting — trigger: >200 letters/month OR Kate review load >20%**
 38. **[MA-AUT-006 G5 — signal-gated] Chief of Staff Orchestrator — trigger: >15% multi-issue cases + attorney referral routing live**
+39. **[MA-IMPL-003 S0-01] Deploy V4 Scoring Service (FastAPI) — internal infra, /analyze + /feedback live, state-backed to Supabase**
+40. **[MA-IMPL-003 S0-01] Wire CTO Sentinel n8n workflow — 6h api_cost_spike detection + Slack APPROVAL routing**
+41. **[MA-IMPL-003 S1-01] Wire scoring service to n8n action routing — all 5 tiers (AUTO/APPROVAL/LOG/BLOCK/IGNORE)**
+42. **[MA-IMPL-003 S1-01] Instrument scoring /feedback — Kate calibration decisions seed learning loop**
+43. **[MA-IMPL-003 S1-02] Deploy CMO Content Refresh n8n workflow — weekly, scoring-gated content action decisions**
+44. **[MA-IMPL-003 S1-02] BitNet cluster scoring to scoring service integration — cluster_priority_score pipeline**
+45. **[MA-IMPL-003 S1-02] Initialize ranked_queue.json — first full BitNet cluster + page scoring pass**
+46. **[MA-IMPL-003 S2-01] Deploy CFO Conversion Insight n8n workflow — weekly, funnel-based revenue scoring**
+47. **[MA-IMPL-003 S2-01] Scoring service learning loop checkpoint — 50+ decisions, drift analysis, document findings**
+48. **[MA-IMPL-003 S2-01] n8n daily founder intelligence digest — Slack Block Kit, scoring state + BitNet signals**
+49. **[MA-IMPL-003 S2-01] Slack ops command center — L1/L2/L3 approval routing wired to scoring thresholds**
+50. **[MA-IMPL-003 S2-02] BitNet fast path calibration gate review — ≥50 Kate records + false positive <10% check; Sarsh sign-off required**
+51. **[MA-IMPL-003 S2-02] Scoring service AUTO tier validation — first autonomous decisions with Slack audit trail; content/infra only**
+52. **[MA-IMPL-003 S2-02] Full agent coordination hierarchy live — CTO→Compliance→CFO→CMO→UX via priority_score conflict resolution**
 
 ---
 
@@ -481,6 +562,7 @@ This file should be reviewed whenever:
 Last reviewed: **2026-03-19**
 
 ### Recent Changes
+- 2026-03-19: MA-IMPL-003 integrated — V4 Scoring Service & Autonomous Agent Architecture canonized. FastAPI scoring service (main.py from scoring pack) formalized as internal intelligence layer: /analyze + /feedback endpoints; 5-score model (Confidence/Impact/Risk/Urgency/Learning); 4-agent weightings (CTO/CMO/CFO/UX); 5-tier decision routing (AUTO/APPROVAL/LOG/BLOCK/IGNORE). 3 n8n starter workflows registered (CTO Sentinel S0-01, CMO Content Refresh S1-02, CFO Conversion Insight S2-01). Month 0-12 activation gates defined. Learning loop spec (historical_accuracy_by_decision_type). Agent coordination hierarchy + conflict resolution protocol. 4 new Core Invariants added (scoring service never public, AUTO never Bucket 1, CMO workflow gated on ranked_queue.json, all weight changes logged). 1 new Scope Gate added (check MA-IMPL-003 before any scoring/n8n changes). 14 new Phase 2 Priority items added (39–52). V4 Scoring Service Architecture section added. Stack table updated with Scoring Engine row. Docs structure updated (MA-IMPL-003 added to intelligence/). 15 Notion sprint tasks created across S0-01 through S2-02. Canonical doc: docs/intelligence/MA-IMPL-003_BitNet_V4_Month0-12_Rollout.docx.
 - 2026-03-19: MA-IMPL-002 integrated — Pre-Launch Intelligence & Automation Architecture canonized. 6 workstreams accelerated to pre-launch (internal only, no public rollout): SEO Intelligence Engine (BitNet hub/spoke cluster scoring + book monitoring), content staging pipeline (50-page queue, 9-state machine), pre-launch data collection (migrations 020-022: appeal_outcome_events, bitnet_calibration, competitive_signals), LQE + BitNet hybrid 3-path routing (fast/standard/review; fast path disabled until ≥50 calibration samples), competitive signal collection (CMS/NAIC/payer bulletins via n8n). 3 new Core Invariants added (BitNet never user-facing, fast path calibration gate, no registry writes from product code). 1 new Scope Gate added (check MA-IMPL-002 before any BitNet/signal pipeline change). 4 new context registry files added (ranked_queue.json, payer_intelligence.json, book_keyword_signals.json, spanish_keyword_signals.json). BitNet Architecture section added. Content Staging Pipeline section added. Phase 2 Priorities expanded to 38 items. Stack table updated with BitNet. 25 Notion sprint tasks created (S1-01 through S2-02). 10 Parking Lot entries created (signal-gated and Phase 3+ items). Canonical docs updated: MA-IMPL-001 + MA-IMPL-002 added to docs/intelligence/. docs/intelligence/ subdirectory created.
 - 2026-03-13: Supplemental Security & Architecture Audit integrated — 10 gaps analyzed against recent work. 6 new MA-SEC-002 PassFail controls (P25–P30) added: server-side free-tier limits (P25/launch blocker), subscription tier authorization (P26/launch blocker), YMYL review operating model (P27/launch blocker), backup restoration test (P28/pre-Signal 1), incident response runbook (P29/pre-Signal 1), prompt version hash (P30/pre-Signal 1). Document upload formally deferred to Phase 2 — NER-grade PII redaction + malware scanning required. YMYL review operating model formalized: Kate primary/24hr SLA/queue cap 10/Sarsh escalation. Incident response runbook created (docs/security/incident-response-runbook.md). 3 new Core Invariants added (tier auth before generation, no doc upload without NER+malware, prompt_version_hash on every artifact). 11 Notion sprint tasks created. Quarterly backup test + 3-month VPN review scheduled as recurring tasks.
 - 2026-03-13: MA-AUT-006 v2 integrated — Agent System Architecture Audit canonized. 7 gaps identified (G1–G7). G1 (LQE) and G6 (7-gate chain) are retroactive launch blockers requiring Phase 2 Sprint 1 remediation. G7 (Spanish Content Audit Agent/SCAA) is HIGH priority — design Sprint 3, build Phase 2, video activation Month 9, web activation Month 12. G4/G5 remain Phase 2 signal-gated. 4 new Core Invariants added (no generateLetter() modification without 7-gate spec, no letter output without LQE, no Spanish content without SCAA, no agent without stopping conditions). 1 new Scope Gate added (check MA-AUT-006 before any generateLetter() or agent change). Phase 2 Priorities updated (items 18–25 added). docs/agents/ updated with MA-AUT-006 docx. Conflicts with stale PMP reference (v20 → v24) and incorrect MA-SEC-001 ref (→ MA-SEC-002) flagged — MA-AUT-006 doc itself needs correction. MA-ARC-001 and MA-GAM-001 refs in MA-AUT-006 are unresolved (no matching canonical doc). Full spec: MA-AUT-006 in docs/agents/.
