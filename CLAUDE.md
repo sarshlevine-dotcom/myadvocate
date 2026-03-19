@@ -67,7 +67,7 @@ boundary for scrubber enforcement, model selection, output caps, cost logging, a
   - `disclaimer.ts` — appended to all user-facing outputs
 - `src/types/` — `domain.ts` (shared enums/interfaces incl. `ModelTier`, `LetterType` canonical location, `WorkflowContract` ✅ AIR-01, `LetterOutputSchema` ✅ AIR-03), `supabase.ts` (generated DB types)
 - `src/components/` — shared UI: Button, Input, FormField, Card, Alert, Nav
-- `supabase/migrations/` — 22 migrations applied; 016–022 pending deploy (scrub_records, friction_events, appeal_outcome_events, bitnet_calibration, competitive_signals, founder_inbox, prompt A/B variant fields). Append-only (see `supabase/migrations/CLAUDE.md`)
+- `supabase/migrations/` — 23 migrations applied; 016–022 pending deploy (scrub_records, friction_events, appeal_outcome_events, bitnet_calibration, competitive_signals, founder_inbox, prompt A/B variant fields); 023 ✅ live (real data pipeline: pages, page_metrics_daily, tool_sessions, billing_events, decision_log, content_queue, experiments, feedback_outcomes + 2 views). Append-only (see `supabase/migrations/CLAUDE.md`)
 - `supabase/seed/` — seed data for denial codes and resource routes
 - `context_registry/` — Agent intelligence layer (MA-CTX-001): **12 JSON registries** (8 original + 4 new from MA-IMPL-002). NOT a database. See Section "Context Registry" below.
 - `docs/` — organized by subdomain (see Docs Structure below)
