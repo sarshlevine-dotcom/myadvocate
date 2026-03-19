@@ -1,7 +1,7 @@
 # EEAT Validation Failure — how-to-appeal-insurance-denial
 
 **File:** `content_drafts/pillars/how-to-appeal-insurance-denial.md`
-**Run date:** 2026-03-13
+**Run date:** 2026-03-18
 **page_id:** page_0006
 **status:** draft_complete
 **Layers failed:** Layer 2 (Citations), Layer 3 (Forbidden Claims)

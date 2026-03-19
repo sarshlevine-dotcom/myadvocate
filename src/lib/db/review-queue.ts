@@ -51,6 +51,33 @@ export async function updateReviewDecision(params: {
 }
 
 /**
+ * Insert a review queue item for LQE failures (MA-AUT-006 §G1).
+ * Encodes the failure reason and letter type into risk_reason so Kate
+ * can triage without schema changes.
+ */
+export async function insertReviewQueueItem(params: {
+  artifactId:    string
+  caseId:        string
+  failureReason: string
+  letterType:    string
+  userId:        string  // SHA-256 hashed — never raw UUID
+}) {
+  const supabase = await createClient()
+  const riskReason = `LQE_FAILED:${params.failureReason} [${params.letterType}] uid:${params.userId.slice(0, 8)}`
+  const { data, error } = await supabase
+    .from('review_queue')
+    .insert({
+      artifact_id: params.artifactId,
+      case_id:     params.caseId,
+      risk_reason: riskReason,
+    })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+/**
  * Returns the number of artifacts currently pending review.
  * MA-SEC-002 P27: Used to enforce the 10-artifact queue cap.
  * Returns 0 on error (safe default — prevents false capacity blocks).

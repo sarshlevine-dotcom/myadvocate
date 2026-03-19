@@ -8,9 +8,11 @@ export async function createArtifact(params: {
   artifactType: LetterType
   releaseState: ArtifactReleaseState
   disclaimerVersion: string
+  disclaimerHash?: string      // MA-AUT-006 §G6 — pending migration; additive column
   contentHash: string
   storagePath: string
   content: string
+  promptVersionHash?: string   // MA-SEC-002 P30 — pending migration; additive column
 }) {
   const supabase = await createClient()
 
@@ -23,18 +25,24 @@ export async function createArtifact(params: {
     })
   if (uploadError) throw uploadError
 
-  // Create DB record
+  // Create DB record — disclaimer_hash and prompt_version_hash are additive columns
+  // pending next migration pass; Supabase will surface an error if columns are absent.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const insertPayload: Record<string, any> = {
+    case_id:            params.caseId,
+    user_id:            params.userId,
+    artifact_type:      params.artifactType,
+    release_state:      params.releaseState,
+    disclaimer_version: params.disclaimerVersion,
+    content_hash:       params.contentHash,
+    storage_path:       params.storagePath,
+  }
+  if (params.disclaimerHash)    insertPayload.disclaimer_hash    = params.disclaimerHash
+  if (params.promptVersionHash) insertPayload.prompt_version_hash = params.promptVersionHash
+
   const { data, error } = await supabase
     .from('artifacts')
-    .insert({
-      case_id: params.caseId,
-      user_id: params.userId,
-      artifact_type: params.artifactType,
-      release_state: params.releaseState,
-      disclaimer_version: params.disclaimerVersion,
-      content_hash: params.contentHash,
-      storage_path: params.storagePath,
-    })
+    .insert(insertPayload)
     .select()
     .single()
   if (error) throw error

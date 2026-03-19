@@ -5,15 +5,16 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 import { scrubPII } from '@/lib/pii-scrubber'
-import { appendDisclaimer, CURRENT_DISCLAIMER_VERSION } from '@/lib/disclaimer'
+import { appendDisclaimer, CURRENT_DISCLAIMER_VERSION, getDisclaimerVersion } from '@/lib/disclaimer'
 import { createArtifact } from '@/lib/db/artifacts'
-import { addToReviewQueue } from '@/lib/db/review-queue'
+import { addToReviewQueue, insertReviewQueueItem } from '@/lib/db/review-queue'
 import { logEvent } from '@/lib/db/metric-events'
+import { runLQE } from '@/lib/lqe'
 import { recordApiSpend } from '@/lib/budget-monitor'
 import { trackedExecution } from '@/lib/tracked-execution'
 import type { CanonicalFunctionName } from '@/lib/tracked-execution'
 import { createHash } from 'crypto'
-import type { ModelTier } from '@/types/domain'
+import type { ModelTier, ArtifactReleaseState } from '@/types/domain'
 
 // Lazy init — avoids throwing at import time when ANTHROPIC_API_KEY not yet set (e.g. tests)
 function getAnthropicClient() {
@@ -128,6 +129,17 @@ makes 2–3 key points; handles one likely objection; closes with next steps. \
 Strictly under 140 words.`,
 }
 
+// ─── MA-AUT-006 §G7: Artifact state machine guard ────────────────────────────
+// Phase 2 invariant: all artifacts must enter with release_state = 'review_required'.
+// Exported for unit testing; treat as @internal — do not call from application code.
+export function validateArtifactState(state: string): void {
+  if (state !== 'review_required') {
+    throw new Error(
+      `GATE_7_FAILED: invalid release_state '${state}' — must be 'review_required' in Phase 2`,
+    )
+  }
+}
+
 // ─── generateLetter ───────────────────────────────────────────────────────────
 export async function generateLetter(params: {
   caseId:       string
@@ -187,24 +199,31 @@ export async function generateLetter(params: {
   const modelString = MODEL_STRINGS[modelTier]
   const { maxTokens } = OUTPUT_CONFIG[params.letterType]
 
-  // Step 3: Call Anthropic via trackedExecution (MA-ARC-FUNC-001)
-  // userId is SHA-256 hashed — never pass raw Supabase auth UUID to the trace layer
-  const hashedUserId = createHash('sha256').update(params.userId).digest('hex')
-  const anthropic    = getAnthropicClient()
+  // Step 3: Build prompt + compute promptVersionHash (MA-SEC-002 P30)
+  // Prompt is extracted before trackedExecution so the hash captures the exact text sent to the API.
+  // promptVersionHash = SHA-256(prompt + model string + disclaimer version) — persisted on every artifact.
+  const hashedUserId    = createHash('sha256').update(params.userId).digest('hex')
+  const anthropic       = getAnthropicClient()
+  const promptString    = PROMPTS[params.letterType](filteredData)
+  const promptVersionHash = createHash('sha256')
+    .update(promptString + modelString + CURRENT_DISCLAIMER_VERSION)
+    .digest('hex')
 
+  // Step 3b: Call Anthropic via trackedExecution (MA-ARC-FUNC-001)
+  // userId is SHA-256 hashed — never pass raw Supabase auth UUID to the trace layer
   const { result: response, trace } = await trackedExecution(
     {
       functionName:         FUNCTION_NAME_MAP[params.letterType],
       callSource:           'app',
       userId:               hashedUserId,
-      piiScrubberConfirmed: true,   // scrubPII ran in Step 1
+      piiScrubberConfirmed: true,   // scrubPII ran in Gate 2
       qualityScore:         null,   // populated by LQE evaluator in future sprint (MA-AUT-006 §G1)
     },
     async () => {
       const res = await anthropic.messages.create({
         model:      modelString,
         max_tokens: maxTokens,
-        messages:   [{ role: 'user', content: PROMPTS[params.letterType](filteredData) }],
+        messages:   [{ role: 'user', content: promptString }],
       })
       return {
         result: res,
@@ -223,27 +242,100 @@ export async function generateLetter(params: {
   // Step 4: Append disclaimer (MA-SEC-002 P7)
   const letterWithDisclaimer = appendDisclaimer(letterText)
 
-  // Step 5: Store artifact in Supabase
-  const contentHash  = createHash('sha256').update(letterWithDisclaimer).digest('hex')
-  const storagePath  = `artifacts/${params.caseId}/${contentHash}.txt`
+  // Compute content hash here — used as LQE logging artifactId and storage path
+  const contentHash = createHash('sha256').update(letterWithDisclaimer).digest('hex')
 
-  const artifact = await createArtifact({
-    caseId:             params.caseId,
-    userId:             params.userId,
-    artifactType:       params.letterType,
-    releaseState:       'review_required',   // Phase 1: ALL outputs require review
-    disclaimerVersion:  CURRENT_DISCLAIMER_VERSION,
-    contentHash,
-    storagePath,
-    content:            letterWithDisclaimer,
+  // ── Gate 5: Letter Quality Evaluator (MA-AUT-006 §G1) ─────────────────────
+  // Runs after trackedExecution produces content, before artifact is written.
+  // Three sequential checks: denial code accuracy → YMYL safety → legal framing.
+  // NEVER calls the Anthropic API. All checks are deterministic.
+  const denialCode = typeof params.caseData.denialCode === 'string'
+    ? params.caseData.denialCode
+    : undefined
+
+  const lqeResult = await runLQE({
+    letterContent: letterText,
+    letterType:    params.letterType,
+    denialCode,
+    artifactId:    contentHash,   // content hash serves as logging ID before artifact exists
+    userId:        hashedUserId,  // already SHA-256 hashed above
   })
 
-  // Step 6: Add to review queue
-  await addToReviewQueue({
-    artifactId:   artifact.id,
-    caseId:       params.caseId,
-    riskReason:   'Phase 1 — all outputs require founder review',
-  })
+  // ── Gate 6: Disclaimer Version Check (MA-AUT-006 §G6 + MA-SEC-002 P30) ────
+  // Capture the disclaimer version+hash after LQE confirms the output is safe.
+  // Halts if version is empty — ensures every artifact records provenance data.
+  const disclaimerInfo = getDisclaimerVersion()
+  if (!disclaimerInfo.version) {
+    logEvent({ eventType: 'gate_failure', sourcePage: 'generateLetter', toolName: params.letterType }).catch(() => {})
+    throw new Error('GATE_6_FAILED: disclaimer version missing')
+  }
+  const { version: disclaimerVersion, hash: disclaimerHash } = disclaimerInfo
+
+  // ── Gate 7: Artifact State Machine (MA-AUT-006 §G6) ──────────────────────
+  // Phase 2 invariant: release_state is ALWAYS 'review_required' — never 'released' or 'pending'.
+  // validateArtifactState() is the runtime guard that halts if this invariant is ever violated.
+  const storagePath   = `artifacts/${params.caseId}/${contentHash}.txt`
+  const releaseState: ArtifactReleaseState = 'review_required'
+  validateArtifactState(releaseState)
+
+  let artifact: Awaited<ReturnType<typeof createArtifact>>
+  try {
+    artifact = await createArtifact({
+      caseId:             params.caseId,
+      userId:             params.userId,
+      artifactType:       params.letterType,
+      releaseState,
+      disclaimerVersion,
+      disclaimerHash,
+      contentHash,
+      storagePath,
+      content:            letterWithDisclaimer,
+      promptVersionHash,
+    })
+  } catch {
+    logEvent({ eventType: 'gate_failure', sourcePage: 'generateLetter', toolName: params.letterType }).catch(() => {})
+    throw new Error('GATE_7_FAILED: ARTIFACT_STATE_ERROR')
+  }
+
+  logEvent({
+    eventType:  'gate_7_passed',
+    sourcePage: 'generateLetter',
+    toolName:   params.letterType,
+    caseId:     params.caseId,
+  }).catch(() => {})
+
+  // Step 6: Review queue + LQE telemetry
+  // LQE-failed letters route to Kate via insertReviewQueueItem (with failure context).
+  // LQE-passed letters route via standard addToReviewQueue (Phase 2: all outputs reviewed).
+  if (lqeResult.passed) {
+    logEvent({
+      eventType:  'lqe_passed',
+      sourcePage: 'generateLetter',
+      toolName:   params.letterType,
+      caseId:     params.caseId,
+    }).catch(() => {})
+
+    await addToReviewQueue({
+      artifactId: artifact.id,
+      caseId:     params.caseId,
+      riskReason: 'Phase 2 — all outputs require review (LQE passed)',
+    })
+  } else {
+    logEvent({
+      eventType:  'lqe_failed',
+      sourcePage: 'generateLetter',
+      toolName:   params.letterType,
+      caseId:     params.caseId,
+    }).catch(() => {})
+
+    await insertReviewQueueItem({
+      artifactId:    artifact.id,
+      caseId:        params.caseId,
+      failureReason: lqeResult.failureReason!,
+      letterType:    params.letterType,
+      userId:        hashedUserId,
+    })
+  }
 
   // Step 7: Record spend + check budget tripwires (MA-COST-001)
   // Non-blocking — budget monitor failure MUST NOT block letter delivery
@@ -267,7 +359,16 @@ export async function generateLetter(params: {
     outputTokens,
   }).catch(() => {})
 
+  // Determine response content:
+  // LQE-passed  → standard letter with disclaimer
+  // LQE-failed  → letter + pending review notice (DO NOT throw — user still gets a response)
+  const PENDING_REVIEW_NOTE =
+    '\n\n---\nThis letter is pending clinical review. You will receive the final version within 24 hours.'
+  const responseContent = lqeResult.passed
+    ? letterWithDisclaimer
+    : letterWithDisclaimer + PENDING_REVIEW_NOTE
+
   // Return content alongside the DB record so callers can surface it without
   // a round-trip back to Supabase Storage (it's already in memory here).
-  return { ...artifact, content: letterWithDisclaimer }
+  return { ...artifact, content: responseContent }
 }

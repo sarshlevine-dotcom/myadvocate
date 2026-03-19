@@ -1,7 +1,7 @@
 # EEAT Validation Failure — co-16-missing-invalid-information
 
 **File:** `content_drafts/codes/co-16-missing-invalid-information.md`
-**Run date:** 2026-03-13
+**Run date:** 2026-03-18
 **page_id:** page_0010
 **status:** draft_complete
 **Layers failed:** Layer 2 (Citations)

@@ -25,8 +25,19 @@ vi.mock('@anthropic-ai/sdk', () => ({
 }))
 
 vi.mock('@/lib/db/artifacts',     () => ({ createArtifact:   vi.fn().mockResolvedValue({ id: 'art-1' }) }))
-vi.mock('@/lib/db/review-queue',  () => ({ addToReviewQueue: vi.fn() }))
+vi.mock('@/lib/db/review-queue',  () => ({ addToReviewQueue: vi.fn(), insertReviewQueueItem: vi.fn() }))
 vi.mock('@/lib/db/metric-events', () => ({ logEvent:         vi.fn().mockResolvedValue(undefined) }))
+// Gate 5 — LQE always passes so legacy tests are unaffected
+vi.mock('@/lib/lqe', () => ({
+  runLQE: vi.fn().mockResolvedValue({
+    passed: true,
+    checks: {
+      denialCodeAccuracy: { passed: true, score: 1.0 },
+      ymylSafety:         { passed: true, score: 1.0 },
+      legalFraming:       { passed: true, score: 1.0 },
+    },
+  }),
+}))
 
 import { generateLetter } from '@/lib/generate-letter'
 import { recordApiSpend }  from '@/lib/budget-monitor'

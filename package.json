@@ -16,6 +16,7 @@
     "@supabase/supabase-js": "^2.99.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.36.4",
+    "langfuse": "^3.38.6",
     "next": "16.1.6",
     "nodemailer": "^8.0.2",
     "pdf-parse": "^2.4.5",

@@ -3,7 +3,7 @@
     "registry": "content_pages",
     "id_prefix": "page_",
     "description": "Structured record of every content page. A page exists here before it is published.",
-    "last_updated": "2026-03-13T00:00:00Z",
+    "last_updated": "2026-03-18T00:00:00Z",
     "schema_version": "1.1",
     "authority": "MA-CTX-001",
     "total_planned": 237,
@@ -456,9 +456,9 @@
     },
     {
       "id": "page_0012",
-      "status": "draft",
+      "status": "draft_complete",
       "created_at": "2026-03-12T00:00:00Z",
-      "updated_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-18T00:00:00Z",
       "owner": "sarsh",
       "source_ids": [
         "src_0009",
@@ -488,13 +488,14 @@
       "publish_state": "not_published",
       "review_level": "founder_review",
       "last_reviewed_at": null,
-      "notes": "Priority #6. High confusion potential — patients don't understand why their claim was called a duplicate. Resolution: confirm original was processed, request claim status, escalate to provider billing if needed. Internal links up to Administrative Hub."
+      "notes": "Priority #6. High confusion potential — patients don't understand why their claim was called a duplicate. Resolution: confirm original was processed, request claim status, escalate to provider billing if needed. Internal links up to Administrative Hub.",
+      "eeat_validated": true
     },
     {
       "id": "page_0013",
-      "status": "draft",
+      "status": "draft_complete",
       "created_at": "2026-03-12T00:00:00Z",
-      "updated_at": "2026-03-12T00:00:00Z",
+      "updated_at": "2026-03-18T00:00:00Z",
       "owner": "sarsh",
       "source_ids": [
         "src_0009",
@@ -524,7 +525,8 @@
       "publish_state": "not_published",
       "review_level": "founder_review",
       "last_reviewed_at": null,
-      "notes": "Priority #7. Common family insurance confusion — dual coverage, primary vs secondary payer. Explain coordination of benefits clearly; high volume of people searching this without understanding what it means. Internal links up to Administrative Hub."
+      "notes": "Priority #7. Common family insurance confusion — dual coverage, primary vs secondary payer. Explain coordination of benefits clearly; high volume of people searching this without understanding what it means. Internal links up to Administrative Hub.",
+      "eeat_validated": true
     },
     {
       "id": "page_0014",

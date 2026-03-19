@@ -1,10 +1,10 @@
 # Seven-Gate Chain Spec — generateLetter()
 
-**Version:** 1.0
+**Version:** 1.1
 **Authority:** MA-AUT-006 §G6
-**Status:** Retroactive launch gap — Sprint 1 remediation
+**Status:** All 7 gates implemented. G5 (LQE) live. G4/G7 Phase 3 transition requires explicit unlock.
 **Applies to:** All calls to `generateLetter()` in `src/lib/generate-letter.ts`
-**Phase:** Gates 1–3 implemented in Phase 2 Sprint 1. Gates 4–7 implemented in Sprint 2.
+**Phase:** Gates 1–3 implemented Phase 2 Sprint 1. Gates 4–7 implemented Phase 2 Sprint 2.
 
 ---
 
@@ -184,67 +184,107 @@ produces the raw letter text. Stub is a no-op returning `{ pass: true }` in Phas
 
 ### Gate 6 — Disclaimer Version Check
 
-**What it does:** Verifies that the disclaimer appended to the output matches
-`CURRENT_DISCLAIMER_VERSION` from `src/lib/disclaimer.ts` before the artifact is created.
+**Status: IMPLEMENTED** (Phase 2 Sprint 2)
 
-**Implementation location:** `generateLetter()` in `src/lib/generate-letter.ts`, after
-`appendDisclaimer()` is called (Step 4 in current code). To be formalized in Sprint 2.
+**What it does:** Calls `getDisclaimerVersion()` immediately after Gate 5 (LQE) to capture and
+validate the version string and short-hash for the disclaimer that was appended to the output.
+Halts if the version is empty — ensuring every artifact records full provenance data.
+
+**Implementation location:** `generateLetter()` in `src/lib/generate-letter.ts`, after the LQE
+result is processed and before `validateArtifactState()` / `createArtifact()`.
+
+**Constants in `src/lib/disclaimer.ts`:**
+- `CURRENT_DISCLAIMER_VERSION` — semver string (e.g. `"1.0.0"`)
+- `DISCLAIMER_HASH` — SHA-256 of `DISCLAIMERS[CURRENT_DISCLAIMER_VERSION]`, first 12 hex chars
 
 **PASS criteria:**
-- `letterWithDisclaimer` contains the text from `DISCLAIMERS[CURRENT_DISCLAIMER_VERSION]`
-- `appendDisclaimer()` did not throw
+- `getDisclaimerVersion()` returns `{ version, hash }` where `version` is non-empty
+- `disclaimerVersion` and `disclaimerHash` are passed through to `createArtifact()`
 
 **FAIL criteria:**
-- `appendDisclaimer()` throws `Unknown disclaimer version` (version string not found in `DISCLAIMERS`)
-- `CURRENT_DISCLAIMER_VERSION` is not a key in the `DISCLAIMERS` map
+- `getDisclaimerVersion().version` is empty string, `null`, or `undefined`
 
 **On-FAIL action:**
-- Re-throw as `new Error('GATE_6_FAILED: DISCLAIMER_VERSION_MISMATCH')`
+- Throw `new Error('GATE_6_FAILED: disclaimer version missing')`
 - Log `logEvent({ eventType: 'gate_failure', ... })` non-blocking
-- Do NOT create artifact
-
-**Phase 2 Sprint 2 work:** Wrap `appendDisclaimer()` in try/catch with the `GATE_6_FAILED` code.
+- Do NOT call `validateArtifactState()` or `createArtifact()`
 
 ---
 
 ### Gate 7 — Artifact State
 
-**What it does:** Confirms the artifact is created with `release_state = 'review_required'` in
-Phase 1. No artifact may be created with any other release state without an explicit Phase gate
-unlock.
+**Status: IMPLEMENTED** (Phase 2 Sprint 2)
 
-**Implementation location:** `generateLetter()` in `src/lib/generate-letter.ts`, the
-`createArtifact()` call (Step 5 in current code). To be formalized in Sprint 2.
+**What it does:** Enforces the Phase 2 state machine invariant that all artifacts must be written
+with `release_state = 'review_required'`. The `validateArtifactState()` guard runs before every
+`createArtifact()` call — if future code accidentally sets a different state, the gate halts
+before any DB write.
+
+**State machine:**
+```
+pending → review_required → released (admin-only, Phase 3+)
+          ↓
+       archived
+```
+Phase 2 invariant: `generateLetter()` always writes `review_required`. `released` requires an
+explicit Phase 3 gate unlock; it is never set here.
+
+**Implementation location:**
+- `validateArtifactState()` is defined in `src/lib/generate-letter.ts` (exported for unit testing;
+  treat as `@internal` — do not call from application code)
+- Called immediately before `createArtifact()` in `generateLetter()`
+- `createArtifact()` is wrapped in try/catch with `GATE_7_FAILED` error code
 
 **PASS criteria:**
-- `createArtifact()` is called with `releaseState: 'review_required'`
+- `releaseState === 'review_required'`
 - `createArtifact()` resolves successfully and returns an artifact with an `id`
+- `logEvent({ eventType: 'gate_7_passed', ... })` is emitted non-blocking
 
 **FAIL criteria:**
+- `releaseState` is any value other than `'review_required'` (throws from `validateArtifactState()`)
 - `createArtifact()` throws (DB error, constraint violation)
-- The artifact is created with any `releaseState` other than `'review_required'` in Phase 1
 
 **On-FAIL action:**
-- Re-throw as `new Error('GATE_7_FAILED: ARTIFACT_STATE_ERROR')`
+- Throw `new Error('GATE_7_FAILED: ARTIFACT_STATE_ERROR')`
 - Log `logEvent({ eventType: 'gate_failure', ... })` non-blocking
 - Do NOT add to review queue or return content to caller
 
-**Phase 2 Sprint 2 work:** Wrap `createArtifact()` in try/catch with the `GATE_7_FAILED` code
-and add an explicit runtime assertion that `releaseState === 'review_required'`.
+---
+
+### MA-SEC-002 P30 — Prompt Version Hash
+
+**Status: IMPLEMENTED** (Phase 2 Sprint 2, same commit as Gates 6+7)
+
+**What it does:** Computes a SHA-256 hash of the exact prompt sent to the Anthropic API, the
+model string, and the current disclaimer version. Persisted on every artifact so the generation
+inputs can be reconstructed at any future point.
+
+**Algorithm:**
+```
+promptVersionHash = SHA-256(promptString + modelString + CURRENT_DISCLAIMER_VERSION)
+```
+
+**Computation location:** `generateLetter()` in `src/lib/generate-letter.ts`, after the prompt
+string is built (extracted from `PROMPTS[letterType](filteredData)`) and before `trackedExecution`
+fires. This ensures the hash captures the exact text sent to the API.
+
+**Persistence:** `promptVersionHash` is passed to `createArtifact()` as an optional field.
+Columns `disclaimer_hash` and `prompt_version_hash` are pending next migration batch — they are
+included in the insert payload and will persist once the migration is applied.
 
 ---
 
 ## Gate Execution Summary
 
-| Gate | Name | Halting? | Phase 1 status | On-fail routing |
+| Gate | Name | Halting? | Status | On-fail routing |
 |---|---|---|---|---|
-| 1 | Input Validation | Yes | Implemented Sprint 1 | Throw GATE_1_FAILED |
-| 2 | PII Scrub | Yes | Implemented Sprint 1 | Throw GATE_2_FAILED |
-| 3 | Context Firewall | No (strip only) | Implemented Sprint 1 | Strip + log GATE_3_STRIPPED |
-| 4 | API Call | Yes | Formalized Sprint 2 | Throw GATE_4_FAILED |
-| 5 | LQE Hook | Yes (when live) | Stub Sprint 1 | Route to Kate queue + return sentinel |
-| 6 | Disclaimer Version | Yes | Formalized Sprint 2 | Throw GATE_6_FAILED |
-| 7 | Artifact State | Yes | Formalized Sprint 2 | Throw GATE_7_FAILED |
+| 1 | Input Validation | Yes | ✅ Implemented Sprint 1 | Throw GATE_1_FAILED |
+| 2 | PII Scrub | Yes | ✅ Implemented Sprint 1 | Throw GATE_2_FAILED |
+| 3 | Context Firewall | No (strip only) | ✅ Implemented Sprint 1 | Strip + log GATE_3_STRIPPED |
+| 4 | API Call | Yes | ✅ Implemented Sprint 2 | Throw GATE_4_FAILED |
+| 5 | LQE Hook | Yes (when live) | ✅ Live Sprint 2 | Route to Kate queue + return sentinel |
+| 6 | Disclaimer Version | Yes | ✅ Implemented Sprint 2 | Throw GATE_6_FAILED |
+| 7 | Artifact State | Yes | ✅ Implemented Sprint 2 | Throw GATE_7_FAILED |
 
 ---
 
@@ -266,6 +306,6 @@ and add an explicit runtime assertion that `releaseState === 'review_required'`.
 
 | Sprint | Work |
 |---|---|
-| Sprint 1 (current) | Gates 1, 2, 3 implemented; Gate 5 stub added |
-| Sprint 2 | Gates 4, 6, 7 formalized with explicit try/catch + error codes; real LQE (G1) built and calibrated |
-| Sprint 3 | Gate 5 stub replaced with real LQE after calibration with Kate |
+| Sprint 1 | Gates 1, 2, 3 implemented; Gate 5 stub added |
+| Sprint 2 ✅ | Gates 4, 6, 7 implemented; real LQE (G1) live; promptVersionHash (P30) + disclaimerHash (G6) persisted on every artifact |
+| Sprint 3 | Gate 5 calibration with Kate — false-positive rate target <10%; Phase 3 gate unlock process for `released` state |

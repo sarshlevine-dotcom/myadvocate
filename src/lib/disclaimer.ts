@@ -1,4 +1,7 @@
 // MA-SEC-002 P7 — versioned, auto-appended, non-optional
+// MA-AUT-006 §G6 — DISCLAIMER_VERSION + DISCLAIMER_HASH constants for Gate 6 version check
+
+import { createHash } from 'crypto'
 
 export const DISCLAIMERS: Record<string, string> = {
   '1.0.0': `
@@ -14,8 +17,20 @@ the outcome of any appeal or dispute process.
 
 export const CURRENT_DISCLAIMER_VERSION = '1.0.0'
 
+// SHA-256 of the current disclaimer text body, first 12 hex chars — used for artifact provenance
+export const DISCLAIMER_HASH = createHash('sha256')
+  .update(DISCLAIMERS[CURRENT_DISCLAIMER_VERSION])
+  .digest('hex')
+  .slice(0, 12)
+
 export function appendDisclaimer(content: string, version = CURRENT_DISCLAIMER_VERSION): string {
   const disclaimer = DISCLAIMERS[version]
   if (!disclaimer) throw new Error(`Unknown disclaimer version: ${version}`)
   return content + disclaimer
+}
+
+// Gate 6 — returns the current version string and short-hash for artifact provenance logging.
+// Pure function — does not mutate DISCLAIMERS or any module-level state.
+export function getDisclaimerVersion(): { version: string; hash: string } {
+  return { version: CURRENT_DISCLAIMER_VERSION, hash: DISCLAIMER_HASH }
 }

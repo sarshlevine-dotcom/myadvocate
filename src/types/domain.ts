@@ -21,6 +21,9 @@ export type EventType =
   | 'subscription_started'
   | 'second_tool_use'
   | 'gate_failure'
+  | 'lqe_passed'
+  | 'lqe_failed'
+  | 'gate_7_passed'
 
 // Denial code types
 export type DenialCodeCategory =
