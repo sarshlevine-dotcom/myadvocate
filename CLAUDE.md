@@ -36,8 +36,9 @@ AI-powered patient advocacy platform. Helps people navigate insurance denials an
 | Payments | Stripe | Webhooks via `/api/webhooks/stripe` |
 | Email (Transactional / Ops) | Google Workspace | admin@getmyadvocate.org — verified ✅ |
 | Email / Newsletter | Beehiiv | Phase 2 — newsletter capture + distribution |
-| Automation | n8n | Phase 2 — event-driven automation, webhook routing, retention flows |
+| Automation | n8n | Phase 2 — event-driven automation, webhook routing, retention flows, budget alert webhooks |
 | AI Provider | Anthropic | All calls via `generateLetter()` — Haiku default, Sonnet for complex/doc cases |
+| Local Intelligence | BitNet | **Pre-launch internal layer** — classification, scoring, routing. NEVER user-facing. Powers SEO intelligence engine, LQE pre-screener, book keyword scan, competitive signal classification. See BitNet Architecture section. |
 | Caching / Rate limiting | Upstash Redis | Rate limiting live; response caching deferred to Phase 2 |
 
 **Provider abstraction rule:** All Anthropic API calls must go through `src/lib/generate-letter.ts`.
@@ -52,18 +53,20 @@ boundary for scrubber enforcement, model selection, output caps, cost logging, a
   - `src/app/tools/denial-decoder/` — denial decoder tool page
   - `src/app/intake/`, `auth/`, `denial-codes/`, `resources/`, `admin/review/`
 - `src/lib/` — core utilities
-  - `db/` — 10 domain helpers: artifacts, cases, denial-codes, documents, extraction-outputs, metric-events, resource-routes, review-queue, subscriptions, users
+  - `db/` — 12 domain helpers: artifacts, cases, denial-codes, documents, extraction-outputs, friction-events, metric-events, outcome-events, resource-routes, review-queue, subscriptions, users
   - `supabase/` — `client.ts` (anon/browser), `server.ts` (service role)
   - `auth.ts`, `stripe.ts`, `rate-limit.ts`, `parse-document.ts`
-  - `generate-letter.ts` — single Anthropic call boundary (never bypass); contains model routing, output caps, and cost logging
-  - `budget-monitor.ts` — Redis-based API spend tracking and tripwire alerts (MA-COST-001)
+  - `generate-letter.ts` — single Anthropic call boundary (never bypass); contains model routing, output caps, cost logging, BitNet pre-screener hook, and 7-gate chain
+  - `lqe.ts` — 3-check Letter Quality Evaluator (denial code accuracy, YMYL safety, legal framing). Zero Anthropic calls.
+  - `bitnet-prescreener.ts` — BitNet pre-screener integration. Returns confidence score + routing path. NEVER produces user-facing output.
+  - `budget-monitor.ts` — Redis-based API spend tracking and tripwire alerts; Phase 2: alerts fire n8n webhook (MA-COST-001)
   - `pii-scrubber.ts` — must run before every API call
   - `disclaimer.ts` — appended to all user-facing outputs
 - `src/types/` — `domain.ts` (shared enums/interfaces incl. `ModelTier`), `supabase.ts` (generated DB types)
 - `src/components/` — shared UI: Button, Input, FormField, Card, Alert, Nav
-- `supabase/migrations/` — 15 migrations (016 pending for scrub_records), append-only (see `supabase/migrations/CLAUDE.md`)
+- `supabase/migrations/` — 22 migrations applied; 016–022 pending deploy (scrub_records, friction_events, appeal_outcome_events, bitnet_calibration, competitive_signals, founder_inbox, prompt A/B variant fields). Append-only (see `supabase/migrations/CLAUDE.md`)
 - `supabase/seed/` — seed data for denial codes and resource routes
-- `context_registry/` — Phase 1 agent intelligence layer (MA-CTX-001): 8 JSON registries. NOT a database — lightweight JSON files. See Section "Context Registry" below.
+- `context_registry/` — Agent intelligence layer (MA-CTX-001): **12 JSON registries** (8 original + 4 new from MA-IMPL-002). NOT a database. See Section "Context Registry" below.
 - `docs/` — organized by subdomain (see Docs Structure below)
 - `automation/daily.js` — Notion sync automation (see Automation section below)
 - `.claude/skills/` — 32 Claude skill definitions (see Skills System below)
@@ -97,6 +100,9 @@ boundary for scrubber enforcement, model selection, output caps, cost logging, a
 - NEVER invoke `generateLetter()` without first running `checkTierAuthorization(userId, letterType)` server-side — free-tier limits and subscription entitlements must be verified at the API layer before generation proceeds (MA-SEC-002 P25/P26)
 - NEVER enable document upload without both malware scanning (VirusTotal API or equivalent) and NER-grade PII redaction (AWS Comprehend Medical or Azure Health NLP) — regex scrubbing is insufficient for insurance documents; upload is deferred to Phase 2 (MA-SEC-002 P22, Supplemental Audit 2026-03-13)
 - NEVER create an artifact without storing `prompt_version_hash` — SHA-256 of prompt template + model string + disclaimer version, captured at generation time (MA-SEC-002 P30)
+- NEVER let BitNet output reach users — BitNet is classification, scoring, and routing only; zero user-facing output; all letter generation still goes through generateLetter() → LQE → Kate path (MA-IMPL-002)
+- NEVER enable BitNet fast path (confidence ≥ 0.95 LQE bypass) until `bitnet_calibration` table has ≥ 50 Kate-reviewed records AND false positive rate is confirmed <10% (MA-IMPL-002 §4.3)
+- NEVER write to `context_registry/` JSON files directly from product code — only BitNet jobs, n8n workflows, and Claude agents write to registries; never from API routes or page handlers (MA-CTX-001)
 
 ### Scope Gates
 - Check MA-LCH-004 before building any new feature (Phase 1 scope boundary)
@@ -106,6 +112,7 @@ boundary for scrubber enforcement, model selection, output caps, cost logging, a
 - Check MA-SEO-SUP-001 before designing any SEO content cluster, cornerstone guide, refresh system, content tier classification, or GEO template — this document is the operating doctrine for all content infrastructure decisions
 - Check MA-AUT-006 before any modification to `generateLetter()`, any new agent deployment, or any change to the letter quality pipeline — G1/G6 are retroactive launch gaps that must be cleared; G4/G5 are signal-gated and must not be pulled forward
 - Check Parking Lot in Notion before adding infrastructure that has a deferred phase tag
+- Check MA-IMPL-002 before any BitNet job deployment, competitive signal pipeline change, content staging state machine change, or LQE hybrid routing modification
 
 ### Model Strings
 | Tier | String | When to use |
@@ -185,6 +192,8 @@ Before building any new feature or making an architectural change, run through t
 - `MA-IG-001` — Instagram Strategy v2.0 — gate structure, direct/indirect revenue model, EN + ES dual channel — `docs/social/MA-IG-001_Instagram_Strategy_v2.docx`
 - `MA-EEAT-001` — EEAT & YMYL Compliance Audit — shortfall analysis, trust infrastructure spec, 5-layer content safety stack, reviewer framing, gamification Trust XP — `docs/seo/MA-EEAT-001_EEAT_YMYL_Audit_Report.docx` ← hardwired into all SEO content
 - `MA-SEO-SUP-001` — SEO Authority & Content Infrastructure Strategy — 9-section operating doctrine: cornerstone library (10 guides, phased), anonymous trust infrastructure, editorial board attribution model, backlink program, policy interpretation cluster, content refresh formalization, Annual Outcomes Report, Spanish-language content, GEO hardwiring; agent deployment revisions and consolidated metrics dashboard — `docs/seo/MA-SEO-SUP-001_SEO_Authority_Content_Infrastructure_v1.docx` ← hardwired into all content infrastructure decisions
+- `MA-IMPL-001` — Strategic Implementation Plan — canonical source of truth for integrating 21 uploaded build pack documents into Phase 2 roadmap; supersession chain for all source docs — `docs/MA-IMPL-001_Strategic_Implementation_Plan.docx` ← read before any Phase 2 architecture decision
+- `MA-IMPL-002` — Pre-Launch Intelligence & Automation Architecture — BitNet SEO intelligence engine (hub/spoke scoring, book monitoring), content staging pipeline (50-page queue, 9-state machine), pre-launch data collection (migrations 020–022), LQE + BitNet hybrid 3-path routing, competitive signal collection (CMS/NAIC/payer bulletins), integration sequence (8-week calendar). **All six workstreams are internal-only and pre-launch safe.** — `docs/MA-IMPL-002_PreLaunch_Intelligence_Architecture.docx` ← hardwired into all BitNet, n8n, and data collection decisions
 - `MA-AHP-001` — Anti-Hallucination Protocol — governs all agent outputs (in Notion Agent Registry)
 - `MA-SUP-DAT-001` — Proprietary Data Engine Strategy — two compounding datasets (friction events + appeal outcomes), collection schema, publication gates, phase/sprint task plan, competitive moat analysis — `docs/data/myadvocate_business_supplemental_proprietary_data_engine_v1.docx` ← hardwired into data architecture and Phase 2+ data intelligence builds
 - `Projections v17` — Financial model M1–M24, all revenue streams — `docs/pmp/MyAdvocate_Projections_v17.xlsx`
@@ -217,6 +226,8 @@ docs/
               MA-IG-001_Instagram_Strategy_v2.docx                   ← NEW in v22
   data/       MA-SUP-DAT-001 (Proprietary Data Engine Strategy)      ← NEW in v23
               myadvocate_business_supplemental_proprietary_data_engine_v1.docx
+  intelligence/ MA-IMPL-001_Strategic_Implementation_Plan.docx       ← NEW 2026-03-19 — 21-doc integration plan, Phase 2 build sequence
+              MA-IMPL-002_PreLaunch_Intelligence_Architecture.docx   ← NEW 2026-03-19 — BitNet SEO engine, staging pipeline, data collection, LQE hybrid, competitive signals
 ```
 
 ---
@@ -311,9 +322,17 @@ The `/context_registry/` folder contains 8 JSON files — the operational memory
 - The DB `denial_codes` table and `context_registry/denial_codes.json` are NOT duplicates — DB is runtime product, registry is agent intelligence layer
 - Phase 2 scope: JSON files only. No DB infrastructure for registries in Phase 1.
 
-**Inventory:** `sources.json`, `decisions.json`, `denial_codes.json`, `appeal_strategies.json`, `regulations.json`, `seo_clusters.json`, `content_pages.json`, `review_queue.json`
+**Original inventory (8):** `sources.json`, `decisions.json`, `denial_codes.json`, `appeal_strategies.json`, `regulations.json`, `seo_clusters.json`, `content_pages.json`, `review_queue.json`
 
-Full spec: MA-CTX-001 in `docs/context/`.
+**New registries (MA-IMPL-002, Phase 2):**
+- `ranked_queue.json` — BitNet-scored, dependency-resolved content production queue. GEO agents read this. n8n updates weekly (Sunday 2am). Source of truth for what to write next.
+- `payer_intelligence.json` — Structured payer-level data: denial_rate_by_category, known_prior_auth_triggers, appeal_win_rate_by_letter_type, recent_policy_changes. Seeded from CMS + NAIC. Powers Phase 3 payer-aware letter tuning.
+- `book_keyword_signals.json` — BitNet scans every new book chapter and extracts patient-voice keyword patterns and cluster_affinity scores. GEO agents consume keyword signals. Enables book → SEO compounding without extra work.
+- `spanish_keyword_signals.json` — BitNet-generated Spanish search demand signals for top 20 denial code pages. Internal intelligence only. Feeds Phase 4 Spanish content planning. No content generated until SCAA gate clears.
+
+**Write rules:** Only BitNet jobs, n8n workflows, and Claude agents write to registries. Never from API routes, page handlers, or user-triggered actions.
+
+Full spec: MA-CTX-001 in `docs/context/`. Intelligence pipeline spec: MA-IMPL-002 in `docs/intelligence/`.
 
 ---
 
@@ -363,32 +382,88 @@ Syncs Notion tasks into Supabase, generates a daily digest via Claude, logs run 
 
 ---
 
+## BitNet Architecture (MA-IMPL-002)
+
+**Role:** Internal intelligence layer only. Never user-facing. Powers SEO scoring, content queue, LQE pre-screening, book keyword extraction, competitive signal classification. All jobs must have defined stopping conditions per MA-AUT-006 G3.
+
+**Canonical doc:** `MyAdvocate_BitNet_Architecture_Report_v3.docx` (in uploads) — 16 sections including Board of Agents expansion, SEO engine, n8n workflow contracts, Supabase tables, and monitoring playbook.
+
+**Jobs and stopping conditions:**
+
+| Job | Cron | Max Retries | Timeout | Failure Action |
+|---|---|---|---|---|
+| `cluster-scoring` | Sunday 2am | 5 | 120s | skip + Slack alert |
+| `page-scoring` | Sunday 2am (after cluster) | 3 | 60s | skip + log |
+| `pre-screener` | Per-request | 2 | 10s | route to standard LQE path |
+| `book-chapter-scan` | On file write to docs/book/chapters/ | 2 | 30s | skip + log |
+| `competitive-signal-classify` | Per-ingest | 2 | 15s | store as unclassified + log |
+| `denial-code-enrichment` | Nightly (after 4-week stability gate) | 3 | 90s | skip + alert if >3 failures/week |
+
+**LQE + BitNet 3-path routing:**
+- **Fast path** (confidence ≥ 0.95): bypasses LQE regex — DISABLED until `bitnet_calibration` ≥ 50 samples + false positive rate <10%
+- **Standard path** (confidence 0.60–0.94): full 3-check LQE runs
+- **Review path** (confidence < 0.60 or any LQE fail): Kate queue — failure_reason logged
+- **Scale path** (signal-gated): parallel YMYL voting — trigger >200 letters/month or Kate load >20%
+
+PII scrubber, output contract validation, disclaimer, and artifact state write are NOT bypassed on any path.
+
+**Amendability:** BitNet jobs are independently deployable — add a new job by: (1) defining it in `src/lib/bitnet-prescreener.ts` with stopping conditions, (2) adding the n8n cron trigger, (3) creating or updating the target registry file. No changes to generateLetter() required unless adding pre-screener logic.
+
+---
+
+## Content Staging Pipeline (MA-IMPL-002)
+
+**50-page staging pool.** State machine: `draft` → `bitnet_scored` → `eeat_pending` → `eeat_passed` → `review_queue` → `approved` → `scheduled` → `published` → `needs_refresh`
+
+**Queue rules:**
+- Max staging pool: 50 pages (draft through eeat_passed)
+- Max Kate review queue: 10 pages (review_queue state)
+- If staging pool > 45: n8n alerts Sarsh
+- If Kate queue = 10: new eeat_passed pages hold — n8n does NOT auto-advance
+- needs_refresh pages jump ahead of new drafts in review queue (MA-SEO-SUP-001 §6)
+- No page may exit `staged` state until all 7 trust pages are attorney-reviewed (MA-EEAT-001 §5.1 hard blocker)
+
+---
+
 ## Phase 2 Priorities (Current)
 1. `src/components/` shared UI library — ✅ Done
 2. `daily.js` automation — ✅ Done
 3. Cost architecture — ✅ Done (model routing, output caps, budget tripwires, per-feature telemetry)
 4. Install external agents: GEO-01/02/03, CNT-01 (see Agent System above) — **IN PROGRESS**
 5. Scaffold `/context_registry/` — 8 JSON files (MA-CTX-001) — **IN PROGRESS**
-6. Deploy Supabase migration 016 — scrub_records table (MA-SOC-002 pre-launch)
-7. **Deploy Supabase migration 019 — friction_events table stub (MA-SUP-DAT-001 Phase 1 P0)** — **NEXT**
-8. Add friction event writes to Denial Decoder, Appeal Letter, and Bill Dispute tools (MA-SUP-DAT-001 Tasks 2–4)
-9. Nurse co-founder review of claim_amount_range prompt language (MA-SUP-DAT-001 Task 5 — BLOCK for prompt deploy)
-10. **Activate Content Refresh Agent — Phase 2 Sprint 1 (moved from Phase 4 per MA-SEO-SUP-001 §10)** — **NEXT**
-11. **Implement page metadata fields: `content_tier`, `last_reviewed_date`, `source_dependency_type`, `refresh_priority_score` — Phase 2 Sprint 1 (MA-SEO-SUP-001 §12)**
-12. **Implement outcome data schema for Annual Report prep — Phase 2 Sprint 2 (MA-SEO-SUP-001 §12)**
-13. Launch SEO content engine with GEO template standard hardwired (target: 20 GEO-optimized articles in 60 days; first = Complete Guide to Insurance Claim Denials — Phase 1 launch gate)
-14. Activate content-production-orchestrator pipeline
-15. Beehiiv integration for newsletter capture
-16. n8n automation setup (event routing, retention flows, budget alert webhooks) — Parking Lot
-17. Landing page + /es Spanish page + custom domain — Google Workspace verified, admin@getmyadvocate.org live ✅
-18. **[MA-AUT-006 G6 — Sprint 1] Write formal 7-gate chain spec + implement gates 1–3 in `generateLetter()` (MA-AUT-006 §G6 — retroactive launch gap)** — **NEXT**
-19. **[MA-AUT-006 G1 — Sprint 2] Build LQE serial evaluator (3-check: denial code accuracy, YMYL, legal framing); calibrate with Kate; false positive rate <10% (MA-AUT-006 §G1 — retroactive launch gap)**
-20. **[MA-AUT-006 G6 — Sprint 2] Implement gates 4–7 in `generateLetter()` (API call, LQE hook, disclaimer version check, artifact state)**
-21. **[MA-AUT-006 G2 — Sprint 2] Document ACI tool schemas for CTO Sentinel + CFO Wealth Engineer with formal error behaviors**
-22. **[MA-AUT-006 G3 — Sprint 2] Add stopping conditions (max retries + timeouts + failure state actions) to CFO Wealth Engineer and all deployed agents**
-23. **[MA-AUT-006 G7 — Sprint 3] Draft MA-AUT-007 (Spanish Content Audit Agent spec); resolve Kate governance decision (Option A/B/C) before Month 7 hard deadline**
-24. **[MA-AUT-006 G4 — Phase 2 signal-gated] Parallel YMYL voting (3-node) — trigger: >200 letters/month OR Kate review load >20% after G1 live**
-25. **[MA-AUT-006 G5 — Phase 2 signal-gated] Chief of Staff Orchestrator — trigger: >15% multi-issue cases + attorney referral routing live**
+6. **[MA-IMPL-002 S1-01] Deploy migrations 016, 019, 020, 021, 022 — scrub_records, friction_events, appeal_outcome_events, bitnet_calibration, competitive_signals** — **NEXT**
+7. **[MA-IMPL-002 S1-01] Instrument tools — write friction_events on every tool interaction (Denial Decoder, Appeal, Bill Dispute)** — **NEXT**
+8. **[MA-IMPL-002 S1-01] Instrument generateLetter() — write appeal_outcome_events stub on every letter generation** — **NEXT**
+9. **[MA-IMPL-002 S1-01] n8n skeleton — CTO Sentinel + budget webhooks (replace console.log tripwires)** — **NEXT**
+10. **[MA-IMPL-002 S1-01] n8n 30-day outcome follow-up email automation** — **NEXT**
+11. **[MA-IMPL-002 S1-01] Google Search Console — register all 237 planned URLs** — **NEXT**
+12. Nurse co-founder review of claim_amount_range prompt language (MA-SUP-DAT-001 Task 5 — BLOCK for prompt deploy)
+13. **Activate Content Refresh Agent — Phase 2 Sprint 1 (moved from Phase 4 per MA-SEO-SUP-001 §10)**
+14. **Implement page metadata fields: `content_tier`, `last_reviewed_date`, `source_dependency_type`, `refresh_priority_score` — Phase 2 Sprint 1 (MA-SEO-SUP-001 §12)**
+15. **[MA-IMPL-002 S2-01] BitNet service setup — local model, REST, stopping conditions documented**
+16. **[MA-IMPL-002 S2-01] BitNet cluster + page scoring pass — all 237 pages; ranked_queue.json generated**
+17. **[MA-IMPL-002 S2-01] BitNet book chapter scan — keyword signals + cluster affinity → context_registry/**
+18. **[MA-IMPL-002 S2-01] LQE + BitNet hybrid pre-screener wired into generateLetter() (fast path disabled until calibration gate)**
+19. **[MA-IMPL-002 S2-01] Kate calibration session — 15-20 test letters; false positive rate target <10%**
+20. **[MA-IMPL-002 S2-01] payer_intelligence.json registry initialized from CMS + NAIC (top 10 payers)**
+21. **[MA-IMPL-002 S2-01] Content staging pipeline dry-run — 5 pages, all stages, publish suppressed**
+22. **[MA-IMPL-002 S2-02] Slack ops command center — founder_inbox + L1/L2/L3 approval routing**
+23. **[MA-IMPL-002 S2-02] n8n daily founder intelligence digest (Slack Block Kit)**
+24. **[MA-IMPL-002 S2-02] n8n CMS data fetch + BitNet classification — first competitive signal pass**
+25. **[MA-IMPL-002 S2-02] n8n payer bulletin feed collection — weekly, top 10 payers**
+26. **[MA-IMPL-002 S2-02] Prompt A/B framework scaffolding (variant_flag + prompt_variant_id)**
+27. **[MA-IMPL-002 S2-02] Spanish keyword intelligence scan — BitNet internal, no content generated**
+28. Launch SEO content engine with GEO template standard hardwired (target: 20 GEO-optimized articles in 60 days; first = Complete Guide to Insurance Claim Denials — Phase 1 launch gate)
+29. Beehiiv integration for newsletter capture
+30. Landing page + /es Spanish page + custom domain — Google Workspace verified, admin@getmyadvocate.org live ✅
+31. **[MA-AUT-006 G6 — Sprint 1] Write formal 7-gate chain spec + implement gates 1–3 in `generateLetter()` (MA-AUT-006 §G6 — retroactive launch gap)** — **NEXT**
+32. **[MA-AUT-006 G1 — Sprint 2] LQE serial evaluator built; calibrate with Kate; false positive rate <10% (MA-AUT-006 §G1)**
+33. **[MA-AUT-006 G6 — Sprint 2] Implement gates 4–7 in `generateLetter()` (API call, LQE hook, disclaimer version check, artifact state)**
+34. **[MA-AUT-006 G2 — Sprint 2] Document ACI tool schemas for CTO Sentinel + CFO Wealth Engineer**
+35. **[MA-AUT-006 G3 — Sprint 2] Add stopping conditions to CFO Wealth Engineer and all deployed agents**
+36. **[MA-AUT-006 G7 — Sprint 3] Draft MA-AUT-007 (Spanish Content Audit Agent spec); resolve Kate governance decision before Month 7**
+37. **[MA-AUT-006 G4 — signal-gated] Parallel YMYL voting — trigger: >200 letters/month OR Kate review load >20%**
+38. **[MA-AUT-006 G5 — signal-gated] Chief of Staff Orchestrator — trigger: >15% multi-issue cases + attorney referral routing live**
 
 ---
 
@@ -400,9 +475,10 @@ This file should be reviewed whenever:
 - The automation setup changes
 - A new skill category is added to `.claude/skills/`
 
-Last reviewed: **2026-03-13**
+Last reviewed: **2026-03-19**
 
 ### Recent Changes
+- 2026-03-19: MA-IMPL-002 integrated — Pre-Launch Intelligence & Automation Architecture canonized. 6 workstreams accelerated to pre-launch (internal only, no public rollout): SEO Intelligence Engine (BitNet hub/spoke cluster scoring + book monitoring), content staging pipeline (50-page queue, 9-state machine), pre-launch data collection (migrations 020-022: appeal_outcome_events, bitnet_calibration, competitive_signals), LQE + BitNet hybrid 3-path routing (fast/standard/review; fast path disabled until ≥50 calibration samples), competitive signal collection (CMS/NAIC/payer bulletins via n8n). 3 new Core Invariants added (BitNet never user-facing, fast path calibration gate, no registry writes from product code). 1 new Scope Gate added (check MA-IMPL-002 before any BitNet/signal pipeline change). 4 new context registry files added (ranked_queue.json, payer_intelligence.json, book_keyword_signals.json, spanish_keyword_signals.json). BitNet Architecture section added. Content Staging Pipeline section added. Phase 2 Priorities expanded to 38 items. Stack table updated with BitNet. 25 Notion sprint tasks created (S1-01 through S2-02). 10 Parking Lot entries created (signal-gated and Phase 3+ items). Canonical docs updated: MA-IMPL-001 + MA-IMPL-002 added to docs/intelligence/. docs/intelligence/ subdirectory created.
 - 2026-03-13: Supplemental Security & Architecture Audit integrated — 10 gaps analyzed against recent work. 6 new MA-SEC-002 PassFail controls (P25–P30) added: server-side free-tier limits (P25/launch blocker), subscription tier authorization (P26/launch blocker), YMYL review operating model (P27/launch blocker), backup restoration test (P28/pre-Signal 1), incident response runbook (P29/pre-Signal 1), prompt version hash (P30/pre-Signal 1). Document upload formally deferred to Phase 2 — NER-grade PII redaction + malware scanning required. YMYL review operating model formalized: Kate primary/24hr SLA/queue cap 10/Sarsh escalation. Incident response runbook created (docs/security/incident-response-runbook.md). 3 new Core Invariants added (tier auth before generation, no doc upload without NER+malware, prompt_version_hash on every artifact). 11 Notion sprint tasks created. Quarterly backup test + 3-month VPN review scheduled as recurring tasks.
 - 2026-03-13: MA-AUT-006 v2 integrated — Agent System Architecture Audit canonized. 7 gaps identified (G1–G7). G1 (LQE) and G6 (7-gate chain) are retroactive launch blockers requiring Phase 2 Sprint 1 remediation. G7 (Spanish Content Audit Agent/SCAA) is HIGH priority — design Sprint 3, build Phase 2, video activation Month 9, web activation Month 12. G4/G5 remain Phase 2 signal-gated. 4 new Core Invariants added (no generateLetter() modification without 7-gate spec, no letter output without LQE, no Spanish content without SCAA, no agent without stopping conditions). 1 new Scope Gate added (check MA-AUT-006 before any generateLetter() or agent change). Phase 2 Priorities updated (items 18–25 added). docs/agents/ updated with MA-AUT-006 docx. Conflicts with stale PMP reference (v20 → v24) and incorrect MA-SEC-001 ref (→ MA-SEC-002) flagged — MA-AUT-006 doc itself needs correction. MA-ARC-001 and MA-GAM-001 refs in MA-AUT-006 are unresolved (no matching canonical doc). Full spec: MA-AUT-006 in docs/agents/.
 - 2026-03-13: MA-SEO-SUP-001 integrated — SEO Authority & Content Infrastructure Strategy canonized. PMP v24 created with new §6G. docs/seo/ updated with canonical file. 4 new Core Invariants added (cornerstone sequencing, GEO template Phase 1 standard, anonymous institutional voice, refresh-before-expand). 1 new Scope Gate added (check MA-SEO-SUP-001 before any content infrastructure work). Phase 2 Priorities updated (items 10–12 added: Content Refresh Agent moved to Sprint 1, page metadata fields Sprint 1, outcome data schema Sprint 2). Context registry updated (src_0013, dec_0010–dec_0014, 3 new seo_clusters, 10 new content_pages). Agent deployment revisions: Content Refresh Agent → Phase 2, Data/Insights Agent → Phase 3, CMO Outreach Module → Phase 3, CMO Spanish Track → Phase 4, GEO Module → Phase 1. Full spec: MA-SEO-SUP-001 in docs/seo/.
