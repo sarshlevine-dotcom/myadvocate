@@ -10,6 +10,7 @@ import { createArtifact } from '@/lib/db/artifacts'
 import { addToReviewQueue, insertReviewQueueItem } from '@/lib/db/review-queue'
 import { logEvent } from '@/lib/db/metric-events'
 import { runLQE } from '@/lib/lqe'
+import { insertLQEResult } from '@/lib/db/letter-quality-evaluations'
 import { recordApiSpend } from '@/lib/budget-monitor'
 import { trackedExecution } from '@/lib/tracked-execution'
 import type { CanonicalFunctionName } from '@/lib/tracked-execution'
@@ -304,7 +305,20 @@ export async function generateLetter(params: {
     caseId:     params.caseId,
   }).catch(() => {})
 
-  // Step 6: Review queue + LQE telemetry
+  // Step 6: Persist LQE result + route to review queue
+  // Write LQE evaluation to letter_quality_evaluations table (MA-AUT-006 §G1).
+  // Non-blocking — telemetry loss is acceptable; blocking delivery is not.
+  insertLQEResult({
+    artifactId: artifact.id,
+    caseId:     params.caseId,
+    letterType: params.letterType,
+    lqeResult,
+    userIdHash: hashedUserId,
+    iteration:  1,
+  }).catch((err) => {
+    console.error('[generateLetter] LQE write-back failed (non-fatal):', err)
+  })
+
   // LQE-failed letters route to Kate via insertReviewQueueItem (with failure context).
   // LQE-passed letters route via standard addToReviewQueue (Phase 2: all outputs reviewed).
   if (lqeResult.passed) {
