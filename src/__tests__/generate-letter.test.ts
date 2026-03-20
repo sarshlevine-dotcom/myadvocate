@@ -10,11 +10,36 @@ vi.mock('@/lib/budget-monitor', () => ({
   recordApiSpend: vi.fn().mockResolvedValue('ok'),
 }))
 
+// Gate 1 — tier auth always passes so legacy tests are unaffected
+vi.mock('@/lib/auth-tier', () => ({
+  checkTierAuthorization: vi.fn().mockResolvedValue({ authorized: true }),
+}))
+
+// Gate 2 — PII scrub passthrough + clean assertion no-op so legacy tests are unaffected
+vi.mock('@/lib/pii-scrubber', () => ({
+  scrubPII:       vi.fn().mockImplementation((data: Record<string, unknown>) => ({ ...data })),
+  verifyScrubbed: vi.fn().mockImplementation(() => {}),
+}))
+
+// Gate 7a — disclaimer version so legacy tests are unaffected
+vi.mock('@/lib/disclaimer', () => ({
+  appendDisclaimer:           (content: string) => content + '\n\n---\nDISCLAIMER',
+  CURRENT_DISCLAIMER_VERSION: '1.0.0',
+  DISCLAIMER_HASH:            'abc123',
+  getDisclaimerVersion:       vi.fn().mockReturnValue({ version: '1.0.0', hash: 'abc123' }),
+}))
+
+// Non-fatal LQE write-back — prevent supabase calls in test environment
+vi.mock('@/lib/db/letter-quality-evaluations', () => ({
+  insertLQEResult: vi.fn().mockResolvedValue(undefined),
+}))
+
 // vi.hoisted ensures mockCreate is available when vi.mock factory runs (hoisted scope)
 const mockCreate = vi.hoisted(() =>
   vi.fn().mockResolvedValue({
     content: [{ type: 'text', text: 'Dear Insurance Company, I am writing to appeal...' }],
     usage: { input_tokens: 120, output_tokens: 80 },
+    model: 'claude-haiku-4-5-20251001',
   })
 )
 
@@ -25,9 +50,9 @@ vi.mock('@anthropic-ai/sdk', () => ({
 }))
 
 vi.mock('@/lib/db/artifacts',     () => ({ createArtifact:   vi.fn().mockResolvedValue({ id: 'art-1' }) }))
-vi.mock('@/lib/db/review-queue',  () => ({ addToReviewQueue: vi.fn(), insertReviewQueueItem: vi.fn() }))
+vi.mock('@/lib/db/review-queue',  () => ({ addToReviewQueue: vi.fn().mockResolvedValue(undefined), insertReviewQueueItem: vi.fn().mockResolvedValue(undefined) }))
 vi.mock('@/lib/db/metric-events', () => ({ logEvent:         vi.fn().mockResolvedValue(undefined) }))
-// Gate 5 — LQE always passes so legacy tests are unaffected
+// Gate 6 — LQE always passes so legacy tests are unaffected
 vi.mock('@/lib/lqe', () => ({
   runLQE: vi.fn().mockResolvedValue({
     passed: true,

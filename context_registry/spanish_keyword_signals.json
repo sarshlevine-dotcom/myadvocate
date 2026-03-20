@@ -1,0 +1,10 @@
+{
+  "_schema": "MA-CTX-001 / MA-IMPL-002",
+  "_description": "BitNet-generated Spanish search demand signals for top 20 denial code pages. Internal intelligence only. Feeds Phase 4 Spanish content planning. No content generated until SCAA gate clears (MA-AUT-006 §G7).",
+  "_write_rule": "ONLY BitNet Spanish keyword scan job writes to this file. Internal only — NEVER user-facing.",
+  "_gate": "LOCKED — no content generated from this registry until Spanish Content Audit Agent (SCAA) is operational (Month 9 YouTube gate, Month 12 web gate).",
+  "_status": "scaffold — awaiting BitNet Spanish scan (Sprint 2, Priority #27)",
+  "version": "0.0.1",
+  "last_scan_at": null,
+  "signals": []
+}

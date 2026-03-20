@@ -1,5 +1,14 @@
 // App-level domain types derived from DB schema
 
+// ─── MA-SUP-AIR-001 AIR-01: Letter types ─────────────────────────────────────
+// Canonical definition lives here so WorkflowContract can reference LetterType
+// without a circular import. generate-letter.ts re-exports this for backward compat.
+export type LetterType =
+  | 'denial_appeal'
+  | 'bill_dispute'
+  | 'hipaa_request'
+  | 'negotiation_script'
+
 // MA-COST-001: Model tier — Haiku is default workhorse; Sonnet only for complex/document cases
 export type ModelTier = 'haiku' | 'sonnet'
 
@@ -112,3 +121,51 @@ export type TierAuthResult =
   | { authorized: false; reason: 'generation_limit_reached'; code: 'AUTH_LIMIT' }
   | { authorized: false; reason: 'tier_insufficient';        code: 'AUTH_TIER' }
   | { authorized: false; reason: 'user_not_found';           code: 'AUTH_USER' }
+
+// ─── MA-SUP-AIR-001 AIR-03: LetterOutputSchema ───────────────────────────────
+// Validated shape of a successfully generated letter, returned by validateLetterOutput()
+// inside Gate 7 before the disclaimer version check (7a) runs.
+// Defense-in-depth: Gate 3 enforces max_tokens upstream; validateLetterOutput() catches
+// any overruns that slip through. Zero Anthropic calls.
+export interface LetterOutputSchema {
+  content:           string      // the generated letter text — must be non-empty
+  letterType:        LetterType
+  disclaimerAppended: boolean    // true after appendDisclaimer() runs
+  promptVersionHash: string      // SHA-256 — must be non-empty
+  modelUsed:         string      // model string from MODEL_ROUTER
+  tokenCount:        number      // actual output tokens — must be <= OUTPUT_CONFIG[letterType].maxTokens
+  lqePassed:         boolean     // true if runLQE() returned passed: true
+}
+
+// ─── MA-SUP-AIR-001 AIR-01: WorkflowContract ─────────────────────────────────
+// Canonical type describing a valid generateLetter() invocation — inputs, required
+// gates, and expected output shape. AIR-03 (LetterOutputSchema) and AIR-04
+// (compliance-static.ts) both depend on this type existing first.
+export interface WorkflowContract {
+  // Identity
+  userId: string                        // pre-hashed SHA-256 before LQE
+  letterType: LetterType
+
+  // Gate 1 — tier enforcement
+  tierAuthRequired: true                // always true; enforced at Gate 1
+
+  // Gate 2 — PII
+  piiScrubbed: true                     // set after scrubPII() + verifyScrubbed() pass
+
+  // Gate 3 — output cap
+  maxTokens: number                     // must equal OUTPUT_CONFIG[letterType].maxTokens
+
+  // Gate 5 — context firewall
+  allowedContextKeys: string[]          // derived from CONTEXT_ALLOWLIST[letterType]
+
+  // Gate 6 — LQE
+  lqeRequired: true                     // always true in Phase 2
+
+  // Gate 7 — post-gen integrity
+  disclaimerVersionRequired: true
+  releaseState: 'review_required'       // Phase 2 lock — never 'released'
+
+  // Output shape (AIR-03: forward reference closed — field typed as LetterOutputSchema interface)
+  // Optional: buildWorkflowContract() runs pre-generation; validateLetterOutput() populates this in Gate 7.
+  outputSchema?: LetterOutputSchema
+}

@@ -1,0 +1,10 @@
+{
+  "_schema": "MA-CTX-001 / MA-IMPL-002",
+  "_description": "BitNet-scored, dependency-resolved content production queue. GEO agents read this. n8n updates weekly (Sunday 2am). Source of truth for what to write next.",
+  "_write_rule": "ONLY BitNet cluster-scoring job writes to this file. Never from API routes, page handlers, or user actions.",
+  "_status": "scaffold — awaiting first BitNet scoring pass (Sprint 2)",
+  "version": "0.0.1",
+  "generated_at": null,
+  "scoring_run_id": null,
+  "queue": []
+}

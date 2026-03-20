@@ -1,0 +1,10 @@
+{
+  "_schema": "MA-CTX-001 / MA-IMPL-002",
+  "_description": "Structured payer-level data: denial_rate_by_category, known_prior_auth_triggers, appeal_win_rate_by_letter_type, recent_policy_changes. Seeded from CMS + NAIC. Powers Phase 3 payer-aware letter tuning.",
+  "_write_rule": "ONLY n8n payer bulletin collection workflow writes to this file. Never from product code.",
+  "_status": "scaffold — awaiting CMS/NAIC seed (Sprint 2, Priority #20)",
+  "version": "0.0.1",
+  "seeded_at": null,
+  "source_ids": [],
+  "payers": []
+}

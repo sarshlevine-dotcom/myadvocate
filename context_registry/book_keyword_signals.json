@@ -1,0 +1,10 @@
+{
+  "_schema": "MA-CTX-001 / MA-IMPL-002",
+  "_description": "BitNet scans every new book chapter and extracts patient-voice keyword patterns and cluster_affinity scores. GEO agents consume keyword signals. Enables book → SEO compounding without extra work.",
+  "_write_rule": "ONLY BitNet book-chapter-scan job writes to this file. Trigger: on file write to docs/book/chapters/.",
+  "_status": "scaffold — no book chapters written yet",
+  "version": "0.0.1",
+  "last_scan_at": null,
+  "chapters_scanned": 0,
+  "signals": []
+}

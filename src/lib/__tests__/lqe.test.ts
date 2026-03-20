@@ -226,7 +226,9 @@ describe('LQE — Check 3: Legal Framing', () => {
     expect(result.failureReason).toBe('LEGAL_FRAMING_FAIL')
   })
 
-  it('fails when letter contains "you should contact an attorney"', async () => {
+  it('fails when letter contains "you should contact an attorney" — caught by FORBIDDEN_PHRASES (Check 2) before Check 3 runs', async () => {
+    // "attorney" is in FORBIDDEN_PHRASES (compliance-static.ts AIR-04) — categorically forbidden.
+    // Check 2 catches it before Check 3's contextual LEGAL_PATTERNS get a chance to run.
     const result = await runLQE({
       ...BASE_INPUT,
       letterType:    'denial_appeal',
@@ -234,8 +236,9 @@ describe('LQE — Check 3: Legal Framing', () => {
       denialCode:    undefined,
     })
 
-    expect(result.checks.legalFraming.passed).toBe(false)
-    expect(result.failureReason).toBe('LEGAL_FRAMING_FAIL')
+    expect(result.checks.ymylSafety.passed).toBe(false)
+    expect(result.checks.ymylSafety.notes).toContain('forbidden_phrase_detected')
+    expect(result.failureReason).toBe('YMYL_SAFETY_FAIL')
   })
 
   it('fails when letter contains "I recommend contacting a lawyer"', async () => {
@@ -262,7 +265,9 @@ describe('LQE — Check 3: Legal Framing', () => {
     expect(result.failureReason).toBe('LEGAL_FRAMING_FAIL')
   })
 
-  it('passes when attorney is mentioned in a non-advice context (e.g., "our legal team")', async () => {
+  it('fails when "attorney" appears in any context — FORBIDDEN_PHRASES is categorical (AIR-04)', async () => {
+    // Prior behavior: only "you should contact an attorney" pattern failed (Check 3 contextual).
+    // AIR-04 FORBIDDEN_PHRASES makes "attorney" categorically forbidden in Check 2 regardless of context.
     const result = await runLQE({
       ...BASE_INPUT,
       letterType:    'denial_appeal',
@@ -270,15 +275,19 @@ describe('LQE — Check 3: Legal Framing', () => {
       denialCode:    undefined,
     })
 
-    expect(result.checks.legalFraming.passed).toBe(true)
-    expect(result.passed).toBe(true)
+    expect(result.checks.ymylSafety.passed).toBe(false)
+    expect(result.checks.ymylSafety.notes).toContain('forbidden_phrase_detected')
+    expect(result.passed).toBe(false)
   })
 
   it('legal framing check always runs for every letterType', async () => {
+    // Letter uses a Check 3 violation-of-law pattern with no FORBIDDEN_PHRASES,
+    // so Check 2 passes and Check 3 is what catches the issue.
+    // "This constitutes a violation of law" hits LEGAL_PATTERNS[1] precisely.
     const result = await runLQE({
       ...BASE_INPUT,
       letterType:    'negotiation_script',
-      letterContent: 'you should sue them for this billing error.',
+      letterContent: 'This constitutes a violation of law that must be addressed.',
       denialCode:    undefined,
     })
 
