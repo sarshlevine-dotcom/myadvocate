@@ -1,0 +1,13 @@
+{
+  "panel_id": "content_director",
+  "title": "Content & Knowledge Director",
+  "owner": "DIR_CTK_001",
+  "audience": ["DIR_CTK_001"],
+  "widgets": [
+    {"id": "content_batches", "type": "kanban", "source": "vw_content_batches"},
+    {"id": "citation_issues", "type": "table", "source": "vw_citation_issues_open"},
+    {"id": "ymyl_risk_flags", "type": "risk_table", "source": "vw_ymyl_risk_flags"},
+    {"id": "refresh_candidates", "type": "table", "source": "vw_refresh_candidates"}
+  ],
+  "refresh_seconds": 300
+}

@@ -1,0 +1,13 @@
+{
+  "panel_id": "chief_of_staff_inbox",
+  "title": "Chief of Staff Inbox",
+  "owner": "FOUNDER_COS_001",
+  "audience": ["FOUNDER_COS_001"],
+  "widgets": [
+    {"id": "director_daily_reports", "type": "inbox", "source": "vw_director_daily_reports_pending"},
+    {"id": "blocker_triage", "type": "priority_queue", "source": "vw_blockers_by_severity"},
+    {"id": "cross_function_handoffs", "type": "handoff_board", "source": "vw_cross_function_handoffs_open"},
+    {"id": "founder_brief_builder", "type": "brief_builder", "source": "vw_founder_brief_inputs"}
+  ],
+  "refresh_seconds": 120
+}

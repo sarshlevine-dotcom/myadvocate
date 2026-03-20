@@ -1,0 +1,78 @@
+version: 1
+organization: MyAdvocate
+architecture_assumption: internal_agent_runtime_plus_hardwired_dashboard
+founder:
+  role: Founder
+  receives_routine_reports_from:
+    - FOUNDER_COS_001
+  receives_direct_exception_reports_from:
+    - FOUNDER_COS_001
+    - DIR_TRC_001
+    - DIR_ENG_001
+  direct_reports:
+    - FOUNDER_COS_001
+
+roles:
+  - agent_id: FOUNDER_COS_001
+    title: Founder Chief of Staff
+    boss: Founder
+    purpose: Single intake and synthesis layer for founder-facing reporting, prioritization, cross-functional coordination, and escalation triage.
+    cadence:
+      founder_daily_brief: daily
+      founder_weekly_exec_summary: weekly
+      exception_broadcasts: event_driven
+    manages:
+      - DIR_ENG_001
+      - DIR_CTK_001
+      - DIR_GRO_001
+      - DIR_TRC_001
+      - DIR_OPF_001
+
+  - agent_id: DIR_ENG_001
+    title: Director of Engineering Systems
+    boss: FOUNDER_COS_001
+    manages:
+      - IMP_BACKEND_001
+      - IMP_DB_001
+      - IMP_AI_001
+      - IMP_AUTOMATION_001
+      - IMP_DASHBOARD_001
+      - IMP_QA_001
+      - IMP_SECURITY_001
+
+  - agent_id: DIR_CTK_001
+    title: Director of Content & Knowledge
+    boss: FOUNDER_COS_001
+    manages:
+      - CTK_YMYL_001
+      - CTK_CITATION_001
+      - CTK_DENIAL_001
+      - CTK_SEO_001
+      - CTK_REFRESH_001
+
+  - agent_id: DIR_GRO_001
+    title: Director of Growth & Distribution
+    boss: FOUNDER_COS_001
+    manages:
+      - GRO_SOCIAL_001
+      - GRO_NEWSLETTER_001
+      - GRO_REFERRAL_001
+      - GRO_B2B_001
+
+  - agent_id: DIR_TRC_001
+    title: Director of Trust, Risk & Compliance
+    boss: FOUNDER_COS_001
+    manages:
+      - TRC_PRIVACY_001
+      - TRC_COMPLIANCE_001
+      - TRC_LEGALMON_001
+      - TRC_EXCEPTION_001
+
+  - agent_id: DIR_OPF_001
+    title: Director of Operations & Finance
+    boss: FOUNDER_COS_001
+    manages:
+      - OPF_OPS_001
+      - OPF_FINANCE_001
+      - OPF_TELEMETRY_001
+      - OPF_LAUNCH_001

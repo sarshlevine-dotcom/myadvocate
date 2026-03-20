@@ -1,0 +1,12 @@
+{
+  "panel_id": "growth_director",
+  "title": "Growth & Distribution Director",
+  "owner": "DIR_GRO_001",
+  "audience": ["DIR_GRO_001"],
+  "widgets": [
+    {"id": "channel_performance", "type": "metric_row", "source": "vw_growth_channel_performance"},
+    {"id": "social_queue", "type": "kanban", "source": "vw_social_distribution_queue"},
+    {"id": "referral_pipeline", "type": "table", "source": "vw_referral_pipeline"},
+    {"id": "b2b_pipeline", "type": "table", "source": "vw_b2b_pipeline"}
+  ]
+}

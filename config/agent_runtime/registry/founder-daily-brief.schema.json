@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://myadvocate.local/schemas/founder-daily-brief.schema.json",
+  "title": "Founder Daily Brief",
+  "type": "object",
+  "required": [
+    "date",
+    "prepared_by",
+    "north_star_snapshot",
+    "top_wins",
+    "top_risks",
+    "decisions_needed_today",
+    "launch_blockers",
+    "agent_health"
+  ],
+  "properties": {
+    "date": { "type": "string", "format": "date" },
+    "prepared_by": { "type": "string", "const": "FOUNDER_COS_001" },
+    "north_star_snapshot": {
+      "type": "object",
+      "properties": {
+        "traffic": { "type": "number" },
+        "content_output": { "type": "number" },
+        "product_readiness": { "type": "number" },
+        "revenue_signal": { "type": "number" },
+        "compliance_exceptions_open": { "type": "integer" }
+      },
+      "additionalProperties": true
+    },
+    "top_wins": { "type": "array", "items": { "type": "string" } },
+    "top_risks": { "type": "array", "items": { "type": "string" } },
+    "decisions_needed_today": { "type": "array", "items": { "type": "string" } },
+    "launch_blockers": { "type": "array", "items": { "type": "string" } },
+    "agent_health": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["director", "status", "summary"],
+        "properties": {
+          "director": { "type": "string" },
+          "status": { "type": "string", "enum": ["green", "yellow", "red"] },
+          "summary": { "type": "string" }
+        }
+      }
+    },
+    "notes": { "type": "string" }
+  }
+}

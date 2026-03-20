@@ -1,0 +1,476 @@
+{
+  "_meta": {
+    "registry": "agent-task-mapping",
+    "description": "Maps every agent to the business plan tasks it owns or supports. Each entry links an agent_id to Phase 2 Priority items, canonical docs, activation triggers, and current status. This is the single source of truth for 'which agent does what work and when.'",
+    "last_updated": "2026-03-19T00:00:00Z",
+    "schema_version": "1.0",
+    "authority": "MA-AGT-002"
+  },
+  "mappings": [
+    {
+      "agent_id": "FOUNDER_COS_001",
+      "agent_file": ".claude/agents/orchestration/founder-chief-of-staff.md",
+      "title": "Founder Chief of Staff",
+      "status": "active",
+      "activation_trigger": "immediate",
+      "phase_gate": "Phase 2 Sprint 1",
+      "owns_tasks": [],
+      "supports_tasks": ["ALL"],
+      "priority_items": [],
+      "canonical_docs": ["MA-PMP-001", "MA-AGT-002"],
+      "notes": "Single executive interface. Routes all founder requests. Synthesizes director reporting. Active from installation."
+    },
+    {
+      "agent_id": "TASK_ROUTER_001",
+      "agent_file": ".claude/agents/orchestration/task-router.md",
+      "title": "Task Router",
+      "status": "active",
+      "activation_trigger": "immediate",
+      "phase_gate": "Phase 2 Sprint 1",
+      "owns_tasks": [],
+      "supports_tasks": ["ALL"],
+      "priority_items": [],
+      "canonical_docs": ["MA-AGT-002"],
+      "notes": "Classifies and assigns every incoming request to the correct director."
+    },
+    {
+      "agent_id": "DIR_ENG_001",
+      "agent_file": ".claude/agents/orchestration/build-director.md",
+      "title": "Build Director",
+      "status": "active",
+      "activation_trigger": "immediate",
+      "phase_gate": "Phase 2 Sprint 1",
+      "owns_tasks": [
+        "Deploy migrations 016-023",
+        "V4 Scoring Service deployment",
+        "n8n skeleton + CTO Sentinel",
+        "Real-data wiring calendar (Weeks 1-4)",
+        "Server/client boundary audit"
+      ],
+      "supports_tasks": [
+        "BitNet service setup",
+        "LQE + BitNet hybrid pre-screener",
+        "OpenHands task execution oversight"
+      ],
+      "priority_items": [6, 9, 31, 32, 33, 39, 40, 53, 54, 55, 56],
+      "canonical_docs": ["MA-IMPL-002", "MA-IMPL-003", "MA-AUT-006", "MA-SEC-002"],
+      "notes": "Highest immediate workload. Owns all technical execution including migration deployment, scoring service, n8n wiring, and OpenHands task supervision."
+    },
+    {
+      "agent_id": "DIR_CTK_001",
+      "agent_file": ".claude/agents/orchestration/content-compliance-director.md",
+      "title": "Content & Compliance Director",
+      "status": "active",
+      "activation_trigger": "immediate",
+      "phase_gate": "Phase 2 Sprint 1",
+      "owns_tasks": [
+        "SEO content engine launch (20 GEO articles in 60 days)",
+        "Trust infrastructure pages (7 pages attorney-reviewed)",
+        "Content staging pipeline dry-run",
+        "Kate calibration session (15-20 test letters)"
+      ],
+      "supports_tasks": [
+        "LQE false positive rate <10%",
+        "EEAT validator integration",
+        "Spanish content audit agent spec (MA-AUT-007)"
+      ],
+      "priority_items": [19, 21, 28, 36],
+      "canonical_docs": ["MA-EEAT-001", "MA-SEO-SUP-001", "MA-AUT-006"],
+      "notes": "Owns all healthcare-facing content quality. No content publishes without passing through this director's chain."
+    },
+    {
+      "agent_id": "DIR_GRO_001",
+      "agent_file": ".claude/agents/orchestration/growth-ops-director.md",
+      "title": "Growth & Operations Director",
+      "status": "active_light",
+      "activation_trigger": "immediate (light mode); full activation at Signal 1",
+      "phase_gate": "Phase 2 Sprint 1 (light); Signal 1 (full)",
+      "owns_tasks": [
+        "Beehiiv integration for newsletter capture",
+        "Landing page + /es Spanish page",
+        "Social distribution for first published content"
+      ],
+      "supports_tasks": [
+        "Google Search Console URL registration",
+        "Instagram strategy execution (MA-IG-001)"
+      ],
+      "priority_items": [11, 29, 30],
+      "canonical_docs": ["MA-YT-001", "MA-IG-001", "MA-SOC-002"],
+      "notes": "Light mode pre-Signal 1. Full team (newsletter, referral, B2B) activates at Signal 1."
+    },
+    {
+      "agent_id": "DIR_TRC_001",
+      "agent_file": ".claude/agents/orchestration/finance-risk-director.md",
+      "title": "Finance & Risk Director",
+      "status": "active",
+      "activation_trigger": "immediate",
+      "phase_gate": "Phase 2 Sprint 1",
+      "owns_tasks": [
+        "Budget monitor webhook upgrade (console → n8n)",
+        "Stripe webhook → billing_events wiring",
+        "Scoring service COMPLIANCE agent activation",
+        "Incident response runbook operationalization"
+      ],
+      "supports_tasks": [
+        "API cost spike detection (CTO Sentinel)",
+        "Reserve-floor monitoring",
+        "Quarterly backup test"
+      ],
+      "priority_items": [9, 40, 53, 58, 60],
+      "canonical_docs": ["MA-COST-001", "MA-SEC-002", "MA-IMPL-003"],
+      "notes": "Owns financial instrumentation and risk escalation. CTO Sentinel and CFO Wealth Engineer report to this director."
+    },
+    {
+      "agent_id": "IMP_BACKEND_001",
+      "agent_file": ".claude/agents/implementation/backend-architect.md",
+      "title": "Backend Architect",
+      "status": "active",
+      "activation_trigger": "immediate",
+      "phase_gate": "Phase 2 Sprint 1",
+      "owns_tasks": [
+        "API route design for new endpoints",
+        "generateLetter() gate modifications",
+        "Server/client boundary hardening"
+      ],
+      "priority_items": [31, 32, 33],
+      "canonical_docs": ["MA-AUT-006", "MA-SEC-002"],
+      "supersedes_legacy": "DEV-02-backend-architect.md"
+    },
+    {
+      "agent_id": "IMP_DB_001",
+      "agent_file": ".claude/agents/implementation/supabase-schema-architect.md",
+      "title": "Supabase Schema Architect",
+      "status": "active",
+      "activation_trigger": "immediate",
+      "phase_gate": "Phase 2 Sprint 1",
+      "owns_tasks": [
+        "Deploy migrations 016-023",
+        "Event taxonomy table design",
+        "Agent registry Supabase schema (future)"
+      ],
+      "priority_items": [6],
+      "canonical_docs": ["MA-DAT-002", "MA-IMPL-002", "MA-IMPL-003"]
+    },
+    {
+      "agent_id": "IMP_AI_001",
+      "agent_file": ".claude/agents/implementation/ai-systems-engineer.md",
+      "title": "AI Systems Engineer",
+      "status": "active",
+      "activation_trigger": "immediate",
+      "phase_gate": "Phase 2 Sprint 1",
+      "owns_tasks": [
+        "Prompt contract governance",
+        "LQE + BitNet hybrid routing",
+        "Prompt A/B framework scaffolding",
+        "Model routing updates"
+      ],
+      "priority_items": [18, 26, 50],
+      "canonical_docs": ["MA-AUT-006", "MA-IMPL-002", "MA-COST-001"]
+    },
+    {
+      "agent_id": "IMP_AUTOMATION_001",
+      "agent_file": ".claude/agents/implementation/agent-runtime-engineer.md",
+      "title": "Agent Runtime Engineer",
+      "status": "active",
+      "activation_trigger": "immediate",
+      "phase_gate": "Phase 2 Sprint 1",
+      "owns_tasks": [
+        "n8n workflow deployment and wiring",
+        "CTO Sentinel workflow",
+        "CMO Content Refresh workflow",
+        "CFO Conversion Insight workflow",
+        "Real-data intake workflows (3)",
+        "Agent registry runtime implementation"
+      ],
+      "priority_items": [9, 10, 40, 41, 43, 46, 53, 54, 55],
+      "canonical_docs": ["MA-IMPL-003", "MA-IMPL-002"]
+    },
+    {
+      "agent_id": "IMP_DASHBOARD_001",
+      "agent_file": ".claude/agents/implementation/dashboard-command-center-builder.md",
+      "title": "Dashboard Command Center Builder",
+      "status": "deferred",
+      "activation_trigger": "After n8n + scoring service + real-data intake are live",
+      "phase_gate": "Phase 2 Sprint 2",
+      "owns_tasks": [
+        "Founder command center panel",
+        "Chief of Staff inbox panel",
+        "Director-level dashboard panels",
+        "Slack ops command center"
+      ],
+      "priority_items": [22, 48, 49, 58],
+      "canonical_docs": ["MA-IMPL-003"],
+      "notes": "Deferred until data sources exist. Dashboard panels are defined in config/agent_runtime/dashboard/panels/."
+    },
+    {
+      "agent_id": "IMP_QA_001",
+      "agent_file": ".claude/agents/implementation/qa-release-reviewer.md",
+      "title": "QA & Release Reviewer",
+      "status": "active",
+      "activation_trigger": "immediate",
+      "phase_gate": "Phase 2 Sprint 1",
+      "owns_tasks": [
+        "Pre-merge validation for all changes",
+        "Release readiness checks",
+        "Gate chain test coverage"
+      ],
+      "priority_items": [],
+      "canonical_docs": ["MA-SEC-002", "MA-AUT-006"]
+    },
+    {
+      "agent_id": "IMP_SECURITY_001",
+      "agent_file": ".claude/agents/implementation/security-privacy-reviewer.md",
+      "title": "Security & Privacy Reviewer",
+      "status": "active",
+      "activation_trigger": "immediate",
+      "phase_gate": "Phase 2 Sprint 1",
+      "owns_tasks": [
+        "MA-SEC-002 control enforcement",
+        "Privacy boundary checks on new features",
+        "Document upload security gate (NER + malware)"
+      ],
+      "priority_items": [],
+      "canonical_docs": ["MA-SEC-002"],
+      "supersedes_legacy": "DEV-01-security-engineer.md"
+    },
+    {
+      "agent_id": "CTK_YMYL_001",
+      "agent_file": ".claude/agents/content-ymyl/ymyl-compliance-writer.md",
+      "title": "YMYL Compliance Writer",
+      "status": "active",
+      "activation_trigger": "immediate",
+      "phase_gate": "Phase 2 Sprint 1",
+      "owns_tasks": [
+        "Healthcare-facing content drafting",
+        "Disclaimer placement enforcement",
+        "Safe conversion path design"
+      ],
+      "priority_items": [28],
+      "canonical_docs": ["MA-EEAT-001", "MA-AUT-006"],
+      "supersedes_legacy": "CNT-01-ymyl-compliance-writer.md"
+    },
+    {
+      "agent_id": "CTK_CITATION_001",
+      "agent_file": ".claude/agents/content-ymyl/legal-citation-checker.md",
+      "title": "Legal Citation Checker",
+      "status": "active",
+      "activation_trigger": "immediate",
+      "phase_gate": "Phase 2 Sprint 1",
+      "owns_tasks": [
+        "Citation verification for all published content",
+        "Regulatory claim grounding"
+      ],
+      "priority_items": [28],
+      "canonical_docs": ["MA-EEAT-001"]
+    },
+    {
+      "agent_id": "CTK_DENIAL_001",
+      "agent_file": ".claude/agents/content-ymyl/denial-intelligence-architect.md",
+      "title": "Denial Intelligence Architect",
+      "status": "active",
+      "activation_trigger": "immediate",
+      "phase_gate": "Phase 2 Sprint 1",
+      "owns_tasks": [
+        "Denial-code taxonomy maintenance",
+        "Payer intelligence registry updates",
+        "Denial code page template design"
+      ],
+      "priority_items": [20],
+      "canonical_docs": ["MA-IMPL-002"],
+      "supersedes_legacy": "GEO-03-denial-code-writer.md"
+    },
+    {
+      "agent_id": "CTK_SEO_001",
+      "agent_file": ".claude/agents/content-ymyl/seo-cluster-architect.md",
+      "title": "SEO Cluster Architect",
+      "status": "active",
+      "activation_trigger": "immediate",
+      "phase_gate": "Phase 2 Sprint 1",
+      "owns_tasks": [
+        "Cluster design and sequencing",
+        "Internal linking plans",
+        "ranked_queue.json consumption"
+      ],
+      "priority_items": [16, 28, 44, 45],
+      "canonical_docs": ["MA-SEO-SUP-001", "MA-IMPL-002"],
+      "supersedes_legacy": "GEO-01-content-architect.md"
+    },
+    {
+      "agent_id": "RUNTIME_CTO_001",
+      "agent_file": ".claude/agents/runtime-mirrors/cto-sentinel-spec.md",
+      "title": "CTO Sentinel",
+      "status": "active",
+      "activation_trigger": "Day 1",
+      "phase_gate": "Phase 2 Sprint 1 (MA-IMPL-003 S0-01)",
+      "owns_tasks": [
+        "API cost monitoring",
+        "Error spike detection",
+        "Telemetry pipeline health",
+        "Emergency throttle recommendation"
+      ],
+      "priority_items": [40, 56],
+      "canonical_docs": ["MA-IMPL-003", "MA-COST-001"],
+      "v4_scoring_agent": "CTO",
+      "notes": "Runtime mirror of V4 Scoring Service CTO agent. n8n workflow: cto_sentinel.json (every 6h)."
+    },
+    {
+      "agent_id": "RUNTIME_CFO_001",
+      "agent_file": ".claude/agents/runtime-mirrors/cfo-wealth-engineer-spec.md",
+      "title": "CFO Wealth Engineer",
+      "status": "active",
+      "activation_trigger": "Day 1 from first subscriber",
+      "phase_gate": "Phase 2 Sprint 1",
+      "owns_tasks": [
+        "MRR tracking",
+        "Reserve-floor monitoring",
+        "Payment anomaly detection",
+        "Budget variance tracking"
+      ],
+      "priority_items": [46, 53],
+      "canonical_docs": ["MA-IMPL-003", "MA-COST-001"],
+      "v4_scoring_agent": "CFO",
+      "notes": "Runtime mirror of V4 Scoring Service CFO agent. n8n workflow: cfo_conversion_insight.json (weekly)."
+    },
+    {
+      "agent_id": "RUNTIME_AI_COMP_001",
+      "agent_file": ".claude/agents/runtime-mirrors/ai-compliance-spec.md",
+      "title": "AI Compliance Monitor",
+      "status": "deferred",
+      "activation_trigger": "Phase 2 public launch",
+      "phase_gate": "Phase 2 public launch",
+      "owns_tasks": [
+        "Output sampling",
+        "Prompt drift detection",
+        "review_required queue monitoring"
+      ],
+      "priority_items": [60],
+      "canonical_docs": ["MA-IMPL-003", "MA-AUT-006"],
+      "v4_scoring_agent": "COMPLIANCE"
+    },
+    {
+      "agent_id": "RUNTIME_CMO_001",
+      "agent_file": ".claude/agents/runtime-mirrors/cmo-content-strategist-spec.md",
+      "title": "CMO Content Strategist",
+      "status": "deferred",
+      "activation_trigger": "Signal 1",
+      "phase_gate": "Signal 1",
+      "owns_tasks": [
+        "Content ROI tracking",
+        "Distribution priorities",
+        "Cluster-level growth review"
+      ],
+      "priority_items": [43, 44],
+      "canonical_docs": ["MA-IMPL-003", "MA-SEO-SUP-001"],
+      "v4_scoring_agent": "CMO"
+    },
+    {
+      "agent_id": "RUNTIME_COO_001",
+      "agent_file": ".claude/agents/runtime-mirrors/coo-operating-coordinator-spec.md",
+      "title": "COO Operating Coordinator",
+      "status": "deferred",
+      "activation_trigger": "Signal 1",
+      "phase_gate": "Signal 1",
+      "owns_tasks": ["Cross-functional queue health", "Weekly operating memo"],
+      "priority_items": [],
+      "canonical_docs": ["MA-IMPL-003"]
+    },
+    {
+      "agent_id": "RUNTIME_CPO_001",
+      "agent_file": ".claude/agents/runtime-mirrors/cpo-product-intelligence-spec.md",
+      "title": "CPO Product Intelligence",
+      "status": "deferred",
+      "activation_trigger": "Signal 2",
+      "phase_gate": "Signal 2",
+      "owns_tasks": ["Product usage pattern review", "Feature prioritization"],
+      "priority_items": [],
+      "canonical_docs": ["MA-IMPL-003"]
+    },
+    {
+      "agent_id": "RUNTIME_CLO_001",
+      "agent_file": ".claude/agents/runtime-mirrors/clo-legal-monitor-spec.md",
+      "title": "CLO Legal Monitor",
+      "status": "deferred",
+      "activation_trigger": "Signal 3",
+      "phase_gate": "Signal 3",
+      "owns_tasks": ["Legal change watch", "Complaint-routing law review"],
+      "priority_items": [],
+      "canonical_docs": ["MA-IMPL-003"]
+    },
+    {
+      "agent_id": "RUNTIME_CRO_001",
+      "agent_file": ".claude/agents/runtime-mirrors/cro-revenue-optimizer-spec.md",
+      "title": "CRO Revenue Optimizer",
+      "status": "deferred",
+      "activation_trigger": "Signal 4",
+      "phase_gate": "Signal 4",
+      "owns_tasks": ["Conversion bottleneck review", "Monetization analysis"],
+      "priority_items": [],
+      "canonical_docs": ["MA-IMPL-003"]
+    },
+    {
+      "agent_id": "GRO_SOCIAL_001",
+      "agent_file": ".claude/agents/growth/social-distribution-operator.md",
+      "title": "Social Distribution Operator",
+      "status": "active_light",
+      "activation_trigger": "Pre-Signal 1 light",
+      "phase_gate": "Phase 2 Sprint 1 (light)",
+      "owns_tasks": ["Content repurposing for social channels"],
+      "priority_items": [30],
+      "canonical_docs": ["MA-IG-001", "MA-YT-001"]
+    },
+    {
+      "agent_id": "GRO_NEWSLETTER_001",
+      "agent_file": ".claude/agents/growth/newsletter-operator.md",
+      "title": "Newsletter Operator",
+      "status": "deferred",
+      "activation_trigger": "Signal 1",
+      "phase_gate": "Signal 1",
+      "owns_tasks": ["Newsletter content production", "Beehiiv workflow"],
+      "priority_items": [29],
+      "canonical_docs": ["MA-PMP-001"]
+    },
+    {
+      "agent_id": "GRO_REFERRAL_001",
+      "agent_file": ".claude/agents/growth/referral-pipeline-analyst.md",
+      "title": "Referral Pipeline Analyst",
+      "status": "deferred",
+      "activation_trigger": "Signal 1 basic / Signal 2 expanded",
+      "phase_gate": "Signal 1",
+      "owns_tasks": ["Referral flow tracking", "Attorney response tracking"],
+      "priority_items": [],
+      "canonical_docs": ["MA-PMP-001"]
+    },
+    {
+      "agent_id": "GRO_B2B_001",
+      "agent_file": ".claude/agents/growth/b2b-pipeline-analyst.md",
+      "title": "B2B Pipeline Analyst",
+      "status": "deferred",
+      "activation_trigger": "Signal 5 or active outreach",
+      "phase_gate": "Signal 5",
+      "owns_tasks": ["Union/employer/benefits-partner pipeline"],
+      "priority_items": [],
+      "canonical_docs": ["MA-PMP-001"]
+    },
+    {
+      "agent_id": "OPENHANDS_001",
+      "agent_file": null,
+      "title": "OpenHands Coding Agent",
+      "status": "pending_setup",
+      "activation_trigger": "Tier 1 complete + first task spec approved",
+      "phase_gate": "Phase 2 Sprint 1",
+      "owns_tasks": [
+        "Content validation CLI script",
+        "Pre-launch engineering check command",
+        "Server/client boundary audit",
+        "Test coverage expansion for gate chain"
+      ],
+      "supports_tasks": [
+        "Migration deployment validation",
+        "n8n workflow scaffolding"
+      ],
+      "priority_items": [],
+      "canonical_docs": ["MA-AGT-002"],
+      "notes": "Supervised coding agent. Takes bounded task specs, works in branches, returns PRs for review. Governance: branch policy, label convention (openhands-execute), max scope per task, founder review on all PRs."
+    }
+  ]
+}

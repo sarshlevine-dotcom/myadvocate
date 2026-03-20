@@ -1,0 +1,27 @@
+{
+  "agent_id": "REPLACE_ME",
+  "name": "REPLACE_ME",
+  "category": "implementation",
+  "status": "draft",
+  "boss_agent_id": "REPLACE_ME",
+  "mission": "REPLACE_ME",
+  "owns": [],
+  "does_not_own": [],
+  "activation_criteria": [],
+  "inputs_required": [],
+  "outputs": [],
+  "allowed_tools": [],
+  "prohibited_actions": [],
+  "handoff_targets": [],
+  "reporting": {
+    "reports_to": "REPLACE_ME",
+    "cadence": "task_based",
+    "report_types": []
+  },
+  "phase_gate": {
+    "activation_stage": "pre_launch",
+    "exit_conditions": []
+  },
+  "pmp_references": [],
+  "notes": ""
+}

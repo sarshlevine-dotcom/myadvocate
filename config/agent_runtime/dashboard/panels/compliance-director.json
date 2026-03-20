@@ -1,0 +1,12 @@
+{
+  "panel_id": "compliance_director",
+  "title": "Trust, Risk & Compliance Director",
+  "owner": "DIR_TRC_001",
+  "audience": ["DIR_TRC_001"],
+  "widgets": [
+    {"id": "exceptions_open", "type": "risk_table", "source": "vw_compliance_exceptions_open"},
+    {"id": "privacy_reviews", "type": "table", "source": "vw_privacy_reviews_pending"},
+    {"id": "legal_monitor_items", "type": "table", "source": "vw_legal_monitor_items"},
+    {"id": "incident_escalations", "type": "table", "source": "vw_incidents_active"}
+  ]
+}

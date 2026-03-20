@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://myadvocate.local/schemas/compliance-exception-report.schema.json",
+  "title": "Compliance Exception Report",
+  "type": "object",
+  "required": ["exception_id", "owner_agent_id", "risk_domain", "description", "recommended_action", "escalation_level"],
+  "properties": {
+    "exception_id": { "type": "string" },
+    "owner_agent_id": { "type": "string" },
+    "risk_domain": { "type": "string", "enum": ["privacy", "legal", "content", "security", "billing", "other"] },
+    "description": { "type": "string" },
+    "recommended_action": { "type": "array", "items": { "type": "string" } },
+    "escalation_level": { "type": "string", "enum": ["director", "chief_of_staff", "founder"] },
+    "production_impact": { "type": "string" }
+  }
+}

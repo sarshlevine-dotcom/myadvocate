@@ -65,15 +65,23 @@ boundary for scrubber enforcement, model selection, output caps, cost logging, a
   - `budget-monitor.ts` — Redis-based API spend tracking and tripwire alerts; Phase 2: alerts fire n8n webhook (MA-COST-001)
   - `pii-scrubber.ts` — `scrubPII()` + `verifyScrubbed()` (exported). Must run before every API call. Gate 2 asserts clean result.
   - `disclaimer.ts` — appended to all user-facing outputs
+  - `cache-keys.ts` — Redis key conventions + TTL constants + `isCacheEligible()` (MA-IMPL-005). Bucket 2/3 only. Never used for letter generation.
+  - `admin/getDashboardData.ts` — server-side data loader for all 5 admin dashboard panels
 - `src/types/` — `domain.ts` (shared enums/interfaces incl. `ModelTier`, `LetterType` canonical location, `WorkflowContract` ✅ AIR-01, `LetterOutputSchema` ✅ AIR-03), `supabase.ts` (generated DB types)
 - `src/components/` — shared UI: Button, Input, FormField, Card, Alert, Nav
-- `supabase/migrations/` — 23 migrations applied; 016–022 pending deploy (scrub_records, friction_events, appeal_outcome_events, bitnet_calibration, competitive_signals, founder_inbox, prompt A/B variant fields); 023 ✅ live (real data pipeline: pages, page_metrics_daily, tool_sessions, billing_events, decision_log, content_queue, experiments, feedback_outcomes + 2 views). Append-only (see `supabase/migrations/CLAUDE.md`)
+  - `src/components/admin/` — 7 admin panel components: LaunchBlockersPanel, OpenHandsQueuePanel, ContentQueuePanel, MonetizationPanel, MetricsPanel, MetricsEntryForm, PackagingAssetForm
+- `src/app/admin/` — Founder dashboard (layout.tsx + page.tsx). Protected by middleware.ts. `/admin/review/` subdirectory is the Kate review queue.
+- `src/app/actions/admin.ts` — Server actions: markSpanishCandidate, createPackagingAsset, createMetricEntry
+- `middleware.ts` — Admin route guard. Uses Supabase SSR session (createServerClient). ADMIN_EMAILS env var.
+- `content_drafts/` — EEAT-validated content drafts organized by type (codes/, hubs/, pillars/, supporting/). Validation failures logged to validation_failures/. See Content Staging Pipeline section.
+- `supabase/migrations/` — 25 migrations created; 016–022 pending deploy (scrub_records, friction_events, appeal_outcome_events, bitnet_calibration, competitive_signals, founder_inbox, prompt A/B variant fields); 023 ✅ live (real data pipeline: pages, page_metrics_daily, tool_sessions, billing_events, decision_log, content_queue, experiments, feedback_outcomes + 2 views); 024 NEW (content flywheel: content_items, content_variants, content_metrics, packaging_assets, packaging_asset_items, tasks, task_runs, prompt_templates); 025 NEW (denial_codes reconciliation: adds title, seo_slug, risk_notes, review_status, plain_language_meaning, recommended_next_step — additive only, no drops); 026 PLANNED (cache tables: cache_entries, cache_logs, cache_promotions, cache_invalidation_events — Sprint 2). Append-only (see `supabase/migrations/CLAUDE.md`)
 - `supabase/seed/` — seed data for denial codes and resource routes
-- `context_registry/` — Agent intelligence layer (MA-CTX-001): **12 JSON registries** (8 original + 4 new from MA-IMPL-002). NOT a database. See Section "Context Registry" below.
+- `context_registry/` — Agent intelligence layer (MA-CTX-001): **12 JSON registries** (8 original + 4 new from MA-IMPL-002, all scaffolded as of 2026-03-20). NOT a database. See Section "Context Registry" below.
 - `docs/` — organized by subdomain (see Docs Structure below)
 - `automation/daily.js` — Notion sync automation (see Automation section below)
 - `.claude/skills/` — 32 Claude skill definitions (see Skills System below)
-- `.claude/agents/` — External agent .md files (MA-AGT-001). See Agent System below.
+- `.claude/agents/` — Hierarchical agent system (MA-AGT-002). 5 subdirectories: orchestration/, implementation/, content-ymyl/, growth/, runtime-mirrors/. Legacy Phase 1 agents in legacy-phase1/. See Agent Hierarchy section below.
+- `config/agent_runtime/` — Agent runtime config: hierarchy YAML, reporting matrix, handoff rules, event taxonomy, agent-task-mapping.json, registry schemas, dashboard panel definitions.
 - `.claude/hooks/` — Claude Code guardrail hooks
 - `scripts/` — dev tooling (git hooks installer)
 
@@ -100,6 +108,9 @@ boundary for scrubber enforcement, model selection, output caps, cost logging, a
 - NEVER allow AI letter output to bypass the Letter Quality Evaluator (G1/LQE) — three sequential checks (denial code accuracy, YMYL safety, legal framing) must all PASS; failures route to Kate review queue with failure_reason logged (MA-AUT-006 §G1)
 - NEVER publish Spanish content (video scripts or web pages) before the Spanish Content Audit Agent (G7/SCAA) is operational — Month 9 YouTube gate; Month 12 web gate (MA-AUT-006 §G7)
 - NEVER deploy a new agent without defined stopping conditions: max retries, timeout ceiling, explicit failure state action — see stopping conditions table in MA-AUT-006 §G3
+- NEVER allow a specialist agent to report routine output directly to the founder — all routine reporting flows through the agent's director to the Founder Chief of Staff (MA-AGT-002 reporting matrix)
+- NEVER allow OpenHands to modify `generateLetter()`, gate chain code, or Supabase migrations — these are human-only changes (MA-AGT-002 OpenHands governance)
+- NEVER modify runtime-mirror specs without a corresponding `/feedback` entry in the V4 Scoring Service — mirror specs must stay aligned with scoring agent weights (MA-AGT-002 + MA-IMPL-003)
 - NEVER invoke `generateLetter()` without first running `checkTierAuthorization(userId, letterType)` server-side — free-tier limits and subscription entitlements must be verified at the API layer before generation proceeds (MA-SEC-002 P25/P26)
 - NEVER enable document upload without both malware scanning (VirusTotal API or equivalent) and NER-grade PII redaction (AWS Comprehend Medical or Azure Health NLP) — regex scrubbing is insufficient for insurance documents; upload is deferred to Phase 2 (MA-SEC-002 P22, Supplemental Audit 2026-03-13)
 - NEVER create an artifact without storing `prompt_version_hash` — SHA-256 of prompt template + model string + disclaimer version, captured at generation time (MA-SEC-002 P30)
@@ -188,14 +199,15 @@ Before building any new feature or making an architectural change, run through t
 
 ## Canonical Docs
 - `SYSTEM.md` — constitutional layer (mission, ethics, legal, privacy) — read first
-- `MA-PMP-001` (PMP v24) — single source of truth for strategy, operations, financials — `docs/pmp/MyAdvocate_PMP_v24.docx`
+- `MA-PMP-001` (PMP v29) — single source of truth for strategy, operations, financials — `docs/pmp/MyAdvocate_PMP_v29.docx` ← CURRENT (supersedes v24)
 - `MA-LCH-004` — Launch Truth (what ships in Phase 1)
 - `MA-SEC-002` — Security Checklist (24 controls — 20 original + 4 AI content security controls)
 - `MA-COST-001` — API Cost Architecture & Spend Control (model routing, output caps, budget tripwires)
 - `MA-DAT-002` — Data Model (10 objects, minimum fields)
 - `MA-CTX-001` — Context Registry Specification — governs `context_registry/` folder and all JSON registries
 - `MA-SOC-002` — Patient Story Engine — dual-track sourcing, scrub protocol, rollout gates
-- `MA-AGT-001` — External Agent Integration Plan — 11 agents (GEO-01/02/03, DEV-01/02/03, CNT-01, MKT-01/02/03, PRD-01)
+- `MA-AGT-001` — External Agent Integration Plan — 11 agents (GEO-01/02/03, DEV-01/02/03, CNT-01, MKT-01/02/03, PRD-01) — **SUPERSEDED by MA-AGT-002 for org structure; signal gates preserved**
+- `MA-AGT-002` — Agent Hierarchy & OpenHands Integration — 5-director hierarchy, 29 agent files, config layer, agent-to-task mapping, OpenHands supervised coding agent — `docs/agents/MA-AGT-002_Agent_Hierarchy_Integration.docx`
 - `MA-AUT-006` — Agent System Architecture Audit v2 — 7 gaps (G1–G7) grounded in Anthropic best practices; G1+G6 are retroactive launch blockers; G7 is the Spanish Content Audit Agent (SCAA) design; G4/G5 are Phase 2 signal-gated — `docs/agents/MA-AUT-006_Agent_System_Audit_v2.docx` ← hardwired into all generateLetter() modifications and agent deployments
 - `Supplemental Security Audit` — 10 operational/security gaps, 6 new PassFail controls (P25–P30), 3 required founder decisions; YMYL review model formalized, doc upload deferred, prompt versioning + incident runbook specified — `docs/security/myadvocate_supplemental_audit_report.docx` + `docs/security/MA-SEC-002-additions-priorities-25-30.md`
 - `Incident Response Runbook` — P1/P2/P3 severity definitions, response targets, P1 user notification template, key contacts — `docs/security/incident-response-runbook.md`
@@ -206,6 +218,9 @@ Before building any new feature or making an architectural change, run through t
 - `MA-IMPL-001` — Strategic Implementation Plan — canonical source of truth for integrating 21 uploaded build pack documents into Phase 2 roadmap; supersession chain for all source docs — `docs/MA-IMPL-001_Strategic_Implementation_Plan.docx` ← read before any Phase 2 architecture decision
 - `MA-IMPL-002` — Pre-Launch Intelligence & Automation Architecture — BitNet SEO intelligence engine (hub/spoke scoring, book monitoring), content staging pipeline (50-page queue, 9-state machine), pre-launch data collection (migrations 020–022), LQE + BitNet hybrid 3-path routing, competitive signal collection (CMS/NAIC/payer bulletins), integration sequence (8-week calendar). **All six workstreams are internal-only and pre-launch safe.** — `docs/intelligence/MA-IMPL-002_PreLaunch_Intelligence_Architecture.docx` ← hardwired into all BitNet, n8n, and data collection decisions
 - `MA-IMPL-003` — V4 Scoring Service & Autonomous Agent Architecture — Month 0-12 rollout plan; FastAPI scoring service (/analyze + /feedback); 5-dimension scoring math; 4-agent model (CTO/CMO/CFO/UX); n8n wiring guide (3 starter workflows); decision routing thresholds (AUTO/APPROVAL/LOG/BLOCK/IGNORE); learning loop spec; agent coordination hierarchy; stopping conditions — `docs/intelligence/MA-IMPL-003_BitNet_V4_Month0-12_Rollout.docx` ← hardwired into all Scoring Service, n8n workflow, and agent coordination decisions
+- `MA-IMPL-004` — Content Flywheel & Admin Dashboard Integration Analysis — 8-file integration analysis; 4 workstreams (content flywheel DB, admin dashboard, caching, content block system); 4 conflict resolutions; 4-tier priority stack; 21 Notion tasks — `docs/intelligence/MA-IMPL-004_Integration_Analysis_2026-03-20.docx` ← read before any content flywheel, admin dashboard, or caching implementation decision
+- `MA-IMPL-005` — Caching Execution Pack V3 — build-ready caching spec; Redis key conventions; 4 Supabase cache tables (migration 026); trackedExecution() extension spec; 6 n8n caching workflows (A-F); cache-to-SEO promotion pipeline — `uploads/MyAdvocate_Caching_Execution_Pack_V3.docx` ← hardwired into all caching implementation decisions
+- `MA-PMP-001` (PMP v29) — single source of truth for strategy, operations, financials — `docs/pmp/MyAdvocate_PMP_v29.docx` ← CURRENT (supersedes v24; integrates MA-IMPL-001/002/003/004/005 + MA-AGT-002)
 - `MA-AHP-001` — Anti-Hallucination Protocol — governs all agent outputs (in Notion Agent Registry)
 - `MA-SUP-DAT-001` — Proprietary Data Engine Strategy — two compounding datasets (friction events + appeal outcomes), collection schema, publication gates, phase/sprint task plan, competitive moat analysis — `docs/data/myadvocate_business_supplemental_proprietary_data_engine_v1.docx` ← hardwired into data architecture and Phase 2+ data intelligence builds
 - `Projections v17` — Financial model M1–M24, all revenue streams — `docs/pmp/MyAdvocate_Projections_v17.xlsx`
@@ -230,7 +245,8 @@ docs/
               MyAdvocate_Projections_v17.xlsx  ← CURRENT financial model (M1-M24, 3 scenarios)
   system/     claude-project-instructions.md
   superpowers/plans/
-  agents/     MA-AGT-001 (External Agent Integration Plan)           ← NEW in v21
+  agents/     MA-AGT-001 (External Agent Integration Plan)           ← superseded by MA-AGT-002
+              MA-AGT-002_Agent_Hierarchy_Integration.docx           ← NEW 2026-03-19 — hierarchy, OpenHands, agent-task mapping
               MA-AUT-006_Agent_System_Audit_v2.docx                 ← NEW in v25 — agent architecture audit, 7 gaps, G1+G6 launch blockers
   context/    MA-CTX-001 (Context Registry Specification)            ← NEW in v21
   social/     MA-SOC-002 (Patient Story Engine)                      ← NEW in v21
@@ -296,31 +312,88 @@ All 32 MyAdvocate skills live in `.claude/skills/<skill-name>/SKILL.md`.
 
 ---
 
-## External Agent System (MA-AGT-001)
+## Agent Hierarchy (MA-AGT-002)
 
-External agents live in `.claude/agents/<agent-name>.md`. All agents are subordinate to MA-PMP-001 → MA-LCH-004 → MA-SEC-002 → MA-AHP-001. Founder approval required for every activation.
+**Supersedes:** flat agent model from MA-AGT-001. Phase 1 agents preserved in `.claude/agents/legacy-phase1/`.
 
-**Phase 1 agents (install now):**
-- `geo-seo-claude` repo → GEO-01 (content architect), GEO-02 (launch checklist), GEO-03 (denial-code writer)
-- `agency-agents` repo → DEV-01 (security engineer), DEV-02 (backend architect), DEV-03 (reality checker)
-- Custom composite → CNT-01 (YMYL compliance writer — build from technical-writer.md + legal-compliance-checker.md + MA context)
+All agents are subordinate to MA-PMP-001 → MA-LCH-004 → MA-SEC-002 → MA-AHP-001. Founder approval required for every activation. **Core organizational rule:** every agent has a boss, every boss rolls up to a director, only the Founder Chief of Staff communicates routine summaries to the founder.
 
-**Signal-gated agents (hold until trigger):**
+**Hierarchy structure:**
+
+| Layer | Role | Reports To | Status |
+|---|---|---|---|
+| Executive | Founder Chief of Staff | Founder / CEO | ✅ Active |
+| Director | Build Director | Founder Chief of Staff | ✅ Active |
+| Director | Content & Compliance Director | Founder Chief of Staff | ✅ Active |
+| Director | Growth & Operations Director | Founder Chief of Staff | ✅ Active (light) |
+| Director | Finance & Risk Director | Founder Chief of Staff | ✅ Active |
+| Orchestration | Task Router | Founder Chief of Staff | ✅ Active |
+
+**Agent file tree:**
+```
+.claude/agents/
+  orchestration/          — Chief of Staff, Task Router, 4 Directors
+  implementation/         — Backend, Schema, AI Systems, Runtime, Dashboard, Security, QA (7 agents)
+  content-ymyl/           — YMYL Writer, Citation Checker, Denial Architect, SEO Cluster (4 agents)
+  growth/                 — Social, Newsletter, Referral, B2B (4 agents — mostly signal-gated)
+  runtime-mirrors/        — CTO, CFO, CMO, COO, CPO, CLO, CRO, AI Compliance (8 specs)
+  legacy-phase1/          — GEO-01/02/03, DEV-01/02/03, CNT-01 (preserved, superseded)
+```
+
+**Config layer** (`config/agent_runtime/`):
+- `agent_hierarchy.yaml` — machine-readable org chart with agent_ids and boss relationships
+- `reporting_matrix.yaml` — 8 reporting rules (routine → director, critical → founder)
+- `handoff-rules.yaml` — 7 trigger-based routing rules (canonical_function_change, schema_change, etc.)
+- `event-taxonomy.yaml` — 20 event categories + severity model (info → critical)
+- `agent-task-mapping.json` — maps every agent to Phase 2 Priority items, activation triggers, canonical docs
+- `registry/` — agent registry schema, 6 report schemas (founder brief, exec summary, compliance exception, etc.)
+- `dashboard/panels/` — 7 panel definitions (founder command center, chief of staff inbox, 5 director panels)
+- `dashboard/sql/` — starter SQL views (deferred until event logging tables exist)
+
+**Signal-gated agents (unchanged from MA-AGT-001):**
 - MKT-01 (Reddit community builder) — T-60 days before projected Signal 1
 - MKT-03 (Growth Hacker) — Signal 1
 - PRD-01 (Feedback Synthesizer) — Signal 1
 - MKT-02 (SEO Growth Specialist) — Signal 2
+- COO, CMO runtime mirrors — Signal 1
+- CPO runtime mirror — Signal 2
+- CLO runtime mirror — Signal 3
+- CRO runtime mirror — Signal 4
 
-**Install commands (Phase 1):**
-```bash
-git clone https://github.com/zubair-trabzada/geo-seo-claude.git && cd geo-seo-claude && ./install.sh
-git clone https://github.com/msitarzewski/agency-agents.git
-cp agency-agents/engineering/engineering-security-engineer.md .claude/agents/
-cp agency-agents/engineering/engineering-backend-architect.md .claude/agents/
-cp agency-agents/testing/testing-reality-checker.md .claude/agents/
-```
+**Runtime-mirror rule:** Runtime-mirror specs (`.claude/agents/runtime-mirrors/`) are the build-time reflection of V4 Scoring Service agents. When modifying agent weights in `engine.py`, the mirror spec is the reference doc. Mirror spec changes require a corresponding `/feedback` entry per MA-IMPL-003.
 
-Full specs and deployment sequence: MA-AGT-001 in `docs/agents/`. Notion Agent Registry has all MA IDs.
+Full specs: MA-AGT-002 integration report in `docs/agents/`. Agent-to-task mapping in `config/agent_runtime/agent-task-mapping.json`.
+
+---
+
+## OpenHands Integration (MA-AGT-002)
+
+**Role:** Supervised coding agent for bounded implementation tasks. Complements agent hierarchy — hierarchy is organizational structure, OpenHands is execution capacity.
+
+**Governance:**
+- Works in Git branches only — never commits to main
+- Returns PRs for founder review — no autonomous merge authority
+- Max scope per task: single bounded feature, migration, test suite, or validation script
+- Label convention: `openhands-execute` on GitHub issues
+- Branch naming: `openhands/<task-slug>`
+
+**Three-stage rollout:**
+1. **Manual** (now): Founder writes task spec → OpenHands executes → PR review
+2. **Issue-driven** (Sprint 2): GitHub issue template → label triggers OpenHands → PR review
+3. **n8n-triggered** (Month 2+): CTO Sentinel detects issue → n8n creates spec → OpenHands → PR review
+
+**Current task candidates (Phase 2 Sprint 1):**
+- Content validation CLI script (extends eeat-validator.ts to cover all staging pipeline states)
+- Pre-launch engineering check command (build + typecheck + test + gate checks in one command)
+- Server/client boundary audit (low-risk hardening)
+
+**Hard rules:**
+- NEVER give OpenHands access to production environment variables or secrets
+- NEVER allow OpenHands to modify `generateLetter()` or any gate chain code — human-only
+- NEVER allow OpenHands to merge its own PRs
+- NEVER allow OpenHands to create or modify Supabase migrations — human review required
+
+Full playbook: `uploads/MyAdvocate_OpenHands_Playbook_V2.docx`. Canonical doc: MA-AGT-002.
 
 ---
 
@@ -528,12 +601,19 @@ Priority order: CTO (BLOCK absolute) → Compliance/LQE → CFO → CMO → UX. 
 
 ---
 
+## Data Model Delineation
+These two tables are separate systems — never conflate them:
+- `content_queue` (migration 023, scoring service) — workflow sequencing and scoring decisions for the V4 Scoring Service and n8n. Written by scoring service + n8n only. Never from product code.
+- `content_items` (migration 024, content flywheel) — master content atom registry. Written by admin dashboard + n8n content intake workflow. Source of truth for what content exists, its production status, and monetization flags.
+
+---
+
 ## Phase 2 Priorities (Current)
 1. `src/components/` shared UI library — ✅ Done
 2. `daily.js` automation — ✅ Done
 3. Cost architecture — ✅ Done (model routing, output caps, budget tripwires, per-feature telemetry)
 4. Install external agents: GEO-01/02/03, CNT-01 (see Agent System above) — **IN PROGRESS**
-5. Scaffold `/context_registry/` — 8 JSON files (MA-CTX-001) — **IN PROGRESS**
+5. Scaffold `/context_registry/` — 12 JSON files (MA-CTX-001) — ✅ Done (4 new scaffolds added 2026-03-20)
 6. **[MA-IMPL-002 S1-01] Deploy migrations 016, 019, 020, 021, 022 — scrub_records, friction_events, appeal_outcome_events, bitnet_calibration, competitive_signals** — **NEXT**
 6a. **[MA-IMPL-003 S0-01] Apply migration 023 (`023_real_data_pipeline.sql`) — creates pages, page_metrics_daily, tool_sessions, billing_events, decision_log, content_queue, experiments, feedback_outcomes tables + 2 views** — **NEXT**
 7. **[MA-IMPL-002 S1-01] Instrument tools — write friction_events on every tool interaction (Denial Decoder, Appeal, Bill Dispute)** — **NEXT**
@@ -601,9 +681,11 @@ This file should be reviewed whenever:
 - The automation setup changes
 - A new skill category is added to `.claude/skills/`
 
-Last reviewed: **2026-03-19**
+Last reviewed: **2026-03-20**
 
 ### Recent Changes
+- 2026-03-20: MA-IMPL-004 + MA-IMPL-005 integrated — Content Flywheel, Admin Dashboard, Caching Architecture, and Content Block System canonized. PMP updated to v29 (supersedes v24; catches up all unexecuted intermediate versions v25-v28 in one update). 8 uploaded files analyzed (code_pack_v1+v2, Caching_Master_V1_V2, Caching_Execution_Pack_V3, master_execution_pack, context_full_system, seed_pages.json, full_implementation_pack_v2). New files added to repo: migration 024 (content_items, content_variants, content_metrics, packaging_assets, packaging_asset_items, tasks, task_runs, prompt_templates + enums/indexes/triggers/rollup view); migration 025 (denial_codes reconciliation — additive only, no drops); middleware.ts (Supabase SSR admin auth, replaces placeholder header); src/app/admin/layout.tsx + page.tsx (5-panel founder dashboard); 7 admin panel components (LaunchBlockersPanel, OpenHandsQueuePanel, ContentQueuePanel, MonetizationPanel, MetricsPanel, MetricsEntryForm, PackagingAssetForm); src/lib/admin/getDashboardData.ts; src/app/actions/admin.ts (markSpanishCandidate, createPackagingAsset, createMetricEntry server actions); src/lib/cache-keys.ts (Redis key conventions + TTL + isCacheEligible); seed files 002_content_items.sql (20 atoms) + 003_tasks_seed.sql (5 OpenHands tasks); 4 context_registry JSON scaffolds (ranked_queue.json, payer_intelligence.json, book_keyword_signals.json, spanish_keyword_signals.json); 2 EEAT failures fixed (CO-16 added cms.gov citation, appeal page removed forbidden "legal action" phrase + added cms.gov/oig.hhs.gov citations — both now eeat_validated: true, pending Kate clinical review); Data Model Delineation section added (content_queue vs content_items). Caching moved from Parking Lot to active Phase 2 Priority (migration 026 planned for Sprint 2). MA-IMPL-004 and MA-IMPL-005 added as canonical docs. PMP v29 created.
+- 2026-03-19: MA-AGT-002 integrated — Agent Hierarchy & OpenHands Integration. Flat agent model from MA-AGT-001 superseded by 5-director hierarchy: Founder Chief of Staff → Build Director + Content & Compliance Director + Growth & Ops Director + Finance & Risk Director + Task Router. 29 agent files installed across 5 subdirectories (.claude/agents/orchestration/, implementation/, content-ymyl/, growth/, runtime-mirrors/). 8 runtime-mirror specs align with V4 Scoring Service agents. Phase 1 agents (GEO-01/02/03, DEV-01/02/03, CNT-01) preserved in legacy-phase1/. Config layer installed (config/agent_runtime/): agent_hierarchy.yaml, reporting_matrix.yaml, handoff-rules.yaml, event-taxonomy.yaml, 7 dashboard panel definitions, 6 report schemas, agent-task-mapping.json linking every agent to Phase 2 Priority items with activation triggers. OpenHands adopted as supervised coding agent for bounded implementation tasks (branch-only, PR review required, no autonomous merge). 3 OpenHands task candidates identified for Sprint 1: content validation CLI, pre-launch engineering check, server/client boundary audit. Context registry updated: 5 new sources (src_0014–src_0018), 2 new decisions (dec_0015–dec_0016). 4 new Core Invariants added (every agent must have a boss, no routine specialist-to-founder communication, OpenHands never modifies gate chain code, runtime-mirror changes require /feedback entry). Signal-gated agent discipline preserved from MA-AGT-001.
 - 2026-03-19: AIR-03 and AIR-04 complete (parallel). AIR-03: `LetterOutputSchema` interface added to `src/types/domain.ts` (7 fields: content, letterType, disclaimerAppended, promptVersionHash, modelUsed, tokenCount, lqePassed). `validateLetterOutput()` added to `generate-letter.ts` as Gate 7-pre — throws `GATE_7_FAILED` on empty content, missing hash, or token overrun. `WorkflowContract.outputSchema` updated from string literal to `outputSchema?: LetterOutputSchema`. 189 tests passing. AIR-04: `src/lib/compliance-static.ts` created — pure constants, zero API/DB calls: `FORBIDDEN_PHRASES` (9 entries, word-boundary regex, case-insensitive), `FORBIDDEN_CONTEXT_FIELDS`, `ALWAYS_KATE_REVIEW`, `MAX_LETTER_CHARS`. `lqe.ts` Check 2 now scans FORBIDDEN_PHRASES after YMYL patterns — fails with `forbidden_phrase_detected`. Gate 5 adds FORBIDDEN_CONTEXT_FIELDS strip layer logged as `GATE_5_FORBIDDEN_FIELD`. 22 compliance-static tests. 199 total tests passing. All 4 AIR tasks (AIR-01 through AIR-04) now complete.
 - 2026-03-19: AIR-01 complete (WorkflowContract type). `LetterType` moved to canonical location in `src/types/domain.ts`. `WorkflowContract` interface added with all gate flags typed as literals (`releaseState: 'review_required'`). `buildWorkflowContract()` exported from `generate-letter.ts` — called before Gate 1, snapshot passed to `logGateFailure()` on every gate failure. `CONTEXT_ALLOWLIST` now exported (needed by AIR-04). 173 tests passing. AIR-03 and AIR-04 now unblocked (parallel).
 - 2026-03-19: Full 7-gate chain shipped (MA-AUT-006 G6 + G1 — retroactive launch gaps cleared). `generate-letter.ts` now enforces all 7 gates: Gate 1 `checkTierAuthorization()` (GATE_1_FAILED halt), Gate 2 `scrubPII()` + `verifyScrubbed()` (GATE_2_FAILED halt), Gate 3 `OUTPUT_CONFIG` cap enforcement (GATE_3_FAILED halt), Gate 4 input validation (GATE_4_FAILED halt), Gate 5 context firewall/CONTEXT_ALLOWLIST (GATE_5_STRIPPED warn-only), Gate 6 LQE (routes to Kate queue on fail), Gate 7a/7b disclaimer version + artifact state (GATE_7_FAILED halt). `logGateFailure()` shared helper emits identical `gate_failure` telemetry events across all gates — admin dashboard and n8n can filter on `eventType === 'gate_failure'` without gate-specific logic. `lqe.ts` live: 3 serial checks (denial code accuracy, YMYL safety, legal framing), zero Anthropic calls, 21 unit tests, serial halt verified. `auth-tier.ts` created with `checkTierAuthorization()`. `pii-scrubber.ts` extended with `verifyScrubbed()` + `PII_FIELDS` export. `promptVersionHash` SHA-256 computed and persisted on every artifact (SEC-P30 ✅). 42 gate tests + 21 LQE tests = 123 total tests passing. AIR-02 complete (CONTEXT_ALLOWLIST embedded in Gate 5). AIR-01/AIR-03/AIR-04 remain pending.

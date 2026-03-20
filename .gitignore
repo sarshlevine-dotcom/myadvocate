@@ -42,3 +42,6 @@ yarn-error.log*
 next-env.d.ts
 .fuse_hidden*
 .claude/settings.local.json
+
+# Supabase temp files (local CLI state, not repo state)
+supabase/.temp/

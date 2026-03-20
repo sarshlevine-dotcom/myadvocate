@@ -1,0 +1,16 @@
+{
+  "panel_id": "founder_command_center",
+  "title": "Founder Command Center",
+  "owner": "FOUNDER_COS_001",
+  "audience": ["Founder"],
+  "widgets": [
+    {"id": "north_star_metrics", "type": "metric_row", "source": "vw_founder_north_star"},
+    {"id": "launch_blockers", "type": "priority_list", "source": "vw_launch_blockers_open"},
+    {"id": "decisions_needed", "type": "decision_queue", "source": "vw_founder_decisions_needed"},
+    {"id": "director_status", "type": "health_grid", "source": "vw_director_health"},
+    {"id": "compliance_exceptions", "type": "risk_table", "source": "vw_compliance_exceptions_open"},
+    {"id": "report_freshness", "type": "freshness_matrix", "source": "vw_reporting_freshness"}
+  ],
+  "refresh_seconds": 300,
+  "notes": "Founder should see rollups, not raw agent chatter."
+}

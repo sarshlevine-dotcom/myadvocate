@@ -1,0 +1,62 @@
+version: 1
+rules:
+  - id: HR_001
+    trigger: canonical_function_change
+    route:
+      - IMP_BACKEND_001
+      - IMP_AI_001
+      - IMP_SECURITY_001
+      - IMP_QA_001
+      - DIR_ENG_001
+    note: No direct deploy path without QA completion.
+
+  - id: HR_002
+    trigger: schema_change
+    route:
+      - IMP_DB_001
+      - IMP_BACKEND_001
+      - IMP_SECURITY_001
+      - IMP_QA_001
+      - DIR_ENG_001
+
+  - id: HR_003
+    trigger: public_healthcare_content
+    route:
+      - CTK_YMYL_001
+      - CTK_CITATION_001
+      - TRC_COMPLIANCE_001
+      - DIR_CTK_001
+    note: Founder review required for new major content pattern or risky template type.
+
+  - id: HR_004
+    trigger: automation_runtime_change
+    route:
+      - IMP_AUTOMATION_001
+      - IMP_SECURITY_001
+      - OPF_TELEMETRY_001
+      - DIR_ENG_001
+
+  - id: HR_005
+    trigger: founder_dashboard_change
+    route:
+      - IMP_DASHBOARD_001
+      - IMP_BACKEND_001
+      - IMP_QA_001
+      - DIR_ENG_001
+      - FOUNDER_COS_001
+
+  - id: HR_006
+    trigger: compliance_exception
+    route:
+      - TRC_EXCEPTION_001
+      - DIR_TRC_001
+      - FOUNDER_COS_001
+    exception:
+      critical_notify:
+        - Founder
+
+  - id: HR_007
+    trigger: cross_function_priority_conflict
+    route:
+      - FOUNDER_COS_001
+    note: Chief of Staff is final routine arbiter before founder decision request.

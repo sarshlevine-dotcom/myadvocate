@@ -1,0 +1,12 @@
+{
+  "panel_id": "ops_finance_director",
+  "title": "Operations & Finance Director",
+  "owner": "DIR_OPF_001",
+  "audience": ["DIR_OPF_001"],
+  "widgets": [
+    {"id": "ops_queue", "type": "kanban", "source": "vw_ops_queue"},
+    {"id": "telemetry_completeness", "type": "metric_row", "source": "vw_telemetry_completeness"},
+    {"id": "finance_summary", "type": "metric_row", "source": "vw_finance_summary"},
+    {"id": "launch_readiness", "type": "scorecard", "source": "vw_launch_readiness"}
+  ]
+}

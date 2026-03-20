@@ -1,0 +1,18 @@
+version: 1
+rules:
+  - id: RM_001
+    rule: Routine specialist reporting must flow to direct manager only.
+  - id: RM_002
+    rule: Directors submit daily director reports to Founder Chief of Staff by 5pm local business time.
+  - id: RM_003
+    rule: Founder Chief of Staff sends one daily founder brief and one weekly executive summary.
+  - id: RM_004
+    rule: Severity high incidents may escalate one layer above the normal chain.
+  - id: RM_005
+    rule: Severity critical incidents may notify Founder Chief of Staff and relevant director immediately.
+  - id: RM_006
+    rule: Only Director of Trust, Risk & Compliance may send direct founder notice on regulatory, privacy, or legal exceptions if the Founder Chief of Staff is unavailable.
+  - id: RM_007
+    rule: All reports must include source_event_ids, confidence, blockers, requested_decisions, and owner.
+  - id: RM_008
+    rule: Any launch blocker automatically opens a launch blocker report and is visible on the Founder Command Center.

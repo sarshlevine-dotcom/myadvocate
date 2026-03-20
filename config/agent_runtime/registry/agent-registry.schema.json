@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://myadvocate.local/schemas/agent-registry.schema.json",
+  "title": "MyAdvocate Agent Registry",
+  "type": "object",
+  "required": ["version", "agents"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "agents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "agent_id",
+          "name",
+          "category",
+          "status",
+          "boss_agent_id",
+          "mission",
+          "owns",
+          "does_not_own",
+          "activation_criteria",
+          "inputs_required",
+          "outputs",
+          "allowed_tools",
+          "prohibited_actions",
+          "handoff_targets",
+          "reporting",
+          "phase_gate"
+        ],
+        "properties": {
+          "agent_id": { "type": "string", "pattern": "^[A-Z_0-9]+$" },
+          "name": { "type": "string" },
+          "category": {
+            "type": "string",
+            "enum": ["orchestration", "implementation", "content", "growth", "trust", "ops", "runtime_mirror"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["draft", "active", "paused", "deprecated"]
+          },
+          "boss_agent_id": { "type": "string" },
+          "mission": { "type": "string" },
+          "owns": { "type": "array", "items": { "type": "string" } },
+          "does_not_own": { "type": "array", "items": { "type": "string" } },
+          "activation_criteria": { "type": "array", "items": { "type": "string" } },
+          "inputs_required": { "type": "array", "items": { "type": "string" } },
+          "outputs": { "type": "array", "items": { "type": "string" } },
+          "allowed_tools": { "type": "array", "items": { "type": "string" } },
+          "prohibited_actions": { "type": "array", "items": { "type": "string" } },
+          "handoff_targets": { "type": "array", "items": { "type": "string" } },
+          "reporting": {
+            "type": "object",
+            "required": ["reports_to", "cadence", "report_types"],
+            "properties": {
+              "reports_to": { "type": "string" },
+              "cadence": { "type": "string" },
+              "report_types": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "phase_gate": {
+            "type": "object",
+            "required": ["activation_stage", "exit_conditions"],
+            "properties": {
+              "activation_stage": { "type": "string" },
+              "exit_conditions": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "pmp_references": { "type": "array", "items": { "type": "string" } },
+          "notes": { "type": "string" }
+        }
+      }
+    }
+  }
+}

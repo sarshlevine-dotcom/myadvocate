@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://myadvocate.local/schemas/weekly-exec-summary.schema.json",
+  "title": "Weekly Executive Summary",
+  "type": "object",
+  "required": [
+    "week_start",
+    "week_end",
+    "prepared_by",
+    "executive_summary",
+    "metric_changes",
+    "director_updates",
+    "next_week_focus"
+  ],
+  "properties": {
+    "week_start": { "type": "string", "format": "date" },
+    "week_end": { "type": "string", "format": "date" },
+    "prepared_by": { "type": "string", "const": "FOUNDER_COS_001" },
+    "executive_summary": { "type": "string" },
+    "metric_changes": { "type": "object", "additionalProperties": true },
+    "director_updates": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "next_week_focus": { "type": "array", "items": { "type": "string" } },
+    "decisions_requested": { "type": "array", "items": { "type": "string" } }
+  }
+}

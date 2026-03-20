@@ -3,7 +3,7 @@
     "registry": "decisions",
     "id_prefix": "dec_",
     "description": "Structured log of strategic and operational decisions with rationale. One of the highest-value registries \u2014 captures why, not just what.",
-    "last_updated": "2026-03-13T00:00:00Z",
+    "last_updated": "2026-03-19T00:00:00Z",
     "schema_version": "1.0",
     "authority": "MA-CTX-001"
   },
@@ -454,6 +454,55 @@
       "related_decision_ids": [],
       "review_on": null,
       "notes": "15 migrations as of v21. Next: migration 016 (scrub_records for MA-SOC-002)."
+    },
+    {
+      "id": "dec_0015",
+      "status": "active",
+      "created_at": "2026-03-19T00:00:00Z",
+      "updated_at": "2026-03-19T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": ["src_0014", "src_0015", "src_0016"],
+      "confidence": 1.0,
+      "title": "Agent hierarchy replaces flat agent model — 5-director org chart with boss-over-boss reporting",
+      "decision_type": "architecture",
+      "summary": "The flat .claude/agents/ model from MA-AGT-001 is superseded by a hierarchical organization: Founder Chief of Staff → 5 Directors (Engineering, Content & Compliance, Growth & Ops, Finance & Risk, Trust & Compliance) → 25+ specialists and 8 runtime-mirror specs. Existing Phase 1 agents (GEO-01/02/03, DEV-01/02/03, CNT-01) are preserved in legacy-phase1/ subfolder; their functions are absorbed by the new hierarchy agents. Only the Founder Chief of Staff communicates routine summaries to the founder; specialists report to directors only.",
+      "rationale": [
+        "PMP already describes an agent operating model — the hierarchy makes it repo-native and enforceable",
+        "Flat model creates 'everyone talks to the founder' chaos as agent count grows past 7",
+        "Director layer converts specialist noise into portfolio-level updates",
+        "Runtime-mirror specs keep build-time implementation aligned to V4 Scoring Service agent weights",
+        "Config layer (hierarchy YAML, reporting matrix, handoff rules) provides machine-readable org chart for n8n and scoring service integration",
+        "Phase gates and signal-gated discipline from MA-AGT-001 are preserved — growth agents remain deferred until traffic signals"
+      ],
+      "affects_systems": ["MA-AGT", "MA-PMP", ".claude/agents/", "config/agent_runtime/"],
+      "supersedes_decision_ids": [],
+      "related_decision_ids": ["dec_0004", "dec_0012"],
+      "review_on": "2026-06-01",
+      "notes": "MA-AGT-002 canonical doc. Tier 1 install complete 2026-03-19. Tier 2 (event taxonomy wiring, runtime-mirror activation) targets Sprint 2. Tier 3 (dashboard panels, n8n-triggered OpenHands) targets Month 2+. Agent-to-task mapping in config/agent_runtime/agent-task-mapping.json."
+    },
+    {
+      "id": "dec_0016",
+      "status": "active",
+      "created_at": "2026-03-19T00:00:00Z",
+      "updated_at": "2026-03-19T00:00:00Z",
+      "owner": "sarsh",
+      "source_ids": ["src_0017", "src_0018"],
+      "confidence": 1.0,
+      "title": "OpenHands adopted as supervised coding agent — bounded task execution in branches with PR review",
+      "decision_type": "architecture",
+      "summary": "OpenHands serves as a supervised junior developer for bounded implementation tasks. It works in Git branches, returns PRs for founder review, and never has autonomous merge authority. Three-stage rollout: (1) manual task specs for 2-3 current-sprint items, (2) GitHub issue-driven workflow with label convention, (3) n8n-triggered low-risk automation. OpenHands complements the agent hierarchy — hierarchy is organizational structure, OpenHands is execution capacity.",
+      "rationale": [
+        "Execution capacity is the primary bottleneck for a two-person team — not organizational structure",
+        "Bounded task specs + PR review = safe delegation without losing control",
+        "Several Phase 2 Sprint 1 items are perfect OpenHands candidates: content validation CLI, pre-launch check command, server/client boundary audit",
+        "OpenHands Playbook provides governance framework aligned with existing MA-SEC-002 controls",
+        "Stage 3 (n8n-triggered) creates CTO Sentinel → auto-fix pipeline for test failures and low-risk issues"
+      ],
+      "affects_systems": ["MA-AGT", "MA-DEV", "MA-IMPL-003"],
+      "supersedes_decision_ids": [],
+      "related_decision_ids": ["dec_0015"],
+      "review_on": "2026-04-15",
+      "notes": "Stage 1 starts immediately. First 3 task specs: content validation CLI, pre-launch engineering check, server/client boundary audit. Review at 30 days to decide Stage 2 activation. Playbook task specs 1-6 are stale (already completed). Active tasks: 7, 9, 10."
     }
   ]
 }

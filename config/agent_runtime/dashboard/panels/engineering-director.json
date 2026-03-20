@@ -1,0 +1,13 @@
+{
+  "panel_id": "engineering_director",
+  "title": "Engineering Director",
+  "owner": "DIR_ENG_001",
+  "audience": ["DIR_ENG_001"],
+  "widgets": [
+    {"id": "implementation_queue", "type": "kanban", "source": "vw_engineering_tasks"},
+    {"id": "test_failures", "type": "table", "source": "vw_test_failures_open"},
+    {"id": "security_reviews", "type": "table", "source": "vw_security_reviews_pending"},
+    {"id": "event_pipeline_health", "type": "metric_row", "source": "vw_event_pipeline_health"}
+  ],
+  "refresh_seconds": 180
+}

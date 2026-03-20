@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://myadvocate.local/schemas/launch-blocker-report.schema.json",
+  "title": "Launch Blocker Report",
+  "type": "object",
+  "required": ["blocker_id", "owner_agent_id", "category", "description", "impact", "required_to_clear"],
+  "properties": {
+    "blocker_id": { "type": "string" },
+    "owner_agent_id": { "type": "string" },
+    "category": { "type": "string" },
+    "description": { "type": "string" },
+    "impact": { "type": "string" },
+    "required_to_clear": { "type": "array", "items": { "type": "string" } },
+    "eta": { "type": "string" },
+    "status": { "type": "string" }
+  }
+}

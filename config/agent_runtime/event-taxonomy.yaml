@@ -1,0 +1,40 @@
+version: 1
+event_categories:
+  - agent_status_changed
+  - task_created
+  - task_started
+  - task_blocked
+  - task_completed
+  - handoff_created
+  - handoff_accepted
+  - handoff_rejected
+  - report_submitted
+  - blocker_opened
+  - blocker_cleared
+  - compliance_exception_opened
+  - incident_opened
+  - incident_escalated
+  - decision_request_created
+  - decision_request_closed
+  - phase_gate_changed
+  - deployment_attempted
+  - deployment_blocked
+  - deployment_completed
+
+severity_model:
+  info: no action required outside direct manager
+  low: visible in next scheduled report
+  medium: manager action required within business day
+  high: director review same day
+  critical: immediate director plus chief_of_staff and founder visibility
+
+required_event_fields:
+  - event_id
+  - event_type
+  - created_at
+  - actor_agent_id
+  - owner_agent_id
+  - severity
+  - summary
+  - entity_type
+  - entity_id

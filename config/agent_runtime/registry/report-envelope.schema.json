@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://myadvocate.local/schemas/report-envelope.schema.json",
+  "title": "MyAdvocate Report Envelope",
+  "type": "object",
+  "required": [
+    "report_id",
+    "report_type",
+    "created_at",
+    "owner_agent_id",
+    "recipient_agent_id",
+    "severity",
+    "confidence",
+    "summary",
+    "source_event_ids",
+    "requested_decisions",
+    "blockers"
+  ],
+  "properties": {
+    "report_id": { "type": "string" },
+    "report_type": { "type": "string" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "owner_agent_id": { "type": "string" },
+    "recipient_agent_id": { "type": "string" },
+    "severity": {
+      "type": "string",
+      "enum": ["info", "low", "medium", "high", "critical"]
+    },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "summary": { "type": "string" },
+    "source_event_ids": { "type": "array", "items": { "type": "string" } },
+    "requested_decisions": { "type": "array", "items": { "type": "string" } },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["blocker_id", "description", "owner", "status"],
+        "properties": {
+          "blocker_id": { "type": "string" },
+          "description": { "type": "string" },
+          "owner": { "type": "string" },
+          "status": { "type": "string" }
+        }
+      }
+    },
+    "metrics": { "type": "object", "additionalProperties": true },
+    "links": { "type": "array", "items": { "type": "string" } },
+    "notes": { "type": "string" }
+  }
+}
