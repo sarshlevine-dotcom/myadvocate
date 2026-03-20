@@ -4,13 +4,12 @@
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 
-if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-  throw new Error('Upstash Redis credentials not set — required for rate limiting (P15)')
-}
-
+// Credentials use ?? '' so module load never throws during `next build`.
+// Actual Redis calls fail at .limit() time if credentials are missing in production —
+// the correct place to surface the error (MA-SEC-002 P15).
 const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  url:   process.env.UPSTASH_REDIS_REST_URL   ?? '',
+  token: process.env.UPSTASH_REDIS_REST_TOKEN ?? '',
 })
 
 // 10 letter generations per user per day

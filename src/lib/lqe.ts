@@ -6,6 +6,7 @@
 
 import { getDenialCodeByCode } from '@/lib/db/denial-codes'
 import type { LetterType } from '@/lib/generate-letter'
+import { FORBIDDEN_PHRASES } from '@/lib/compliance-static'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -86,14 +87,14 @@ async function checkDenialCodeAccuracy(
   const keywords = record.appeal_angle
     .toLowerCase()
     .split(/[\s,.()?!\-/]+/)
-    .filter((w) => w.length > 4)
+    .filter((w: string) => w.length > 4)
 
   if (keywords.length === 0) {
     return { passed: true, score: 1.0 }
   }
 
   const lowerLetter  = letterContent.toLowerCase()
-  const matchedCount = keywords.filter((kw) => lowerLetter.includes(kw)).length
+  const matchedCount = keywords.filter((kw: string) => lowerLetter.includes(kw)).length
   const score        = matchedCount / keywords.length
 
   if (score >= 0.6) {
@@ -109,8 +110,9 @@ async function checkDenialCodeAccuracy(
 
 /**
  * CHECK 2 — YMYL Safety
- * Scans for forbidden clinical determinations. Runs for ALL letter types.
- * Any match → immediate fail with the matched pattern in notes.
+ * Scans for forbidden clinical determinations AND forbidden phrases from compliance-static.ts.
+ * Runs for ALL letter types. Any match → immediate fail.
+ * YMYL regex patterns checked first; FORBIDDEN_PHRASES checked second (case-insensitive).
  */
 function checkYMYLSafety(letterContent: string): CheckResult {
   for (const pattern of YMYL_PATTERNS) {
@@ -123,6 +125,22 @@ function checkYMYLSafety(letterContent: string): CheckResult {
       }
     }
   }
+
+  // Case-insensitive whole-word scan for FORBIDDEN_PHRASES (MA-SUP-AIR-001 AIR-04)
+  // Uses \b word boundaries so single-word entries (e.g. "sue") don't match as substrings
+  // inside longer words (e.g. "pursue", "issue").
+  for (const phrase of FORBIDDEN_PHRASES) {
+    const escapedPhrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const pattern = new RegExp(`\\b${escapedPhrase}\\b`, 'i')
+    if (pattern.test(letterContent)) {
+      return {
+        passed: false,
+        score:  0.0,
+        notes:  `forbidden_phrase_detected: "${phrase}"`,
+      }
+    }
+  }
+
   return { passed: true, score: 1.0 }
 }
 

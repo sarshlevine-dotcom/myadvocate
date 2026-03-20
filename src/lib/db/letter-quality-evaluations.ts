@@ -3,8 +3,8 @@
 // (migration 021 + 022). Called by generate-letter.ts after artifact creation.
 // Non-blocking — errors are logged but must NEVER halt letter delivery.
 //
-// TODO: after running `supabase gen types typescript`, remove the `as unknown as`
-// cast below — the table will be present in src/types/supabase.ts.
+// NOTE: cast removed once `supabase gen types typescript` is run and
+// src/types/supabase.ts is regenerated with the letter_quality_evaluations table.
 
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import type { LQEResult } from '@/lib/lqe'

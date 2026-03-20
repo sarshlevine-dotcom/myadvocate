@@ -1,4 +1,5 @@
 // src/__tests__/stripe-webhook.test.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('@/lib/stripe', () => ({

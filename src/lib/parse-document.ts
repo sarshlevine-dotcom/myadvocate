@@ -1,7 +1,8 @@
 // MA-SEC-002: Document parsing — confidence threshold 0.7
 // Only PDFs and images accepted
 
-const pdfParse = require("pdf-parse")
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pdfParse = require('pdf-parse') as (buffer: Buffer) => Promise<{ text: string; numpages: number }>
 import { createWorker } from 'tesseract.js'
 
 export const CONFIDENCE_THRESHOLD = 0.7
