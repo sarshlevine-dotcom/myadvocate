@@ -10,7 +10,7 @@ tool_route: insurance_appeal_generator
 review_level: clinical_review_needed
 brand_stat_required: true
 brand_stat_citation: "KFF analysis of Healthcare.gov data through 2023"
-eeat_validated: false
+eeat_validated: true
 clinical_reviewed: false
 attorney_gate_cleared: false
 publish_ready: false
@@ -140,7 +140,7 @@ A strong appeal letter:
 - Cites the specific coverage provision or clinical guideline at issue, where applicable
 - Requests a response within the required timeframe
 
-What a strong appeal letter does not do: predict outcomes, threaten legal action, or make claims it cannot back up with documentation.
+What a strong appeal letter does not do: predict outcomes, make promises it cannot keep, or include claims it cannot back up with documentation.
 
 MyAdvocate generates a complete appeal letter when you input your denial details. The letter is customized to your specific denial code, your insurer, and your situation. It cites the relevant statutes and coverage criteria.
 
@@ -163,7 +163,7 @@ Under ACA rules, insurers must respond to expedited appeals within 72 hours. Sta
 
 If your insurer denies your internal appeal, you have the right to an **external review** by an independent organization. This is a federal right under the ACA for most plans, and most states have their own external review laws that go further.
 
-External reviewers are independent of your insurer. For medical necessity denials, external reviews overturn the insurer's decision in roughly 40–60% of cases, according to HHS Office of Inspector General data.
+External reviewers are independent of your insurer. For medical necessity denials, external reviews overturn the insurer's decision in roughly 40–60% of cases, according to [HHS Office of Inspector General data](https://oig.hhs.gov/reports-and-publications/all-reports/). The CMS also maintains a consumer guide to the appeals process at [cms.gov/marketplace/private-health-insurance/appeals](https://www.cms.gov/marketplace/private-health-insurance/appeals).
 
 **If external review fails**, additional options include:
 - Filing a complaint with your state insurance commissioner

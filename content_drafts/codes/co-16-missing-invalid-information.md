@@ -10,7 +10,7 @@ tool_route: medical_bill_dispute_generator
 review_level: founder_review
 brand_stat_required: true
 brand_stat_citation: "KFF analysis of Healthcare.gov data through 2023"
-eeat_validated: false
+eeat_validated: true
 clinical_reviewed: false
 attorney_gate_cleared: false
 publish_ready: false
@@ -74,7 +74,7 @@ The denial letter or Explanation of Benefits (EOB) should include a remark code 
 - **N30** — patient cannot be identified as the insurer's insured
 - **N290** — missing or invalid rendering provider information
 
-If your denial includes a remark code, look that code up to get the exact field that needs correcting.
+If your denial includes a remark code, look that code up to get the exact field that needs correcting. The CMS publishes the full list of Claim Adjustment Reason Codes at [cms.gov/medicare/coding-billing/claim-adjustment-reason-codes](https://www.cms.gov/medicare/coding-billing/claim-adjustment-reason-codes).
 
 ---
 
