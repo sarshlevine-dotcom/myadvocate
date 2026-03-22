@@ -1,0 +1,79 @@
+name: Export Docs Pipeline v2
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'SYSTEM.md'
+      - 'CLAUDE.md'
+
+jobs:
+  build-manifest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Get changed files
+        id: changes
+        uses: tj-actions/changed-files@v44
+
+      - name: Save changed files
+        run: |
+          echo '{"files": ["'$(echo ${{ steps.changes.outputs.all_changed_files }} | sed 's/ /","/g')'"]}' > changed_files.json
+
+      - name: Generate structured manifest
+        run: |
+          node << 'EOF'
+          const fs = require('fs');
+
+          const whitelist = JSON.parse(fs.readFileSync('docs/system/export_whitelist.json'));
+          const changed = JSON.parse(fs.readFileSync('changed_files.json')).files;
+
+          const manifest = [];
+
+          const globToRegex = (pattern) => {
+            return new RegExp('^' + pattern
+              .replace(/\*\*/g, '.*')
+              .replace(/\*/g, '[^/]*') + '$');
+          };
+
+          const matches = (pattern, file) => globToRegex(pattern).test(file);
+
+          changed.forEach(file => {
+            if (!file) return;
+
+            const denied = whitelist.deny_patterns.some(p => matches(p, file));
+            if (denied) return;
+
+            for (const rule of whitelist.paths) {
+              if (matches(rule.pattern, file)) {
+                manifest.push({
+                  file,
+                  category: rule.category,
+                  drive_folder: rule.drive_folder,
+                  notebooklm_eligible: rule.notebooklm_eligible,
+                  privacy_class: rule.privacy_class,
+                  export_ready: true,
+                  timestamp: new Date().toISOString()
+                });
+                break;
+              }
+            }
+          });
+
+          fs.writeFileSync('export_manifest.json', JSON.stringify({ manifest }, null, 2));
+          console.log(JSON.stringify({ manifest }, null, 2));
+          EOF
+
+      - name: Show manifest
+        run: cat export_manifest.json
+
+      - name: Upload manifest artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: export-manifest-v2
+          path: export_manifest.json
