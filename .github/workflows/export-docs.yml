@@ -1,0 +1,39 @@
+name: Export Docs Pipeline
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'SYSTEM.md'
+      - 'CLAUDE.md'
+
+jobs:
+  detect-and-manifest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Get changed files
+        id: changes
+        uses: tj-actions/changed-files@v44
+
+      - name: Print changed files
+        run: echo "${{ steps.changes.outputs.all_changed_files }}"
+
+      - name: Filter exportable docs
+        run: |
+          echo "Filtering approved doc paths..."
+
+      - name: Generate export manifest
+        run: |
+          echo "Generating manifest (placeholder)..."
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: export-manifest
+          path: .
