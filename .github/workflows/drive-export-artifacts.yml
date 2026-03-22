@@ -1,0 +1,112 @@
+name: Drive Export Artifacts
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '17 9 * * *'
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Create service account file
+        run: |
+          cat > service-account.json <<'EOF'
+          ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
+          EOF
+
+      - name: Build export artifacts
+        env:
+          REPO: ${{ github.repository }}
+          REF_NAME: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+          ACTOR: ${{ github.actor }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_NUMBER: ${{ github.run_number }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          mkdir -p automation-export
+          TS=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
+          FILE_PREFIX="${TS}-${RUN_NUMBER}"
+
+          git ls-files > automation-export/${FILE_PREFIX}-repo-files.txt
+          git show --name-only --format= HEAD > automation-export/${FILE_PREFIX}-head-changes.txt
+
+          cat > automation-export/${FILE_PREFIX}-run-summary.json <<EOF
+          {
+            "repository": "${REPO}",
+            "ref_name": "${REF_NAME}",
+            "commit_sha": "${SHA}",
+            "actor": "${ACTOR}",
+            "run_id": "${RUN_ID}",
+            "run_number": "${RUN_NUMBER}",
+            "event_name": "${EVENT_NAME}",
+            "generated_at_utc": "${TS}"
+          }
+          EOF
+
+      - name: Install Google APIs client
+        run: npm install googleapis
+
+      - name: Upload artifacts to Google Drive
+        env:
+          GDRIVE_ROOT_FOLDER_ID: ${{ secrets.GDRIVE_ROOT_FOLDER_ID }}
+        run: |
+          cat > upload-artifacts.js <<'EOF'
+          const fs = require('fs');
+          const path = require('path');
+          const { google } = require('googleapis');
+
+          async function main() {
+            const auth = new google.auth.GoogleAuth({
+              keyFile: 'service-account.json',
+              scopes: ['https://www.googleapis.com/auth/drive.file'],
+            });
+
+            const authClient = await auth.getClient();
+            const drive = google.drive({ version: 'v3', auth: authClient });
+            const folderId = process.env.GDRIVE_ROOT_FOLDER_ID;
+            const dir = 'automation-export';
+            const files = fs.readdirSync(dir);
+
+            for (const filename of files) {
+              const filePath = path.join(dir, filename);
+              const media = {
+                mimeType: filename.endsWith('.json') ? 'application/json' : 'text/plain',
+                body: fs.createReadStream(filePath),
+              };
+
+              const res = await drive.files.create({
+                resource: {
+                  name: filename,
+                  parents: [folderId],
+                },
+                media,
+                fields: 'id,name',
+                supportsAllDrives: true,
+              });
+
+              console.log('Uploaded:', res.data);
+            }
+          }
+
+          main().catch(err => {
+            console.error(err);
+            process.exit(1);
+          });
+          EOF
+          node upload-artifacts.js
