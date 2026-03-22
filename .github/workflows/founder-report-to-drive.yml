@@ -1,0 +1,182 @@
+name: Founder Report to Drive
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 9 * * *'
+
+jobs:
+  founder-report:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Create service account file
+        run: |
+          cat > service-account.json <<'EOF'
+          ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
+          EOF
+
+      - name: Build founder report
+        env:
+          REPO: ${{ github.repository }}
+          REF_NAME: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+          ACTOR: ${{ github.actor }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_NUMBER: ${{ github.run_number }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          mkdir -p founder-report
+          TS=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
+          DATE_ONLY=$(date -u +"%Y-%m-%d")
+          REPORT_MD="founder-report/founder-report-${DATE_ONLY}.md"
+          REPORT_JSON="founder-report/founder-report-${DATE_ONLY}.json"
+
+          RECENT_COMMITS=$(git log -10 --pretty=format:'- %h %s (%an, %ad)' --date=short || true)
+          CHANGED_FILES=$(git show --name-only --format='' HEAD | sed '/^$/d' || true)
+          WORKFLOW_FILES=$(find .github/workflows -maxdepth 1 -type f | sort || true)
+          CANONICAL_FILES=$(find docs -type f \( -iname '*canonical*' -o -iname '*schema*' -o -path '*/schemas/*' \) 2>/dev/null | sort || true)
+
+          {
+            echo "# Founder Report"
+            echo
+            echo "- Generated UTC: ${TS}"
+            echo "- Repository: ${REPO}"
+            echo "- Branch: ${REF_NAME}"
+            echo "- Commit: ${SHA}"
+            echo "- Actor: ${ACTOR}"
+            echo "- Event: ${EVENT_NAME}"
+            echo "- Run ID: ${RUN_ID}"
+            echo "- Run Number: ${RUN_NUMBER}"
+            echo
+            echo "## Recent commits"
+            echo
+            if [ -n "${RECENT_COMMITS}" ]; then
+              echo "${RECENT_COMMITS}"
+            else
+              echo "- No commit history available"
+            fi
+            echo
+            echo "## Changed files in HEAD"
+            echo
+            if [ -n "${CHANGED_FILES}" ]; then
+              echo "${CHANGED_FILES}" | sed 's/^/- /'
+            else
+              echo "- No changed files found"
+            fi
+            echo
+            echo "## Workflow files"
+            echo
+            if [ -n "${WORKFLOW_FILES}" ]; then
+              echo "${WORKFLOW_FILES}" | sed 's/^/- /'
+            else
+              echo "- No workflow files found"
+            fi
+            echo
+            echo "## Canonical and schema file scan"
+            echo
+            if [ -n "${CANONICAL_FILES}" ]; then
+              echo "${CANONICAL_FILES}" | sed 's/^/- /'
+            else
+              echo "- No canonical/schema files found under docs"
+            fi
+          } > "${REPORT_MD}"
+
+          python3 - <<'PY'
+import json, os, subprocess
+
+def run(cmd):
+    try:
+        out = subprocess.check_output(cmd, shell=True, text=True).strip().splitlines()
+        return [line for line in out if line.strip()]
+    except Exception:
+        return []
+
+report = {
+    "generated_utc": os.environ.get("TS", ""),
+    "repository": os.environ.get("REPO", ""),
+    "branch": os.environ.get("REF_NAME", ""),
+    "commit": os.environ.get("SHA", ""),
+    "actor": os.environ.get("ACTOR", ""),
+    "event": os.environ.get("EVENT_NAME", ""),
+    "run_id": os.environ.get("RUN_ID", ""),
+    "run_number": os.environ.get("RUN_NUMBER", ""),
+    "recent_commits": run("git log -10 --pretty=format:'%h %s (%an, %ad)' --date=short"),
+    "changed_files_head": run("git show --name-only --format='' HEAD | sed '/^$/d'"),
+    "workflow_files": run("find .github/workflows -maxdepth 1 -type f | sort"),
+    "canonical_and_schema_files": run("find docs -type f \\( -iname '*canonical*' -o -iname '*schema*' -o -path '*/schemas/*' \\) 2>/dev/null | sort"),
+}
+
+with open(os.environ["REPORT_JSON"], "w") as f:
+    json.dump(report, f, indent=2)
+PY
+        env:
+          TS: ${{ github.run_id }}
+          REPORT_JSON: founder-report/founder-report-${{ github.run_id }}.json
+
+      - name: Normalize report filenames
+        run: |
+          DATE_ONLY=$(date -u +"%Y-%m-%d")
+          mv founder-report/founder-report-${{ github.run_id }}.json founder-report/founder-report-${DATE_ONLY}.json
+
+      - name: Install Google APIs client
+        run: npm install googleapis
+
+      - name: Upload founder report to Google Drive
+        env:
+          GDRIVE_ROOT_FOLDER_ID: ${{ secrets.GDRIVE_ROOT_FOLDER_ID }}
+        run: |
+          cat > upload-founder-report.js <<'EOF'
+          const fs = require('fs');
+          const path = require('path');
+          const { google } = require('googleapis');
+
+          async function main() {
+            const auth = new google.auth.GoogleAuth({
+              keyFile: 'service-account.json',
+              scopes: ['https://www.googleapis.com/auth/drive.file'],
+            });
+
+            const authClient = await auth.getClient();
+            const drive = google.drive({ version: 'v3', auth: authClient });
+            const folderId = process.env.GDRIVE_ROOT_FOLDER_ID;
+            const dir = 'founder-report';
+            const files = fs.readdirSync(dir);
+
+            for (const filename of files) {
+              const filePath = path.join(dir, filename);
+              const media = {
+                mimeType: filename.endsWith('.json') ? 'application/json' : 'text/markdown',
+                body: fs.createReadStream(filePath),
+              };
+
+              const res = await drive.files.create({
+                resource: {
+                  name: filename,
+                  parents: [folderId],
+                },
+                media,
+                fields: 'id,name',
+                supportsAllDrives: true,
+              });
+
+              console.log('Uploaded:', res.data);
+            }
+          }
+
+          main().catch(err => {
+            console.error(err);
+            process.exit(1);
+          });
+          EOF
+          node upload-founder-report.js
