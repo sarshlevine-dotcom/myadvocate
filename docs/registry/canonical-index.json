@@ -1,0 +1,126 @@
+{
+  "generated_from": "repo baseline + existing canonical references",
+  "last_updated": "2026-03-21",
+  "control_hierarchy": [
+    {
+      "id": "SYSTEM",
+      "title": "Constitutional Layer",
+      "repo_path": "SYSTEM.md",
+      "authority_level": "highest",
+      "repo_backed": true,
+      "domain": "governance"
+    },
+    {
+      "id": "CLAUDE",
+      "title": "Engineering Operator Layer",
+      "repo_path": "CLAUDE.md",
+      "authority_level": "high",
+      "repo_backed": true,
+      "domain": "engineering"
+    }
+  ],
+  "canonical_docs": [
+    {
+      "id": "MA-PMP-001",
+      "title": "Project Management Plan",
+      "repo_path": "docs/pmp/MyAdvocate_PMP_v21.docx",
+      "external_location": null,
+      "authority_level": "strategic",
+      "repo_backed": true,
+      "linked_schema": null,
+      "domain": "strategy",
+      "status": "repo_present_but_repo_readme_version_outdated"
+    },
+    {
+      "id": "MA-LCH-004",
+      "title": "Launch Truth (Phase 1 scope)",
+      "repo_path": null,
+      "external_location": "Notion / Google Drive",
+      "authority_level": "phase-scope",
+      "repo_backed": false,
+      "linked_schema": null,
+      "domain": "launch",
+      "status": "external_only"
+    },
+    {
+      "id": "MA-SEC-002",
+      "title": "Security Checklist (24 controls)",
+      "repo_path": "docs/security/",
+      "external_location": null,
+      "authority_level": "launch-blocker",
+      "repo_backed": true,
+      "linked_schema": "docs/schemas/security-checklist.schema.json",
+      "domain": "security",
+      "status": "repo_backed"
+    },
+    {
+      "id": "MA-COST-001",
+      "title": "API Cost Architecture",
+      "repo_path": "docs/cost/",
+      "external_location": null,
+      "authority_level": "financial-architecture",
+      "repo_backed": true,
+      "linked_schema": "docs/schemas/cost-architecture.schema.json",
+      "domain": "cost",
+      "status": "repo_backed"
+    },
+    {
+      "id": "MA-CTX-001",
+      "title": "Context Registry Specification",
+      "repo_path": "docs/context/",
+      "external_location": null,
+      "authority_level": "agent-context",
+      "repo_backed": true,
+      "linked_schema": "docs/schemas/context-registry.schema.json",
+      "domain": "context",
+      "status": "repo_backed"
+    },
+    {
+      "id": "MA-SOC-002",
+      "title": "Patient Story Engine",
+      "repo_path": "docs/social/",
+      "external_location": null,
+      "authority_level": "content-governance",
+      "repo_backed": true,
+      "linked_schema": "docs/schemas/story-engine.schema.json",
+      "domain": "social",
+      "status": "repo_backed"
+    },
+    {
+      "id": "MA-AGT-001",
+      "title": "External Agent Integration Plan",
+      "repo_path": "docs/agents/",
+      "external_location": null,
+      "authority_level": "automation-governance",
+      "repo_backed": true,
+      "linked_schema": "docs/schemas/agent-integration.schema.json",
+      "domain": "agents",
+      "status": "repo_backed"
+    },
+    {
+      "id": "MA-AHP-001",
+      "title": "Anti-Hallucination Protocol",
+      "repo_path": null,
+      "external_location": "Notion Agent Registry",
+      "authority_level": "output-compliance",
+      "repo_backed": false,
+      "linked_schema": "docs/schemas/anti-hallucination-protocol.schema.json",
+      "domain": "compliance",
+      "status": "external_only"
+    }
+  ],
+  "repo_runtime_layers": [
+    {
+      "name": "context_registry",
+      "repo_path": "context_registry/",
+      "role": "agent intelligence layer",
+      "linked_schema": "docs/schemas/context-registry.schema.json"
+    },
+    {
+      "name": "docs",
+      "repo_path": "docs/",
+      "role": "canonical document storage",
+      "linked_schema": null
+    }
+  ]
+}
