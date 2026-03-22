@@ -1,0 +1,144 @@
+name: Canonical Docs Sync
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Create service account file
+        run: |
+          cat > service-account.json <<'EOF'
+          ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
+          EOF
+
+      - name: Install Google APIs client
+        run: npm install googleapis
+
+      - name: Sync canonical docs to Drive
+        env:
+          GDRIVE_FOLDER_00_SYSTEM: ${{ secrets.GDRIVE_FOLDER_00_SYSTEM }}
+          GDRIVE_FOLDER_01_STRATEGY: ${{ secrets.GDRIVE_FOLDER_01_STRATEGY }}
+          GDRIVE_FOLDER_04_AUTOMATION: ${{ secrets.GDRIVE_FOLDER_04_AUTOMATION }}
+          GDRIVE_FOLDER_05_COMPLIANCE: ${{ secrets.GDRIVE_FOLDER_05_COMPLIANCE }}
+        run: |
+          cat > sync-canonical-docs.js <<'EOF'
+          const fs = require('fs');
+          const path = require('path');
+          const { google } = require('googleapis');
+
+          const mappings = [
+            { local: 'SYSTEM.md', folder: process.env.GDRIVE_FOLDER_00_SYSTEM },
+            { local: 'CLAUDE.md', folder: process.env.GDRIVE_FOLDER_00_SYSTEM },
+            { local: 'docs/registry/README.md', folder: process.env.GDRIVE_FOLDER_00_SYSTEM },
+            { local: 'docs/registry/canonical-index.json', folder: process.env.GDRIVE_FOLDER_00_SYSTEM },
+            { local: 'docs/pmp', folder: process.env.GDRIVE_FOLDER_01_STRATEGY },
+            { local: 'docs/agents', folder: process.env.GDRIVE_FOLDER_04_AUTOMATION },
+            { local: 'docs/context', folder: process.env.GDRIVE_FOLDER_04_AUTOMATION },
+            { local: 'docs/cost', folder: process.env.GDRIVE_FOLDER_04_AUTOMATION },
+            { local: 'docs/security', folder: process.env.GDRIVE_FOLDER_05_COMPLIANCE },
+            { local: 'docs/social', folder: process.env.GDRIVE_FOLDER_05_COMPLIANCE },
+          ];
+
+          function flattenFiles(targetPath) {
+            if (!fs.existsSync(targetPath)) return [];
+            const stat = fs.statSync(targetPath);
+            if (stat.isFile()) return [targetPath];
+            const out = [];
+            for (const entry of fs.readdirSync(targetPath)) {
+              out.push(...flattenFiles(path.join(targetPath, entry)));
+            }
+            return out;
+          }
+
+          async function findExistingFile(drive, folderId, name) {
+            const query = [
+              `'${folderId}' in parents`,
+              `name = '${name.replace(/'/g, "\\'")}'`,
+              `trashed = false`
+            ].join(' and ');
+
+            const res = await drive.files.list({
+              q: query,
+              fields: 'files(id,name)',
+              includeItemsFromAllDrives: true,
+              supportsAllDrives: true,
+            });
+            return res.data.files?.[0] || null;
+          }
+
+          async function uploadOrUpdate(drive, filePath, folderId) {
+            const name = path.basename(filePath);
+            const ext = path.extname(filePath).toLowerCase();
+            const mimeType = ext === '.json'
+              ? 'application/json'
+              : ext === '.docx'
+                ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                : 'text/markdown';
+
+            const media = {
+              mimeType,
+              body: fs.createReadStream(filePath),
+            };
+
+            const existing = await findExistingFile(drive, folderId, name);
+
+            if (existing) {
+              const res = await drive.files.update({
+                fileId: existing.id,
+                media,
+                fields: 'id,name',
+                supportsAllDrives: true,
+              });
+              console.log(`Updated: ${filePath} -> ${folderId}`, res.data);
+              return;
+            }
+
+            const res = await drive.files.create({
+              resource: { name, parents: [folderId] },
+              media,
+              fields: 'id,name',
+              supportsAllDrives: true,
+            });
+            console.log(`Uploaded: ${filePath} -> ${folderId}`, res.data);
+          }
+
+          async function main() {
+            const auth = new google.auth.GoogleAuth({
+              keyFile: 'service-account.json',
+              scopes: ['https://www.googleapis.com/auth/drive.file'],
+            });
+            const authClient = await auth.getClient();
+            const drive = google.drive({ version: 'v3', auth: authClient });
+
+            for (const mapping of mappings) {
+              if (!mapping.folder) {
+                console.log(`Skipping ${mapping.local}: no folder secret configured`);
+                continue;
+              }
+              const files = flattenFiles(mapping.local);
+              for (const filePath of files) {
+                await uploadOrUpdate(drive, filePath, mapping.folder);
+              }
+            }
+          }
+
+          main().catch(err => {
+            console.error(err);
+            process.exit(1);
+          });
+          EOF
+          node sync-canonical-docs.js
