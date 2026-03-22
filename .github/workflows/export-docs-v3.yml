@@ -1,0 +1,120 @@
+name: Export Docs Pipeline v3 (Drive Upload)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'SYSTEM.md'
+      - 'CLAUDE.md'
+
+jobs:
+  export-and-upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Get changed files
+        id: changes
+        uses: tj-actions/changed-files@v44
+
+      - name: Save changed files
+        run: |
+          echo '{"files": ["'$(echo ${{ steps.changes.outputs.all_changed_files }} | sed 's/ /","/g')'"]}' > changed_files.json
+
+      - name: Generate manifest
+        run: |
+          node << 'EOF'
+          const fs = require('fs');
+
+          const whitelist = JSON.parse(fs.readFileSync('docs/system/export_whitelist.json'));
+          const changed = JSON.parse(fs.readFileSync('changed_files.json')).files;
+
+          const manifest = [];
+
+          const globToRegex = (pattern) => new RegExp('^' + pattern.replace(/\*\*/g, '.*').replace(/\*/g, '[^/]*') + '$');
+          const matches = (pattern, file) => globToRegex(pattern).test(file);
+
+          changed.forEach(file => {
+            if (!file) return;
+
+            if (whitelist.deny_patterns.some(p => matches(p, file))) return;
+
+            for (const rule of whitelist.paths) {
+              if (matches(rule.pattern, file)) {
+                manifest.push({
+                  file,
+                  ...rule,
+                  timestamp: new Date().toISOString()
+                });
+                break;
+              }
+            }
+          });
+
+          fs.writeFileSync('export_manifest.json', JSON.stringify({ manifest }, null, 2));
+          EOF
+
+      - name: Install dependencies
+        run: npm install googleapis
+
+      - name: Upload to Google Drive
+        env:
+          GDRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}
+          GDRIVE_ROOT_FOLDER_ID: ${{ secrets.GDRIVE_ROOT_FOLDER_ID }}
+        run: |
+          node << 'EOF'
+          const fs = require('fs');
+          const { google } = require('googleapis');
+
+          const creds = JSON.parse(process.env.GDRIVE_SERVICE_ACCOUNT_JSON);
+
+          const auth = new google.auth.GoogleAuth({
+            credentials: creds,
+            scopes: ['https://www.googleapis.com/auth/drive.file']
+          });
+
+          const drive = google.drive({ version: 'v3', auth });
+
+          const manifest = JSON.parse(fs.readFileSync('export_manifest.json')).manifest;
+
+          async function upload(file) {
+            const fileMetadata = {
+              name: file.file.replace(/\//g, '__'),
+              parents: [process.env.GDRIVE_ROOT_FOLDER_ID]
+            };
+
+            const media = {
+              mimeType: 'text/markdown',
+              body: fs.createReadStream(file.file)
+            };
+
+            await drive.files.create({
+              resource: fileMetadata,
+              media: media,
+              fields: 'id'
+            });
+          }
+
+          async function run() {
+            for (const file of manifest) {
+              try {
+                await upload(file);
+                console.log('Uploaded:', file.file);
+              } catch (e) {
+                console.error('Failed:', file.file, e.message);
+              }
+            }
+          }
+
+          run();
+          EOF
+
+      - name: Upload manifest artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: export-manifest-v3
+          path: export_manifest.json
