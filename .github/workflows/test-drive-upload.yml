@@ -2,7 +2,9 @@ name: Test Google Drive Upload
 
 on:
   workflow_dispatch:
-
+  push:
+    branches:
+      - main
 jobs:
   upload:
     runs-on: ubuntu-latest
