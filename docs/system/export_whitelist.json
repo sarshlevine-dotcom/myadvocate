@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "paths": [
+    {
+      "pattern": "SYSTEM.md",
+      "category": "system",
+      "drive_folder": "02_System_Architecture",
+      "notebooklm_eligible": true,
+      "privacy_class": "governance"
+    },
+    {
+      "pattern": "CLAUDE.md",
+      "category": "system",
+      "drive_folder": "02_System_Architecture",
+      "notebooklm_eligible": true,
+      "privacy_class": "governance"
+    },
+    {
+      "pattern": "docs/system/**",
+      "category": "system",
+      "drive_folder": "02_System_Architecture",
+      "notebooklm_eligible": true,
+      "privacy_class": "governance"
+    },
+    {
+      "pattern": "docs/product/**",
+      "category": "product",
+      "drive_folder": "03_Product_Operations",
+      "notebooklm_eligible": true,
+      "privacy_class": "internal_summary"
+    },
+    {
+      "pattern": "docs/content/**",
+      "category": "content",
+      "drive_folder": "04_Content_SEO",
+      "notebooklm_eligible": true,
+      "privacy_class": "internal_summary"
+    },
+    {
+      "pattern": "docs/operations/**",
+      "category": "operations",
+      "drive_folder": "03_Product_Operations",
+      "notebooklm_eligible": true,
+      "privacy_class": "internal_summary"
+    },
+    {
+      "pattern": "docs/intelligence/**",
+      "category": "intelligence",
+      "drive_folder": "05_Agent_Intelligence",
+      "notebooklm_eligible": false,
+      "privacy_class": "internal_summary"
+    }
+  ],
+  "deny_patterns": [
+    "src/**",
+    "supabase/**",
+    "context_registry/**",
+    ".env*",
+    "**/*.sql",
+    "**/node_modules/**"
+  ]
+}
