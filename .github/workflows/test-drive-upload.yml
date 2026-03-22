@@ -9,15 +9,61 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Create service account file
+        run: |
+          echo '${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}' > service-account.json
 
       - name: Create test file
-        run: echo "MyAdvocate test upload works 🚀" > test.txt
+        run: echo "MyAdvocate test upload works" > test.txt
 
-      - name: Upload to Google Drive
-        uses: google-github-actions/upload-cloud-storage@v1
-        with:
-          path: test.txt
-          destination: ${{ secrets.GDRIVE_ROOT_FOLDER_ID }}
+      - name: Install Google APIs client
+        run: npm install googleapis
+
+      - name: Upload file to Google Drive
         env:
-          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
+          GDRIVE_ROOT_FOLDER_ID: ${{ secrets.GDRIVE_ROOT_FOLDER_ID }}
+        run: |
+          cat > upload.js <<'EOF'
+          const fs = require('fs');
+          const { google } = require('googleapis');
+
+          async function main() {
+            const auth = new google.auth.GoogleAuth({
+              keyFile: 'service-account.json',
+              scopes: ['https://www.googleapis.com/auth/drive'],
+            });
+
+            const drive = google.drive({ version: 'v3', auth });
+
+            const fileMetadata = {
+              name: 'test.txt',
+              parents: [process.env.GDRIVE_ROOT_FOLDER_ID],
+            };
+
+            const media = {
+              mimeType: 'text/plain',
+              body: fs.createReadStream('test.txt'),
+            };
+
+            const res = await drive.files.create({
+              resource: fileMetadata,
+              media,
+              fields: 'id,name',
+            });
+
+            console.log('Uploaded:', res.data);
+          }
+
+          main().catch(err => {
+            console.error(err);
+            process.exit(1);
+          });
+          EOF
+          node upload.js
