@@ -65,6 +65,7 @@ jobs:
               resource: fileMetadata,
               media,
               fields: 'id,name',
+              supportsAllDrives: true,
             });
 
             console.log('Uploaded:', res.data);
