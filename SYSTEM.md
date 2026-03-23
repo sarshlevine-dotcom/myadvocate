@@ -1,177 +1,256 @@
-# MyAdvocate — SYSTEM.md
-## Constitutional Layer
+# SYSTEM.md — MyAdvocate System Architecture & Governance
 
-> This file defines the mission, ethical posture, legal boundaries, privacy promises, and growth
-> constraints for MyAdvocate. It is the highest-ranking instruction layer — it outranks local task
-> prompts, skill instructions, and feature-level decisions. When any instruction conflicts with this
-> file, this file wins.
-
-**Last reviewed:** 2026-03-12
-**Alignment basis:** PMP v21 strategic directives (MA-PMP-001 v21)
+> **Document ID:** MA-SYS-001
+> **Authority:** Subordinate to MA-PMP-001 v30 → MA-ARC-001. This document describes system architecture and tool governance for operational reference.
+> **Last updated:** March 22, 2026
 
 ---
 
-## 1. Mission and Scope
+## Mission
 
-MyAdvocate gives everyday patients practical, legally grounded tools to navigate insurance denials,
-medical billing disputes, and healthcare access barriers.
+Give everyday Americans the same institutional power that insurance companies, hospital billing departments, and care facility operators have been using against them for decades.
 
-The product prioritizes **usable outputs**: letters, phone scripts, agency complaint routes,
-timelines, and clear next steps. It does not provide legal or medical advice — it gives people the
-information and words they need to advocate for themselves.
-
-**Brand posture:** adversarial toward abusive insurance and billing systems; the software itself
-must remain calm, factual, and compliant.
-
-**Scope boundary:** consumer patient advocacy only. No B2B, enterprise, or clinical features until
-explicitly phase-gated.
+MyAdvocate is a **healthcare insurance and advocacy execution engine** — not a blog, not a generic SaaS. Every feature produces a real, usable output: letters citing statutes, phone scripts, regulator contacts, state-specific rights.
 
 ---
 
-## 2. Non-Negotiable Principles
+## System Architecture Overview
 
-- Never sell, share, or monetize user data
-- Treat all healthcare, rights, and financial content as **YMYL-grade** (Your Money or Your Life)
-- Prefer structured workflows over open-ended chat for sensitive inputs
-- Every feature must lower friction, improve actionability, reduce legal/financial risk, or create
-  compounding distribution value — no features built for vanity metrics
-- Growth is **phase-gated, not calendar-gated** — unlock conditions must be met before expansion
-
----
-
-## 3. Forbidden Determinations
-
-The following outputs are prohibited in all user-facing documents, scripts, summaries, and
-generated content — without exception. These apply to every skill, every prompt, every output:
-
-| Forbidden | Why |
-|---|---|
-| "You should sue" / "consider litigation" | Legal advice; creates liability |
-| "This was illegal" / "they broke the law" | Legal determination; requires attorney |
-| "You have a case" / "you have legal grounds" | Legal determination; creates false confidence |
-| "You will win" / "your appeal will succeed" | Outcome prediction; no one can know this |
-| Settlement value or recovery amount estimates | Financial/legal speculation |
-| Attorney success likelihood predictions | Legal advice |
-| Implying MyAdvocate is acting as attorney, doctor, or insurer | Misrepresentation |
-| Contradicting a treating physician's documented recommendation | Medical advice |
-
-**What IS allowed:** Citing statutes, describing patient rights in plain language, explaining what
-laws require insurers to do, describing the appeal process and timelines, providing negotiation
-frameworks, explaining what regulators can do. The line is between *information* and *determination*.
-
----
-
-## 4. Privacy Constitution
-
-MyAdvocate operates a **four-layer privacy model**. All features must respect all four layers:
-
-**Layer 1 — Structured inputs**
-User data enters only through typed, bounded form fields for sensitive workflows. Open-ended
-free-text inputs are permitted only where the content cannot be mistaken for PII-containing
-clinical narratives. Intake forms must enforce this at the UI layer.
-
-**Layer 2 — PII scrubber**
-Any free text that includes user-submitted content must pass through `pii-sanitizer` before any
-external model call. The implementation lives in `src/lib/pii-scrubber.ts`. This step is never
-optional. Bypassing it is a critical security violation per MA-SEC-002.
-
-**Layer 3 — Context firewall**
-Each workflow type may only access the stored fields explicitly whitelisted for that workflow.
-A billing dispute workflow cannot read denial-workflow case data. Cross-context access is blocked.
-*(Phase 2 implementation — tracked in Parking Lot. Until live, skills manually enforce minimum
-field access.)*
-
-**Layer 4 — Stateless model calls**
-Model calls do not retain or reference session history beyond the current turn. No persistent memory
-of user data between sessions. All calls route through `generateLetter()` which enforces this.
-
-**Data storage rule:** Only minimum viable data is stored. No workflow stores data it doesn't need
-for its own outputs.
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     INTELLIGENCE LAYER                      │
+│  NotebookLM (synthesis) · Denial Intelligence · AKG        │
+└────────────────────┬────────────────────────────────────────┘
+                     │
+┌────────────────────▼────────────────────────────────────────┐
+│                    PRODUCTION LAYER                         │
+│  NotebookLM → Opal (packaging) → Claude Cowork (normalize) │
+│  → GitHub (source of truth) → Publication                  │
+└────────────────────┬────────────────────────────────────────┘
+                     │
+┌────────────────────▼────────────────────────────────────────┐
+│                   EXECUTION LAYER                           │
+│  OpenHands (engineering) · n8n (automation)                │
+│  Claude Cowork (task specs, normalization)                  │
+└────────────────────┬────────────────────────────────────────┘
+                     │
+┌────────────────────▼────────────────────────────────────────┐
+│                     DATA LAYER                              │
+│  Supabase (Postgres + RLS) · Redis L1 cache                │
+│  17+ migrations · 20 tables across 3 functional groups     │
+└────────────────────┬────────────────────────────────────────┘
+                     │
+┌────────────────────▼────────────────────────────────────────┐
+│                  APPLICATION LAYER                          │
+│  Next.js 14 (App Router) · Vercel deployment               │
+│  /admin (founder-only) · /tools/* · /denial-codes/*        │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 5. YMYL Content Rules
+## Tool Roles & Responsibilities
 
-Content touching health decisions, insurance coverage, legal rights, or financial outcomes is YMYL.
-The standard for YMYL content is higher than general content:
-
-- Every factual claim must be citable to a specific law, regulation, clinical guideline, or
-  government source
-- State-specific rights content must be framed as general rights information tied to named laws,
-  not as specific legal advice for the user's situation
-- Every generated output must carry the standard legal disclaimer (see `src/lib/disclaimer.ts`)
-- Medical accuracy must be validated against NIH, CDC, major specialty society guidelines —
-  never insurance company FAQs, marketing materials, or unreviewed sources
-- When accuracy cannot be confirmed, the skill must say so explicitly rather than generating
-  plausible-sounding content
-
-**SEO content is also YMYL.** Articles covering insurance, medical billing, or patient rights are
-subject to the same citation and accuracy standards as product outputs.
-
----
-
-## 6. Crisis Resource Rules
-
-- Crisis resources (mental health hotlines, domestic violence resources, patient advocacy
-  organizations, emergency contacts) must be accessible from any part of the product
-- Crisis resources must never sit behind a paywall, login wall, or subscription gate
-- Crisis resources must never be removed from a generated document to reduce length
-- If a user's input suggests immediate safety risk, the product must surface crisis resources
-  regardless of what workflow they are in
+| Tool | Role | What It Controls | What It Does NOT Do |
+| --- | --- | --- | --- |
+| **GitHub** | Source of truth | All code, schemas, prompts, automations, migrations | Host documents/drafts |
+| **Google Drive** | Review/export layer | Drafts, archive, review copies | Override GitHub as truth |
+| **NotebookLM** | Intelligence synthesis | Synthesis over approved documents | Generate primary content directly |
+| **Opal** | Packaging tool | Simple workflow packaging | Complex automation (use n8n) |
+| **n8n** | Automation engine | 7 Phase 1 workflows + cache workflows | Replace human review gates |
+| **OpenHands** | Bounded engineering | Scoped coding tasks, tests, migrations | Architecture decisions, autonomous merges |
+| **Claude Cowork** | Normalization/execution engine | Task specs, canonical docs, migrations, briefs | Main content workhorse, engineering |
+| **Supabase** | Database + auth | All persistent data, RLS, service role | Cache (Redis handles hot cache) |
+| **Redis** | L1 hot cache | Fast lookup for denial codes, rights, appeal templates | Transactional user data |
+| **Stripe** | Payments | Subscriptions, one-time purchases | Direct user data storage |
+| **Anthropic claude-sonnet-4-6** | AI inference | All AI calls via generateLetter() | Direct SDK access from pages/components |
+| **Vercel** | Deployment | Next.js hosting | Source of truth for any file |
+| **Langfuse** | Observability | AI call monitoring, cost tracking | Governance or review decisions |
 
 ---
 
-## 7. Business Model Guardrails
+## Governance Chain
 
-- **Phase-gated growth:** No feature, market, or channel expansion without meeting the defined
-  unlock conditions for that phase. See the Parking Lot in Notion for phase assignments.
-- **Solo-founder operability:** Every automation and infrastructure choice must be operable by
-  one person without specialized DevOps skills. Complexity that requires a team is premature.
-- **Lock-in risk:** Before adopting a new vendor, evaluate lock-in risk. Prefer vendors with
-  data export, standard APIs, and replaceable contracts.
-- **Cost awareness:** Model tier decisions must reflect actual cost/quality tradeoffs.
-  Use Haiku for classification, routing, and structural tasks. Use Sonnet for generation and
-  complex reasoning. Never default to the most expensive model.
-- **Founder command surfaces never touch production user data directly.** All founder-facing
-  analytics use aggregate events only. PII remains inside production boundaries.
+```
+MA-PMP-001 (strategic doctrine — highest authority)
+  ↓
+MA-ARC-001 (constitutional implementation — Rule 2)
+  ↓
+MA-LCH-004 (launch checklist)
+  ↓
+MA-SEC-002 (security standards)
+  ↓
+MA-DAT-001 (data governance)
+  ↓
+Feature docs, supplementals, skill definitions
+```
 
----
+**Conflict resolution:** Any unresolved conflict between two MA-* docs → founder decision → recorded in Decision Log.
 
-## 8. Decision Hierarchy
-
-When instructions conflict, resolve in this order:
-
-1. **Compliance > conversion** — if a feature would violate a legal/privacy rule to improve
-   conversion, the feature is not built
-2. **Modularity > speed** — if a shortcut would create vendor lock-in or architectural debt that
-   blocks future flexibility, take the slower modular path
-3. **Quality > volume** — in YMYL contexts, one accurate output beats ten plausible ones
-4. **User protection > founder convenience** — features that expose user data to the founder
-   command surface are not built regardless of operational convenience
+**OpenHands governance chain:**
+```
+PMP (what's allowed) → Founder (what to work on) → Claude Cowork (task spec)
+  → OpenHands (codes) → PR → Founder review → Merge
+```
 
 ---
 
-## 9. Change Control
+## Three-Layer Caching System
 
-Changes to the following require explicit review before deployment:
+| Layer | Technology | TTL | Purpose |
+| --- | --- | --- | --- |
+| L1 — Hot Cache | Redis | Denial: 90–180d; Rights: 30–90d | Sub-100ms response |
+| L2 — Persistent | Supabase `cache_entries` | Same as L1 | Analytics, promotion source |
+| L3 — SEO Static | Generated pages | Invalidated on updates | Zero marginal cost at scale |
 
-- Privacy handling (scrubber rules, context firewall, data retention)
-- Legal disclaimer text (`src/lib/disclaimer.ts`)
-- Forbidden determinations list (this file, Section 3)
-- YMYL content accuracy standards (this file, Section 5)
-- Prompt text for any patient-facing skill (see `.claude/skills/`)
-- Event schema definitions (billing, referral, compliance events)
-
-Changes to any of the above must be noted in the commit message with `[governance]` tag and
-reviewed against this file before merge.
+**Promotion flywheel:** L2 hit frequency → promotion detector (n8n) → static SEO page generated → free organic traffic.
 
 ---
 
-## 10. Repo Control File Hierarchy
+## Content Production System
 
-| File | Role | Priority |
-|---|---|---|
-| `SYSTEM.md` (this file) | Constitutional layer — mission, ethics, legal, privacy | Highest |
-| `CLAUDE.md` | Engineering operator layer — build rules, stack, workflow | High |
-| `.claude/skills/*/SKILL.md` | Skill-level instructions — specific workflow steps | Standard |
-| `PROMPTS.md` | Prompt governance registry | Phase 2 |
+**Registry-first architecture:** Every page is a typed object. Every section is a standalone answer block.
+
+**Three clusters:**
+- Cluster 1: Insurance Denials (appeal letters, denial codes, escalation)
+- Cluster 2: Medical Bills (billing disputes, negotiation, financial assistance)
+- Cluster 3: Patient Rights (hospital rights, discharge appeals, regulatory complaints)
+
+**English-first doctrine:** All content starts in English. Spanish only when: views ≥500, clicks ≥10, signups ≥3, quality score threshold, or founder flag.
+
+**Production pipeline:**
+```
+NotebookLM (intelligence) → Opal (packaging) → Claude Cowork (normalize)
+  → GitHub (commit) → n8n (automate) → publication
+```
+
+---
+
+## AI SEO Layer
+
+Four-layer visibility stack ensuring content is citable by both humans and AI intermediaries:
+
+1. **Retrieval-ready surfaces** — structured answer blocks, answer-first page structure
+2. **Authority graph** — denial codes, states, insurers linked via schema.org entity graph
+3. **Conversion routing** — every explanation has tool CTA; AI funnel: Citation → Page → Tool → Paid
+4. **Measurement** — AI referral sessions, citation share, assisted branded search lift
+
+**Infrastructure:** schema.org markup · `llms.txt` · segmented XML sitemaps · canonical URLs · review-date metadata
+
+---
+
+## 6 Canonical Functions
+
+All AI output routes through these functions. Never call Anthropic SDK directly.
+
+| Function | Trigger | YMYL Gate |
+| --- | --- | --- |
+| `generateAppealLetter()` | Denial code + insurer + state | Kate required |
+| `generateDisputeLetter()` | Bill data + hospital + amount | Kate required |
+| `explainDenialCode()` | CPT/HCPCS + denial code | Kate spot-check |
+| `getPatientRights()` | State + insurer type | Kate + Attorney |
+| `routeComplaint()` | Issue type + state + insurer | Kate spot-check |
+| `generateBillingAnalysis()` | Uploaded document | Kate medical codes (Phase 2) |
+
+Every function wraps through `trackedExecution()` middleware. **This is a launch blocker — not optional.**
+
+---
+
+## 7-Gate Chain on generateLetter()
+
+All gates must pass in sequence. G1 and G6 are retroactive launch blockers.
+
+1. Structured intake received (all required fields, types match schema)
+2. PII Scrubber (zero matches, confidence ≥0.95)
+3. Context Firewall (prompt contains only whitelisted fields for query type)
+4. Anthropic API call
+5. LQE evaluation (denial accuracy + YMYL + legal framing — all three must pass)
+6. Disclaimer append (current version required)
+7. Artifact state set (`review_required` Phase 1; `ready_for_delivery` Phase 2 LQE-pass)
+
+---
+
+## Phase 1 Launch Blockers
+
+Nothing ships to public with AI output until ALL of these are live:
+
+- [ ] `trackedExecution()` middleware wrapping every canonical function
+- [ ] 7-gate chain on `generateLetter()` (MA-AUT-006 G6)
+- [ ] LQE (Letter Quality Evaluator) running on all letter outputs (MA-AUT-006 G1)
+- [ ] Context Firewall (`context-firewall.ts`) — currently missing from codebase
+- [ ] 7 trust pages built and attorney-reviewed
+- [ ] PII scrubber confirmed live on every Anthropic call path
+
+---
+
+## n8n Phase 1 Workflows (7)
+
+| # | Workflow | Description |
+| --- | --- | --- |
+| 1 | Content intake | Validate → write to DB → notify |
+| 2 | English draft generation | Query eligible items → call Claude → parse JSON → insert variants |
+| 3 | Review routing | Determine review path → set status → notify reviewer |
+| 4 | Publish prep | Prepare metadata → mark produced → export |
+| 5 | Metrics logging | Manual weekly process (v1) |
+| 6 | Spanish candidate trigger | Evaluate threshold → mark candidate |
+| 7 | Packaging trigger | Find clusters → create assets → connect items |
+
+**Cache workflows (6 additional — see MA-CACHE-001):** lookup · write-back · invalidation listener · promotion detector · cost-savings digest · stale sweeper
+
+---
+
+## Locked Build Order (Tier 1/2/3)
+
+### Tier 1 — Foundation (Days 1–6)
+Supabase schema · /admin route + founder auth · task queue · 20 seed content atoms · review state flow · OpenHands queue panel
+
+### Tier 2 — Content Flywheel (Days 7–10)
+English draft generation · review routing · publish prep · manual metrics entry · packaging candidate tagging
+
+### Tier 3 — Intelligence & Scale (Days 11–14)
+Metrics scoring · Spanish candidate detection · Spanish variant generation · ebook/toolkit cluster creation
+
+---
+
+## YMYL Compliance Requirements
+
+| Gate | Requirement | Scope |
+| --- | --- | --- |
+| Kate clinical sign-off | Required | All letter templates, denial code content, appeal frameworks, adversarial test cases |
+| Attorney review | Required | All 7 trust pages before publish; legal framing spot-check |
+| LQE automated check | Required | Every `generateLetter()` call — launch blocker |
+| AHP protocol | Required | Step 0 before every content review and Anthropic API call |
+| Content audit log | Required | Migration 017 — all content creation logged |
+
+---
+
+## Google Drive Folder Structure
+
+```
+MyAdvocate/
+  02 Architecture/      — technical specs, architecture docs
+  03 SEO & Content/     — content drafts, SEO strategy
+  04 Product/           — product specs, roadmaps
+  05 Agents & Automation/ — agent specs, n8n workflow drafts
+  06 Revenue & Growth/  — revenue models, growth strategy
+  07 Compliance & Legal/ — YMYL docs, attorney review materials
+  08 Social & Distribution/ — YouTube, Instagram, social content
+  09 Financial/         — projections, financial models
+  10 Design & UI/       — Figma exports, design tokens
+  _Archive/             — processed supplemental documents
+```
+
+**Rule:** Google Drive is the review/export layer. GitHub is source of truth. Nothing in Drive overrides GitHub.
+
+---
+
+## Naming Convention
+
+`[system]-[type]-[name]-v[number]`
+
+Examples: `MA-ARC-001` · `MA-PMP-001-v30` · `myadvocate-content-denial-codes-v2`
+
+---
+
+**Aligned with:** MA-PMP-001 v30 · MA-ARC-001 · March 22, 2026
+**Maintained by:** Sarsh Levine (founder) · Claude Cowork (normalization)
