@@ -147,4 +147,4 @@ MA-PMP-001 (what's allowed)
             → Merge
 ```
 
-**Version:** Aligned with MA-PMP-001 v30 · March 22, 2026
+**Version:** Aligned with MA-PMP-001 v31 · March 26, 2026
