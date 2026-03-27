@@ -39,6 +39,7 @@ export type EventType =
 export type DenialCodeCategory =
   | 'labs' | 'imaging' | 'surgery' | 'dme' | 'pharmacy'
   | 'mental_health' | 'prior_auth' | 'coordination' | 'timely_filing' | 'other'
+  | 'medical_necessity' | 'coverage' | 'billing_error'
 
 export type ToolCtaId =
   | 'denial_decoder' | 'appeal_generator' | 'bill_dispute' | 'hipaa_request'
