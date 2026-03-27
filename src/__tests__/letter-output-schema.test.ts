@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { parseLetterOutput } from '@/lib/letter-output-schema'
 
-// Helper: builds a valid full letter input
-function validInput(overrides: Record<string, unknown> = {}) {
+// Helper: builds a valid full letter input. Explicit Record<string, unknown> return type
+// allows `delete` on any key without a cast at the call site.
+function validInput(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     subject:    'Appeal of Denial for Physical Therapy Services',
     body:       'Dear Insurance Company, I am writing to formally appeal the denial of coverage for my physical therapy treatment. The treatment was prescribed by my physician and is medically necessary for my recovery. I request an urgent review of this decision and reconsideration of the denial. Please contact me at your earliest convenience to discuss this matter further. Sincerely, [PATIENT NAME]',
@@ -15,41 +16,34 @@ function validInput(overrides: Record<string, unknown> = {}) {
 
 describe('parseLetterOutput', () => {
   it('passes for a valid full letter', () => {
-    expect(() => parseLetterOutput(validInput())).not.toThrow()
     const result = parseLetterOutput(validInput())
     expect(result.subject).toBe('Appeal of Denial for Physical Therapy Services')
     expect(result.letterType).toBe('denial_appeal')
   })
 
   it('throws when subject is missing', () => {
-    expect(() => parseLetterOutput(validInput({ subject: '' }))).toThrow('GATE_7_FAILED')
-    expect(() => parseLetterOutput(validInput({ subject: '' }))).toThrow('subject')
+    expect(() => parseLetterOutput(validInput({ subject: '' }))).toThrow(/GATE_7_FAILED.*subject/)
   })
 
   it('throws when body is under 100 chars', () => {
-    expect(() => parseLetterOutput(validInput({ body: 'Too short.' }))).toThrow('GATE_7_FAILED')
-    expect(() => parseLetterOutput(validInput({ body: 'Too short.' }))).toThrow('body')
+    expect(() => parseLetterOutput(validInput({ body: 'Too short.' }))).toThrow(/GATE_7_FAILED.*body/)
   })
 
   it('throws when letterType is unknown', () => {
-    expect(() => parseLetterOutput(validInput({ letterType: 'unknown_type' }))).toThrow('GATE_7_FAILED')
-    expect(() => parseLetterOutput(validInput({ letterType: 'unknown_type' }))).toThrow('letterType')
+    expect(() => parseLetterOutput(validInput({ letterType: 'unknown_type' }))).toThrow(/GATE_7_FAILED.*letterType/)
   })
 
   it('throws when disclaimer is missing', () => {
-    expect(() => parseLetterOutput(validInput({ disclaimer: '' }))).toThrow('GATE_7_FAILED')
-    expect(() => parseLetterOutput(validInput({ disclaimer: '' }))).toThrow('disclaimer')
+    expect(() => parseLetterOutput(validInput({ disclaimer: '' }))).toThrow(/GATE_7_FAILED.*disclaimer/)
   })
 
   it('throws when body is empty', () => {
-    expect(() => parseLetterOutput(validInput({ body: '' }))).toThrow('GATE_7_FAILED')
-    expect(() => parseLetterOutput(validInput({ body: '' }))).toThrow('body')
+    expect(() => parseLetterOutput(validInput({ body: '' }))).toThrow(/GATE_7_FAILED.*body/)
   })
 
   it('passes for a valid letter without denialCode', () => {
     const input = validInput()
-    delete (input as Record<string, unknown>).denialCode
-    expect(() => parseLetterOutput(input)).not.toThrow()
+    delete input.denialCode
     const result = parseLetterOutput(input)
     expect(result.denialCode).toBeUndefined()
   })
