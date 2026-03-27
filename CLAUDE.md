@@ -118,6 +118,9 @@ High-risk tasks require founder review before merge. No exceptions.
 ### Brain / Operating Memory (4) — MA-BRN-001
 `brain_entries` · `brain_entry_versions` · `brain_entry_links` · `brain_ingestion_runs`
 
+### Automation Layer (7) — Make + Google Workspace + Supabase — §26
+`automation_modules` · `automation_runs` · `automation_events` · `review_queue` · `memory_candidates` · `memory_review_actions` · `notification_events`
+
 ### Proposed Migrations (pending Sprint assignment)
 - **018:** `brain_entries` — Operating Memory System core table (MA-BRN-001)
 - **019:** `brain_entry_versions` — Immutable Brain object version history
@@ -127,6 +130,7 @@ High-risk tasks require founder review before merge. No exceptions.
 - **023:** `agent_execution_logs` — G3 stopping condition enforcement
 - **024:** Already applied — Content Flywheel (9 tables)
 - **025:** Already applied — denial_codes additive columns
+- **026–032:** Automation Layer tables (automation_modules, automation_runs, automation_events, review_queue, memory_candidates, memory_review_actions, notification_events)
 
 ---
 
@@ -159,11 +163,11 @@ MA-PMP-001 (what's allowed)
 
 | Doc ID | Title | Location |
 |--------|-------|----------|
-| MA-PMP-001 v32 | Project Management Plan | docs/pmp/MA-PMP-001-v32.docx |
+| MA-PMP-001 v33 | Project Management Plan | docs/pmp/MA-PMP-001-v33.docx |
 | MA-BRN-001 v1.0 | Operating Memory System (Brain) | docs/memory/MA-BRN-001_Operating_Memory_System.docx |
 | MA-ARC-001 | Architecture Constitution | docs/architecture/ |
 | MA-ARC-FUNC-001 | Canonical Function Registry | docs/architecture/ |
 
 ---
 
-**Version:** Aligned with MA-PMP-001 v32 · MA-BRN-001 v1.0 · March 26, 2026
+**Version:** Aligned with MA-PMP-001 v33 · MA-BRN-001 v1.0 · March 27, 2026
