@@ -115,10 +115,18 @@ High-risk tasks require founder review before merge. No exceptions.
 ### Caching (3)
 `cache_entries` · `cache_logs` · `cache_promotions`
 
+### Brain / Operating Memory (4) — MA-BRN-001
+`brain_entries` · `brain_entry_versions` · `brain_entry_links` · `brain_ingestion_runs`
+
 ### Proposed Migrations (pending Sprint assignment)
-- **018:** `letter_quality_evaluations` — LQE 3-gate results
-- **019:** `agent_execution_logs` — G3 stopping condition enforcement
-- **020:** `denial_intelligence_events` — TIMS denial pattern clustering
+- **018:** `brain_entries` — Operating Memory System core table (MA-BRN-001)
+- **019:** `brain_entry_versions` — Immutable Brain object version history
+- **020:** `brain_entry_links` — Brain graph relationships
+- **021:** `brain_ingestion_runs` — Brain sync observability
+- **022:** `letter_quality_evaluations` — LQE 3-gate results
+- **023:** `agent_execution_logs` — G3 stopping condition enforcement
+- **024:** Already applied — Content Flywheel (9 tables)
+- **025:** Already applied — denial_codes additive columns
 
 ---
 
@@ -147,4 +155,15 @@ MA-PMP-001 (what's allowed)
             → Merge
 ```
 
-**Version:** Aligned with MA-PMP-001 v31 · March 26, 2026
+## Canonical Document Index (key docs)
+
+| Doc ID | Title | Location |
+|--------|-------|----------|
+| MA-PMP-001 v32 | Project Management Plan | docs/pmp/MA-PMP-001-v32.docx |
+| MA-BRN-001 v1.0 | Operating Memory System (Brain) | docs/memory/MA-BRN-001_Operating_Memory_System.docx |
+| MA-ARC-001 | Architecture Constitution | docs/architecture/ |
+| MA-ARC-FUNC-001 | Canonical Function Registry | docs/architecture/ |
+
+---
+
+**Version:** Aligned with MA-PMP-001 v32 · MA-BRN-001 v1.0 · March 26, 2026
