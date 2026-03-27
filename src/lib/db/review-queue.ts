@@ -78,6 +78,81 @@ export async function insertReviewQueueItem(params: {
 }
 
 /**
+ * Approve a pending review queue item.
+ * Throws if the item does not currently have decision='pending'.
+ */
+export async function approveItem(
+  reviewQueueId: string,
+  reviewerId: string,
+): Promise<void> {
+  const supabase = await createClient()
+
+  // Verify the item is still pending before approving
+  const { data: row, error: selectErr } = await supabase
+    .from('review_queue')
+    .select('decision')
+    .eq('id', reviewQueueId)
+    .single()
+
+  if (selectErr) throw selectErr
+  if (row.decision !== 'pending') {
+    throw new Error(`Cannot approve review_queue item ${reviewQueueId}: not pending (current: ${row.decision})`)
+  }
+
+  const { error: updateErr } = await supabase
+    .from('review_queue')
+    .update({
+      decision:    'approved',
+      reviewed_at: new Date().toISOString(),
+      reviewer_id: reviewerId,
+    })
+    .eq('id', reviewQueueId)
+
+  if (updateErr) throw updateErr
+}
+
+/**
+ * Reject a pending review queue item.
+ * Requires a non-empty rejection reason (mirrors DB constraint risk_reason_required_on_rejection).
+ * Throws if the item does not currently have decision='pending'.
+ */
+export async function rejectItem(
+  reviewQueueId: string,
+  reviewerId: string,
+  rejectionReason: string,
+): Promise<void> {
+  if (!rejectionReason?.trim()) {
+    throw new Error('Rejection reason is required and cannot be empty')
+  }
+
+  const supabase = await createClient()
+
+  // Verify the item is still pending before rejecting
+  const { data: row, error: selectErr } = await supabase
+    .from('review_queue')
+    .select('decision')
+    .eq('id', reviewQueueId)
+    .single()
+
+  if (selectErr) throw selectErr
+  if (row.decision !== 'pending') {
+    throw new Error(`Cannot reject review_queue item ${reviewQueueId}: not pending (current: ${row.decision})`)
+  }
+
+  const { error: updateErr } = await supabase
+    .from('review_queue')
+    .update({
+      decision:    'rejected',
+      reviewed_at: new Date().toISOString(),
+      reviewer_id: reviewerId,
+      risk_reason: rejectionReason,
+    })
+    .eq('id', reviewQueueId)
+
+  if (updateErr) throw updateErr
+}
+
+/**
  * Returns the number of artifacts currently pending review.
  * MA-SEC-002 P27: Used to enforce the 10-artifact queue cap.
  * Returns 0 on error (safe default — prevents false capacity blocks).
