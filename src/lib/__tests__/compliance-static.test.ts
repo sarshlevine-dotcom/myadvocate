@@ -9,6 +9,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import * as fs from 'fs'
+import * as path from 'path'
 import type { LetterType } from '@/types/domain'
 
 // ─── Mocks required for LQE integration tests ─────────────────────────────────
@@ -303,6 +305,31 @@ describe('LQE + FORBIDDEN_PHRASES integration (Check 2)', () => {
 
     expect(result.checks.ymylSafety.passed).toBe(false)
     expect(result.checks.legalFraming.notes).toBe('not evaluated')
+  })
+})
+
+// ─── Static enforcement: compliance-static.ts must not import Anthropic SDK ───
+// compliance-static.ts is a pure constants/config module. It must never import
+// the Anthropic SDK — doing so would couple compliance rules to API call machinery.
+
+describe('compliance-static module enforcement', () => {
+  it('compliance-static.ts does not import @anthropic-ai/sdk', () => {
+    const filePath = path.resolve(process.cwd(), 'src', 'lib', 'compliance-static.ts')
+    const content  = fs.readFileSync(filePath, 'utf-8')
+    const sdkPattern = /(?:from\s+['"]@anthropic-ai\/sdk['"]|require\s*\(\s*['"]@anthropic-ai\/sdk['"]\s*\))/
+    expect(sdkPattern.test(content)).toBe(false)
+  })
+
+  it('compliance-static.ts does not import generate-letter.ts (no circular dependency)', () => {
+    const filePath = path.resolve(process.cwd(), 'src', 'lib', 'compliance-static.ts')
+    const content  = fs.readFileSync(filePath, 'utf-8')
+    expect(content).not.toContain('generate-letter')
+  })
+
+  it('compliance-static.ts does not import tracked-execution.ts (no AI call machinery)', () => {
+    const filePath = path.resolve(process.cwd(), 'src', 'lib', 'compliance-static.ts')
+    const content  = fs.readFileSync(filePath, 'utf-8')
+    expect(content).not.toContain('tracked-execution')
   })
 })
 

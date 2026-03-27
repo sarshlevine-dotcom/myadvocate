@@ -134,4 +134,91 @@ describe('trackedExecution', () => {
     // Must look like a SHA-256 hex digest (64 hex chars)
     expect(emitted.userId).toMatch(/^[0-9a-f]{64}$/)
   })
+
+  // ── Test 5: fn() throws — errorState=true, trace emitted, error re-thrown ───
+
+  it('sets errorState=true and re-throws when fn() throws', async () => {
+    const thrownError = new Error('RATE_LIMIT_EXCEEDED')
+    const failingFn   = vi.fn(async () => { throw thrownError })
+
+    await expect(
+      trackedExecution(BASE_INPUT, failingFn),
+    ).rejects.toThrow('RATE_LIMIT_EXCEEDED')
+
+    // Trace must still have been emitted (non-blocking)
+    expect(mockTrace).toHaveBeenCalledOnce()
+    const emitted = mockTrace.mock.calls[0][0]
+    expect(emitted.metadata.errorState).toBe(true)
+    expect(emitted.metadata.errorCode).toContain('RATE_LIMIT_EXCEEDED')
+  })
+
+  // ── Test 6: cost calculation is correct for known model rates ───────────────
+
+  it('calculates costUsd correctly for claude-sonnet-4-6 rates', async () => {
+    const fn = vi.fn(async () => ({
+      result: 'letter',
+      usage: { model: 'claude-sonnet-4-6', inputTokens: 1_000_000, outputTokens: 1_000_000 },
+    }))
+
+    const { trace } = await trackedExecution(BASE_INPUT, fn)
+
+    // Sonnet: $3.00/MTok input + $15.00/MTok output = $18.00 for 1M + 1M
+    expect(trace.costUsd).toBeCloseTo(18.0, 2)
+  })
+
+  it('calculates costUsd correctly for claude-haiku-4-5-20251001 rates', async () => {
+    const fn = vi.fn(async () => ({
+      result: 'letter',
+      usage: { model: 'claude-haiku-4-5-20251001', inputTokens: 1_000_000, outputTokens: 1_000_000 },
+    }))
+
+    const { trace } = await trackedExecution(BASE_INPUT, fn)
+
+    // Haiku: $0.80/MTok input + $4.00/MTok output = $4.80 for 1M + 1M
+    expect(trace.costUsd).toBeCloseTo(4.8, 2)
+  })
+
+  // ── Test 7: qualityScore forwarded from TraceInput to TraceOutput ─────────
+
+  it('forwards qualityScore from input to the emitted trace and TraceOutput', async () => {
+    const fn = makeSuccessfulFn()
+    const { trace } = await trackedExecution(
+      { ...BASE_INPUT, qualityScore: 87 },
+      fn,
+    )
+
+    expect(trace.qualityScore).toBe(87)
+
+    const emitted = mockTrace.mock.calls[0][0]
+    expect(emitted.metadata.qualityScore).toBe(87)
+  })
+
+  it('defaults qualityScore to null when not supplied', async () => {
+    const { trace } = await trackedExecution(BASE_INPUT, makeSuccessfulFn())
+    expect(trace.qualityScore).toBeNull()
+  })
+
+  // ── Test 8: all CanonicalFunctionName values are accepted without error ──────
+
+  it('accepts every CanonicalFunctionName value without throwing', async () => {
+    const canonicalNames = [
+      'generateAppealLetter',
+      'generateDisputeLetter',
+      'generateHIPAARequest',
+      'generateNegotiationScript',
+      'explainDenialCode',
+      'getPatientRights',
+      'routeComplaint',
+      'generateBillingAnalysis',
+    ] as const
+
+    for (const name of canonicalNames) {
+      await expect(
+        trackedExecution(
+          { functionName: name, callSource: 'app', piiScrubberConfirmed: true },
+          makeSuccessfulFn(),
+        ),
+      ).resolves.toBeDefined()
+    }
+  })
 })
