@@ -38,9 +38,9 @@ function makeWebhookRequest(body: string, signature: string | null): NextRequest
   } as unknown as NextRequest
 }
 
-// Helper: create a minimal Stripe event object
-function makeStripeEvent(type: string, dataObject: Record<string, unknown> = {}) {
-  return { type, data: { object: dataObject } }
+// Helper: create a minimal Stripe event object (cast through unknown to satisfy strict Stripe.Event type)
+function makeStripeEvent(type: string, dataObject: Record<string, unknown> = {}): ReturnType<typeof stripe.webhooks.constructEvent> {
+  return { type, data: { object: dataObject } } as unknown as ReturnType<typeof stripe.webhooks.constructEvent>
 }
 
 describe('POST /api/stripe/webhook', () => {
@@ -55,7 +55,7 @@ describe('POST /api/stripe/webhook', () => {
         id: 'pi_123',
         metadata: {},
         amount: 1300,
-      }) as ReturnType<typeof stripe.webhooks.constructEvent>
+      })
     )
 
     const req = makeWebhookRequest('{}', 't=123,v1=abc')
@@ -88,7 +88,7 @@ describe('POST /api/stripe/webhook', () => {
         mode: 'subscription',
         metadata: { userId },
         client_reference_id: null,
-      }) as ReturnType<typeof stripe.webhooks.constructEvent>
+      })
     )
 
     const req = makeWebhookRequest('{}', 't=123,v1=abc')
@@ -110,7 +110,7 @@ describe('POST /api/stripe/webhook', () => {
         mode: 'payment',
         metadata: {},
         client_reference_id: null,
-      }) as ReturnType<typeof stripe.webhooks.constructEvent>
+      })
     )
 
     const req = makeWebhookRequest('{}', 't=123,v1=abc')
@@ -122,7 +122,7 @@ describe('POST /api/stripe/webhook', () => {
 
   it('returns 200 and does not crash for an unhandled event type', async () => {
     vi.mocked(stripe.webhooks.constructEvent).mockReturnValue(
-      makeStripeEvent('invoice.payment_succeeded', { id: 'in_123' }) as ReturnType<typeof stripe.webhooks.constructEvent>
+      makeStripeEvent('invoice.payment_succeeded', { id: 'in_123' })
     )
 
     const req = makeWebhookRequest('{}', 't=123,v1=abc')
@@ -161,7 +161,7 @@ describe('POST /api/stripe/webhook', () => {
         metadata: { userId },
         items: { data: [{ price: { unit_amount: 1999 } }] },
         current_period_end: Math.floor(Date.now() / 1000) + 86400,
-      }) as ReturnType<typeof stripe.webhooks.constructEvent>
+      })
     )
 
     const req = makeWebhookRequest('{}', 't=123,v1=abc')
@@ -186,7 +186,7 @@ describe('POST /api/stripe/webhook', () => {
         metadata: { userId },
         items: { data: [{ price: { unit_amount: 1999 } }] },
         current_period_end: Math.floor(Date.now() / 1000) - 86400,
-      }) as ReturnType<typeof stripe.webhooks.constructEvent>
+      })
     )
 
     const req = makeWebhookRequest('{}', 't=123,v1=abc')
