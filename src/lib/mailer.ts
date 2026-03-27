@@ -75,6 +75,47 @@ export async function sendReviewNotification(
 }
 
 /**
+ * MA-SEC-002 P23: Alert Sarsh when a user hits 3+ injection flags in one session.
+ * Returns true on success, false on failure — never throws.
+ */
+export async function sendInjectionEscalationAlert(params: {
+  userId:      string
+  letterType:  string
+  flagCount:   number
+}): Promise<boolean> {
+  try {
+    const to = process.env.SARSH_EMAIL ?? ''
+    if (!to.trim()) {
+      console.warn('[mailer] sendInjectionEscalationAlert: no recipient configured (SARSH_EMAIL is unset)')
+      return false
+    }
+
+    const text = [
+      `SECURITY ALERT: Repeated injection attempts detected (MA-SEC-002 P23).`,
+      '',
+      `User ID:     ${params.userId}`,
+      `Letter type: ${params.letterType}`,
+      `Flag count:  ${params.flagCount} in current session (threshold: 3)`,
+      '',
+      'Generation is blocked for this session. Review metric_events for full context.',
+      '',
+      'No action required unless abuse is confirmed — the system has already blocked the requests.',
+    ].join('\n')
+
+    await getTransport().sendMail({
+      from:    FROM,
+      to,
+      subject: `[MyAdvocate] SECURITY: Injection escalation — ${params.flagCount} flags from user`,
+      text,
+    })
+    return true
+  } catch (err) {
+    console.error('[mailer] sendInjectionEscalationAlert failed:', err)
+    return false
+  }
+}
+
+/**
  * Alert Sarsh (only) that the review queue has hit the 10-artifact cap.
  * Returns true on success, false on failure — never throws.
  */

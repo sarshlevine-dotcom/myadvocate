@@ -33,6 +33,7 @@ export type EventType =
   | 'lqe_passed'
   | 'lqe_failed'
   | 'gate_7_passed'
+  | 'injection_attempt'    // MA-SEC-002 P23: prompt injection detected and quarantined
 
 // Denial code types
 export type DenialCodeCategory =
