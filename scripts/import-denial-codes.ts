@@ -142,11 +142,7 @@ async function main() {
     }
   }
 
-  console.log(`\nDone`)
-  console.log(`  inserted: ${inserted}`)
-  console.log(`  updated:  ${updated}`)
-  console.log(`  skipped:  ${skipped}`)
-  console.log(`  errors:   ${errors}\n`)
+  console.log(`\n✓ inserted: ${inserted} | updated: ${updated} | skipped: ${skipped} | errors: ${errors}\n`)
 
   if (errors > 0) {
     process.exit(1)
