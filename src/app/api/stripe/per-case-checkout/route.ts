@@ -30,10 +30,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'caseId is required' }, { status: 400 })
   }
 
-  // Validate that userId (from auth) and priceId (from env) are non-empty strings
-  if (!user.id || typeof user.id !== 'string') {
-    return NextResponse.json({ error: 'Invalid user session' }, { status: 400 })
-  }
+  // userId is guaranteed non-empty string by the Supabase auth check above (if !user → 401).
+  // Validate priceId from env — must be a non-empty, non-whitespace string.
   const priceId = process.env.STRIPE_PER_CASE_PRICE_ID
   if (!priceId || priceId.trim() === '') {
     return NextResponse.json({ error: 'Per-case product not configured' }, { status: 500 })
@@ -47,6 +45,8 @@ export async function POST(request: NextRequest) {
     userId: user.id,
   }).catch(() => {})
 
+  // Note: stripe is a lazy Proxy — STRIPE_SECRET_KEY missing throws inside this try/catch,
+  // which returns a 503 rather than a startup-time config error. See src/lib/stripe.ts.
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
