@@ -2,7 +2,24 @@
 // Integration tests — run against local Supabase (supabase start required).
 // Skipped automatically in CI when SUPABASE_SERVICE_ROLE_KEY is not set.
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+
+// Mock the Next.js server Supabase client so tests can run outside a request context.
+// createClient() is swapped for a service-role client that uses env vars directly.
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: async () =>
+    createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    ),
+  createServiceRoleClient: () =>
+    createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    ),
+}))
+
 import { getAllDenialCodes, getDenialCodeByCode, getRelatedDenialCodes } from '@/lib/db/denial-codes'
 
 const RUN = !!process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -45,8 +62,8 @@ describe.skipIf(!RUN)('denial_codes — post-import integration', () => {
   })
 
   // Test 6: Lookup for a thin (needs_review) code
-  it('a thin code (CO-100) exists with explanation but null appeal_angle', async () => {
-    const code = await getDenialCodeByCode('CO-100')
+  it('a thin code (CO-1) exists with explanation but null appeal_angle', async () => {
+    const code = await getDenialCodeByCode('CO-1')
     expect(code).not.toBeNull()
     expect(code!.plain_language_explanation.length).toBeGreaterThan(10)
     expect(code!.appeal_angle).toBeNull()

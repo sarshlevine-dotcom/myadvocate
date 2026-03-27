@@ -38,10 +38,22 @@ async function main() {
   console.log(`   Category: ${CATEGORY ?? 'all'}`)
   console.log(`   Records:  ${DENIAL_CODES_SEED.length} in seed file\n`)
 
+  // Deduplicate by code — keep first occurrence (seed file may have duplicates)
+  const deduped = Array.from(
+    DENIAL_CODES_SEED.reduce((map, r) => {
+      if (!map.has(r.code)) map.set(r.code, r)
+      return map
+    }, new Map<string, typeof DENIAL_CODES_SEED[0]>()).values()
+  )
+  const dupCount = DENIAL_CODES_SEED.length - deduped.length
+  if (dupCount > 0) {
+    console.log(`   NOTE: ${dupCount} duplicate code(s) in seed file removed (first occurrence kept).`)
+  }
+
   // Filter by category if requested
   const records = CATEGORY
-    ? DENIAL_CODES_SEED.filter(r => r.category === CATEGORY)
-    : DENIAL_CODES_SEED
+    ? deduped.filter(r => r.category === CATEGORY)
+    : deduped
 
   if (records.length === 0) {
     console.log(`No records found for category '${CATEGORY}'. Valid categories: check DenialCodeCategory type.`)
