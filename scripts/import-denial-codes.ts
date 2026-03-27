@@ -33,11 +33,6 @@ let errors   = 0
 
 // ─── Main ────────────────────────────────────────────────────────────────────
 async function main() {
-  console.log(`\nMyAdvocate — Denial Codes Import`)
-  console.log(`   Mode:     ${DRY_RUN ? 'DRY RUN (no writes)' : 'LIVE'}`)
-  console.log(`   Category: ${CATEGORY ?? 'all'}`)
-  console.log(`   Records:  ${DENIAL_CODES_SEED.length} in seed file\n`)
-
   // Deduplicate by code — keep first occurrence (seed file may have duplicates)
   const deduped = Array.from(
     DENIAL_CODES_SEED.reduce((map, r) => {
@@ -46,14 +41,19 @@ async function main() {
     }, new Map<string, typeof DENIAL_CODES_SEED[0]>()).values()
   )
   const dupCount = DENIAL_CODES_SEED.length - deduped.length
-  if (dupCount > 0) {
-    console.log(`   NOTE: ${dupCount} duplicate code(s) in seed file removed (first occurrence kept).`)
-  }
 
   // Filter by category if requested
   const records = CATEGORY
     ? deduped.filter(r => r.category === CATEGORY)
     : deduped
+
+  console.log(`\nMyAdvocate — Denial Codes Import`)
+  console.log(`   Mode:     ${DRY_RUN ? 'DRY RUN (no writes)' : 'LIVE'}`)
+  console.log(`   Category: ${CATEGORY ?? 'all'}`)
+  console.log(`   Records:  ${records.length} to process (${DENIAL_CODES_SEED.length} in seed file)\n`)
+  if (dupCount > 0) {
+    console.log(`   NOTE: ${dupCount} duplicate code(s) in seed file removed (first occurrence kept).`)
+  }
 
   if (records.length === 0) {
     console.log(`No records found for category '${CATEGORY}'. Valid categories: check DenialCodeCategory type.`)
