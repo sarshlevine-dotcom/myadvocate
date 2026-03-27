@@ -7,7 +7,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { scrubPII, verifyScrubbed } from '@/lib/pii-scrubber'
 import { checkTierAuthorization } from '@/lib/auth-tier'
-import { appendDisclaimer, CURRENT_DISCLAIMER_VERSION, getDisclaimerVersion } from '@/lib/disclaimer'
+import { appendDisclaimer, CURRENT_DISCLAIMER_VERSION, getDisclaimerVersion, DISCLAIMERS } from '@/lib/disclaimer'
 import { createArtifact } from '@/lib/db/artifacts'
 import { addToReviewQueue, insertReviewQueueItem } from '@/lib/db/review-queue'
 import { logEvent } from '@/lib/db/metric-events'
@@ -16,6 +16,7 @@ import { sendInjectionEscalationAlert } from '@/lib/mailer'
 import { runLQE } from '@/lib/lqe'
 import { insertLQEResult } from '@/lib/db/letter-quality-evaluations'
 import { recordApiSpend } from '@/lib/budget-monitor'
+import { parseLetterOutput } from '@/lib/letter-output-schema'
 import { trackedExecution } from '@/lib/tracked-execution'
 import type { CanonicalFunctionName } from '@/lib/tracked-execution'
 import { createHash } from 'crypto'
@@ -434,6 +435,29 @@ export async function generateLetter(params: {
     tokenCount:        outputTokens,
     lqePassed:         lqeResult.passed,
   })
+
+  // 7-pre-content: Zod content-level schema validation (H1-04)
+  // Validates letter structure: subject, body length, letterType, disclaimer, optional denialCode.
+  // On failure: logGateFailure + throw. Never proceeds with unvalidated output.
+  if (!letterText || letterText.trim().length === 0) {
+    logGateFailure(params.letterType, contract)
+    throw new Error('GATE_7_FAILED: EMPTY_LETTER_OUTPUT')
+  }
+  const subject = letterText.split('\n').find(line => line.trim().length > 0) ?? params.letterType
+  try {
+    parseLetterOutput({
+      subject,
+      body:        letterText,
+      letterType:  params.letterType,
+      disclaimer:  DISCLAIMERS[CURRENT_DISCLAIMER_VERSION],
+      denialCode,
+    })
+  } catch (err) {
+    logGateFailure(params.letterType, contract)
+    throw err instanceof Error && err.message.startsWith('GATE_7_FAILED')
+      ? err
+      : new Error(`GATE_7_FAILED: LETTER_SCHEMA_INVALID — ${err instanceof Error ? err.message : String(err)}`)
+  }
 
   // 7a: Disclaimer Version Check
   const disclaimerInfo = getDisclaimerVersion()
