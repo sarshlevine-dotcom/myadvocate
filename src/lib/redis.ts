@@ -20,7 +20,7 @@ export const redis = new Redis({
  * Returns null on cache miss OR on any Redis error.
  * NEVER throws — callers must always handle null as a cache miss.
  */
-export async function getCache(key: string): Promise<unknown | null> {
+export async function getCache(key: string): Promise<unknown> {
   try {
     return await redis.get(key)
   } catch (err) {
