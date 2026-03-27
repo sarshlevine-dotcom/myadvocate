@@ -30,7 +30,7 @@ export function parseLetterOutput(input: unknown): LetterOutput {
   const result = LetterOutputSchema.safeParse(input)
   if (!result.success) {
     const reasons = result.error.issues
-      .map((e: { path: PropertyKey[]; message: string }) => `${e.path.join('.')}: ${e.message}`)
+      .map((e) => `${e.path.join('.')}: ${e.message}`)
       .join('; ')
     throw new Error(`GATE_7_FAILED: LETTER_SCHEMA_INVALID — ${reasons}`)
   }
