@@ -439,8 +439,12 @@ export async function generateLetter(params: {
   // 7-pre-content: Zod content-level schema validation (H1-04)
   // Validates letter structure: subject, body length, letterType, disclaimer, optional denialCode.
   // On failure: logGateFailure + throw. Never proceeds with unvalidated output.
+  if (!letterText || letterText.trim().length === 0) {
+    logGateFailure(params.letterType, contract)
+    throw new Error('GATE_7_FAILED: EMPTY_LETTER_OUTPUT')
+  }
+  const subject = letterText.split('\n').find(line => line.trim().length > 0) ?? params.letterType
   try {
-    const subject = letterText.split('\n').find(line => line.trim().length > 0) ?? params.letterType
     parseLetterOutput({
       subject,
       body:        letterText,
@@ -450,7 +454,9 @@ export async function generateLetter(params: {
     })
   } catch (err) {
     logGateFailure(params.letterType, contract)
-    throw err
+    throw err instanceof Error && err.message.startsWith('GATE_7_FAILED')
+      ? err
+      : new Error(`GATE_7_FAILED: LETTER_SCHEMA_INVALID — ${err instanceof Error ? err.message : String(err)}`)
   }
 
   // 7a: Disclaimer Version Check
