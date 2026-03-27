@@ -11,6 +11,8 @@ import { appendDisclaimer, CURRENT_DISCLAIMER_VERSION, getDisclaimerVersion } fr
 import { createArtifact } from '@/lib/db/artifacts'
 import { addToReviewQueue, insertReviewQueueItem } from '@/lib/db/review-queue'
 import { logEvent } from '@/lib/db/metric-events'
+import { scanContextFields, recordInjectionAttempt } from '@/lib/injection-guard'
+import { sendInjectionEscalationAlert } from '@/lib/mailer'
 import { runLQE } from '@/lib/lqe'
 import { insertLQEResult } from '@/lib/db/letter-quality-evaluations'
 import { recordApiSpend } from '@/lib/budget-monitor'
@@ -311,6 +313,32 @@ export async function generateLetter(params: {
   if (blockedFields.length > 0) {
     logGateFailure(params.letterType, contract)
     console.warn(`GATE_5_STRIPPED [${params.letterType}]: ${blockedFields.join(', ')}`)
+  }
+
+  // ── Gate 5.5: Injection Scan (MA-SEC-002 P21/P23) ─────────────────────────
+  // Scans string values in filteredData for prompt injection markers.
+  // Runs after Gate 5 strips unknown keys — only allowlisted values are scanned.
+  // P21: rejects flagged input before prompt construction.
+  // P23 three-step: (2) logEvent in recordInjectionAttempt, (3) Redis counter in
+  //                 recordInjectionAttempt; (1) generic throw is below.
+  // P24: rejection message is deliberately generic — never confirm injection detected.
+  const flaggedFields = scanContextFields(filteredData)
+  if (flaggedFields.length > 0) {
+    const flagCount = await recordInjectionAttempt({
+      userId:        params.userId,
+      letterType:    params.letterType,
+      flaggedFields,
+    })
+    logGateFailure(params.letterType, contract)
+    // P23: escalate to founder on 3+ flags within session (fire-and-forget)
+    if (flagCount >= 3) {
+      sendInjectionEscalationAlert({
+        userId:     params.userId,
+        letterType: params.letterType,
+        flagCount,
+      }).catch(() => {})
+    }
+    throw new Error('GATE_5_INJECTION_BLOCKED: input validation failed')
   }
 
   // Model routing (MA-COST-001)
