@@ -39,6 +39,7 @@ export type EventType =
 export type DenialCodeCategory =
   | 'labs' | 'imaging' | 'surgery' | 'dme' | 'pharmacy'
   | 'mental_health' | 'prior_auth' | 'coordination' | 'timely_filing' | 'other'
+  | 'medical_necessity' | 'coverage' | 'billing_error'
 
 export type ToolCtaId =
   | 'denial_decoder' | 'appeal_generator' | 'bill_dispute' | 'hipaa_request'
@@ -55,6 +56,7 @@ export interface DenialCode {
   appeal_angle: string | null
   related_codes: string[] | null
   tool_cta_id: ToolCtaId | null
+  review_status: 'draft' | 'approved' | 'needs_review' | 'archived'
 }
 
 // ─── MA-EEAT-001: Content review types ───────────────────────────────────────
