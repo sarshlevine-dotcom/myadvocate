@@ -56,6 +56,7 @@ export interface DenialCode {
   appeal_angle: string | null
   related_codes: string[] | null
   tool_cta_id: ToolCtaId | null
+  review_status: 'draft' | 'approved' | 'needs_review' | 'archived'
 }
 
 // ─── MA-EEAT-001: Content review types ───────────────────────────────────────
