@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
           }).catch(() => {})
         }
       } else {
-        console.error('Stripe webhook: missing userId in subscription metadata', { type: event.type, subscriptionId: (event.data.object as Stripe.Subscription).id })
+        console.error('[stripe/webhook] missing userId in subscription metadata', { type: event.type, subscriptionId: (event.data.object as Stripe.Subscription).id })
       }
     }
 
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       if (userId) {
         await updateSubscriptionStatus(userId, 'canceled')
       } else {
-        console.error('Stripe webhook: missing userId in subscription metadata', { type: event.type, subscriptionId: (event.data.object as Stripe.Subscription).id })
+        console.error('[stripe/webhook] missing userId in subscription metadata', { type: event.type, subscriptionId: (event.data.object as Stripe.Subscription).id })
       }
     }
 
@@ -93,9 +93,34 @@ export async function POST(request: NextRequest) {
         }).catch(() => {})
       }
     }
+
+    // Only log 'conversion' for subscription checkouts — per-case purchases are already
+    // tracked via 'per_case_checkout' + 'per_case_purchased' and must not be double-counted.
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session
+      if (session.mode === 'subscription') {
+        const userId = session.metadata?.userId ?? session.client_reference_id ?? null
+        logEvent({
+          eventType: 'conversion',
+          sourcePage: '/api/stripe/webhook',
+          userId: userId ?? undefined,
+        }).catch(() => {})
+      }
+    }
+
+    if (event.type === 'payment_intent.payment_failed') {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent
+      const userId = paymentIntent.metadata?.userId
+      console.error('[stripe/webhook] payment_intent.payment_failed', {
+        paymentIntentId: paymentIntent.id,
+        userId: userId ?? 'unknown',
+        lastError: paymentIntent.last_payment_error?.message ?? null,
+      })
+      // No logEvent — no suitable EventType for payment failures
+    }
   } catch (err) {
-    console.error('Stripe webhook: error processing event', err)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    // Log error but always return 200 — Stripe retries on non-2xx, causing double-processing
+    console.error('[stripe/webhook] error processing event', { type: event.type, err })
   }
 
   return NextResponse.json({ received: true })

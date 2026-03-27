@@ -30,7 +30,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'caseId is required' }, { status: 400 })
   }
 
-  if (!process.env.STRIPE_PER_CASE_PRICE_ID) {
+  // userId is guaranteed non-empty string by the Supabase auth check above (if !user → 401).
+  // Validate priceId from env — must be a non-empty, non-whitespace string.
+  const priceId = process.env.STRIPE_PER_CASE_PRICE_ID
+  if (!priceId || priceId.trim() === '') {
     return NextResponse.json({ error: 'Per-case product not configured' }, { status: 500 })
   }
 
@@ -42,26 +45,33 @@ export async function POST(request: NextRequest) {
     userId: user.id,
   }).catch(() => {})
 
-  const session = await stripe.checkout.sessions.create({
-    mode: 'payment',
-    line_items: [
-      {
-        price: process.env.STRIPE_PER_CASE_PRICE_ID,
-        quantity: 1,
+  // Note: stripe is a lazy Proxy — STRIPE_SECRET_KEY missing throws inside this try/catch,
+  // which returns a 503 rather than a startup-time config error. See src/lib/stripe.ts.
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      // MA-SEC-002 P13: metadata uses session userId — not the request body userId
+      // The payment_intent.succeeded webhook reads these to fire per_case_purchased
+      payment_intent_data: {
+        metadata: {
+          userId: user.id,
+          caseId,
+          productType: 'per_case',
+        },
       },
-    ],
-    // MA-SEC-002 P13: metadata uses session userId — not the request body userId
-    // The payment_intent.succeeded webhook reads these to fire per_case_purchased
-    payment_intent_data: {
-      metadata: {
-        userId: user.id,
-        caseId,
-        productType: 'per_case',
-      },
-    },
-    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/cases/${caseId}?payment=success`,
-    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/cases/${caseId}?payment=cancelled`,
-  })
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/cases/${caseId}?payment=success`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/cases/${caseId}?payment=cancelled`,
+    })
 
-  return NextResponse.json({ url: session.url })
+    return NextResponse.json({ url: session.url })
+  } catch (err) {
+    console.error('[stripe/per-case-checkout] Stripe API error:', err)
+    return NextResponse.json({ error: 'Payment service unavailable. Please try again.' }, { status: 503 })
+  }
 }
