@@ -94,14 +94,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Only log 'conversion' for subscription checkouts — per-case purchases are already
+    // tracked via 'per_case_checkout' + 'per_case_purchased' and must not be double-counted.
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session
-      const userId = session.metadata?.userId ?? session.client_reference_id ?? null
-      logEvent({
-        eventType: 'conversion',
-        sourcePage: '/api/stripe/webhook',
-        userId: userId ?? undefined,
-      }).catch(() => {})
+      if (session.mode === 'subscription') {
+        const userId = session.metadata?.userId ?? session.client_reference_id ?? null
+        logEvent({
+          eventType: 'conversion',
+          sourcePage: '/api/stripe/webhook',
+          userId: userId ?? undefined,
+        }).catch(() => {})
+      }
     }
 
     if (event.type === 'payment_intent.payment_failed') {
