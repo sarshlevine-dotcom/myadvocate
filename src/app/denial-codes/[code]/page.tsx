@@ -2,7 +2,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import type { WithContext, FAQPage } from 'schema-dts'
-import { getAllDenialCodes, getDenialCodeByCode } from '@/lib/db/denial-codes'
+import { getDenialCodeByCode } from '@/lib/db/denial-codes'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 
 const CATEGORY_LABELS: Record<string, string> = {
   medical_necessity: 'Medical Necessity',
@@ -23,8 +24,10 @@ const CATEGORY_LABELS: Record<string, string> = {
 // ─── SSG — one page per denial code, built at compile time ───────────────────
 
 export async function generateStaticParams() {
-  const codes = await getAllDenialCodes()
-  return codes.map(row => ({ code: row.code.toLowerCase() }))
+  // Must use service role client here — cookies() is not available at build time
+  const supabase = createServiceRoleClient()
+  const { data } = await supabase.from('denial_codes').select('code').order('code')
+  return (data ?? []).map((row: { code: string }) => ({ code: row.code.toLowerCase() }))
 }
 
 // ─── Metadata ─────────────────────────────────────────────────────────────────

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { getAllDenialCodes } from '@/lib/db/denial-codes'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -25,7 +25,9 @@ const CATEGORY_LABELS: Record<string, string> = {
 }
 
 export default async function DenialCodesIndexPage() {
-  const codes = await getAllDenialCodes()
+  const supabase = createServiceRoleClient()
+  const { data } = await supabase.from('denial_codes').select('*').order('code')
+  const codes = data ?? []
 
   // Group by category — hardwired at build time (invariant #11)
   const grouped = codes.reduce<Record<string, typeof codes>>((acc, row) => {
