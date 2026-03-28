@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import { getCache, setCache } from '@/lib/redis'
 import { CACHE_KEYS, CACHE_TTL } from '@/lib/cache-keys'
 
@@ -11,7 +11,8 @@ export async function getDenialCodeByCode(code: string) {
   if (cached !== null && typeof cached === 'object') return cached
 
   // Cache miss: fetch from DB
-  const supabase = await createClient()
+  // Use service role client: denial_codes is static reference data readable by everyone
+  const supabase = createServiceRoleClient()
   const { data, error } = await supabase
     .from('denial_codes')
     .select()
@@ -26,7 +27,8 @@ export async function getDenialCodeByCode(code: string) {
 }
 
 export async function getAllDenialCodes() {
-  const supabase = await createClient()
+  // Use service role client: denial_codes is static reference data readable by everyone
+  const supabase = createServiceRoleClient()
   const { data, error } = await supabase
     .from('denial_codes')
     .select()
@@ -37,7 +39,8 @@ export async function getAllDenialCodes() {
 
 export async function getRelatedDenialCodes(codes: string[]) {
   if (codes.length === 0) return []
-  const supabase = await createClient()
+  // Use service role client: denial_codes is static reference data readable by everyone
+  const supabase = createServiceRoleClient()
   const { data, error } = await supabase
     .from('denial_codes')
     .select()
