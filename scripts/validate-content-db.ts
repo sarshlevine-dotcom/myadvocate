@@ -101,7 +101,7 @@ async function main(): Promise<void> {
   )
 
   // ── 3. Run validation ─────────────────────────────────────────────────────
-  const contentRows = rows as ContentItemRow[]
+  const contentRows = rows as unknown as ContentItemRow[]
   const report = buildReport(contentRows, validDenialCodes)
 
   // ── 4. Output ─────────────────────────────────────────────────────────────
