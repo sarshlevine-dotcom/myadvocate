@@ -1,10 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getServerSupabase } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 export async function markSpanishCandidate(contentItemId: string) {
-  const supabase = getServerSupabase();
+  const supabase = await createClient();
 
   const { error } = await supabase
     .from("content_items")
@@ -16,7 +16,7 @@ export async function markSpanishCandidate(contentItemId: string) {
 }
 
 export async function createPackagingAsset(formData: FormData) {
-  const supabase = getServerSupabase();
+  const supabase = await createClient();
 
   const title = String(formData.get("title_working") ?? "").trim();
   const assetType = String(formData.get("asset_type") ?? "toolkit").trim();
@@ -38,7 +38,7 @@ export async function createPackagingAsset(formData: FormData) {
 }
 
 export async function createMetricEntry(formData: FormData) {
-  const supabase = getServerSupabase();
+  const supabase = await createClient();
 
   const variantId = String(formData.get("variant_id") ?? "").trim();
   const windowType = String(formData.get("window_type") ?? "7d").trim();
