@@ -1,7 +1,7 @@
-import { getServerSupabase } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 export async function getDashboardData() {
-  const supabase = getServerSupabase();
+  const supabase = await createClient();
 
   const [
     { data: contentItems },
